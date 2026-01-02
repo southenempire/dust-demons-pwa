@@ -1,13 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react';
-import { performScan } from './actions';
-import { Shield, Skull, Ghost, Search, Trash2, Flame, Loader2, Zap, Crosshair, Terminal } from 'lucide-react';
+import { useState } from 'react';
+import { performScan } from './actions'; // REAL SCANNER
+import { prepareBatchExorcism } from '@/lib/exorcist'; // REAL BURNER
+import { 
+  Shield, Skull, Ghost, Crosshair, Flame, Zap, Trophy, Menu, Activity, 
+  X, Star, Target, ShoppingCart, Settings, HelpCircle, Award, Lock, 
+  Users, Volume2, VolumeX, Bell, BellOff, CheckCircle 
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
-import { prepareExorcism } from '@/lib/exorcist';
-
 import dynamic from 'next/dynamic';
+
+// Fix Wallet Button Hydration
 const WalletMultiButton = dynamic(
     () => import('@solana/wallet-adapter-react-ui').then((mod) => mod.WalletMultiButton),
     { ssr: false }
@@ -16,313 +21,276 @@ const WalletMultiButton = dynamic(
 export default function Home() {
   const { publicKey, sendTransaction } = useWallet();
   const { connection } = useConnection();
-  
+
+  // --- STATE ---
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
-  const [activeTab, setActiveTab] = useState('demons');
-  const [burningId, setBurningId] = useState(null);
-  const [lootDrops, setLootDrops] = useState([]); // Tracks floating "money" text
+  const [view, setView] = useState('SCANNER');
+  const [lootDrops, setLootDrops] = useState([]);
+  const [playerRank, setPlayerRank] = useState('ROOKIE');
+  
+  // MULTI-SELECT STATE
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [isBurning, setIsBurning] = useState(false);
 
-  // 1. The Scanner Logic
+  // GAME VISUALS
+  const [shake, setShake] = useState(false);
+  const [killCount, setKillCount] = useState(0);
+  const [combo, setCombo] = useState(0);
+  const [totalEarned, setTotalEarned] = useState(0.000);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuTab, setMenuTab] = useState('STATS');
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  // --- SCAN LOGIC ---
   async function handleSubmit(e) {
-      if (e) e.preventDefault();
-      if (!publicKey) return;
-
-      setLoading(true);
-      setResult(null);
-
-      // Fake delay for "cool" radar effect
-      await new Promise(r => setTimeout(r, 1200));
-
-      const formData = new FormData();
-      formData.append('walletAddress', publicKey.toString());
-
-      const response = await performScan(formData);
-      if (response.success) {
-        setResult(response.data);
-      } else {
-        alert(response.error);
-      }
-      setLoading(false);
-  }
-
-  // 2. The Exorcism Logic
-  async function handleExorcism(demon) {
+    if (e) e.preventDefault();
     if (!publicKey) return;
+    setLoading(true);
+    setResult(null);
+    setSelectedIds([]);
+    
+    await new Promise(r => setTimeout(r, 1200)); // Cinematic Delay
 
     try {
-      setBurningId(demon.id); 
-      
-      const transaction = await prepareExorcism(publicKey.toString(), demon, connection);
+        const formData = new FormData();
+        formData.append('walletAddress', publicKey.toString());
+        const response = await performScan(formData);
+        
+        if (response.success) {
+            setResult(response.data);
+            const worth = parseFloat(response.data.net_worth.replace('$','').replace(/,/g,''));
+            if (worth > 1000) setPlayerRank('WHALE HUNTER');
+            else if (worth > 100) setPlayerRank('VOID STALKER');
+            else setPlayerRank('DUST RECRUIT');
+            setView('INVENTORY');
+        } else {
+            alert(response.error);
+        }
+    } catch (error) { console.error(error); }
+    setLoading(false);
+  }
+
+  // --- MULTI-SELECT TOGGLE ---
+  const toggleSelection = (id) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  // --- BATCH BURN LOGIC ---
+  async function handleBatchBurn() {
+    if (!publicKey || selectedIds.length === 0) return;
+    try {
+      setIsBurning(true);
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+
+      // 1. Gather Targets
+      const allDemons = [...result.dust_demons, ...result.nft_demons];
+      const targets = allDemons.filter(d => selectedIds.includes(d.id));
+
+      // 2. Execute on Blockchain
+      const transaction = await prepareBatchExorcism(publicKey.toString(), targets, connection);
       const signature = await sendTransaction(transaction, connection);
-      
       const latestBlockhash = await connection.getLatestBlockhash();
-      await connection.confirmTransaction({
-        signature,
-        blockhash: latestBlockhash.blockhash,
-        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
-      }, 'confirmed');
+      await connection.confirmTransaction({ signature, ...latestBlockhash }, 'confirmed');
 
-      // --- THE JUICE: SPAWN LOOT DROP ---
-      const newLoot = { id: Date.now(), text: "+0.002 SOL" };
+      // 3. Rewards
+      const reward = 0.002 * targets.length;
+      const newLoot = { id: Date.now(), text: `CLUSTER KILL: +${reward.toFixed(3)} SOL` };
       setLootDrops(prev => [...prev, newLoot]);
-      
-      // Remove loot text after 2 seconds
-      setTimeout(() => {
-        setLootDrops(prev => prev.filter(l => l.id !== newLoot.id));
-      }, 2000);
+      setTotalEarned(prev => prev + reward);
+      setKillCount(prev => prev + targets.length);
+      setCombo(prev => prev + targets.length);
+      setTimeout(() => setLootDrops(prev => prev.filter(l => l.id !== newLoot.id)), 3000);
 
-      // Refresh list
-      handleSubmit(null);
+      // 4. Cleanup UI
+      setResult(prev => ({
+        ...prev,
+        dust_demons: prev.dust_demons.filter(d => !selectedIds.includes(d.id)),
+        nft_demons: prev.nft_demons.filter(d => !selectedIds.includes(d.id))
+      }));
+      setSelectedIds([]);
 
     } catch (error) {
-      console.error("Exorcism Failed:", error);
-      alert("Burn failed. Check console.");
+      console.error(error);
+      alert("Burn failed. Try selecting fewer items.");
     } finally {
-      setBurningId(null);
+      setIsBurning(false);
     }
   }
 
+  // --- MENU MOCK DATA ---
+  const achievements = [
+    { id: 1, name: 'First Blood', desc: 'Eliminate 1 demon', unlocked: killCount > 0, icon: Skull },
+    { id: 2, name: 'Cluster Bomber', desc: 'Burn 5+ at once', unlocked: killCount >= 5, icon: Zap },
+    { id: 3, name: 'Rent Seeker', desc: 'Earn 0.01 SOL', unlocked: totalEarned >= 0.01, icon: Trophy },
+  ];
+  const shopItems = [{ id: 1, name: 'Auto Scanner', desc: 'Scan automatically', price: '0.1 SOL', icon: Crosshair, locked: true }, { id: 2, name: 'Combo Extender', desc: '+5s timer', price: '0.05 SOL', icon: Zap, locked: true }];
+
   return (
-    <main className="min-h-screen bg-black text-green-500 font-mono p-4 pb-24 relative overflow-hidden selection:bg-green-900 selection:text-white">
+    <main className={`min-h-screen relative overflow-hidden flex flex-col bg-black font-mono selection:bg-red-500/30 ${shake ? 'animate-shake' : ''}`}>
       
-      {/* CYBER GRID BACKGROUND */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#111_1px,transparent_1px),linear-gradient(to_bottom,#111_1px,transparent_1px)] bg-[size:40px_40px] -z-10 opacity-20 pointer-events-none" />
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-green-900/10 to-black pointer-events-none -z-10" />
+      {/* 3D WARP STYLES */}
+      <style jsx global>{`
+        @keyframes warp { 0% { transform: perspective(500px) rotateX(60deg) translateY(0); } 100% { transform: perspective(500px) rotateX(60deg) translateY(60px); } }
+        @keyframes shake { 0%, 100% { transform: translate(0, 0); } 10%, 90% { transform: translate(-2px, 2px); } 50% { transform: translate(2px, -2px); } }
+        .animate-shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        .warp-grid { position: fixed; top: -50%; left: -50%; width: 200%; height: 200%; background-image: linear-gradient(rgba(0, 255, 65, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 65, 0.3) 1px, transparent 1px); background-size: 60px 60px; animation: warp 2s linear infinite; opacity: 0.15; z-index: 0; }
+        .vignette { position: fixed; inset: 0; background: radial-gradient(circle, transparent 40%, black 120%); z-index: 1; pointer-events: none; }
+      `}</style>
+
+      <div className="warp-grid" />
+      <div className="vignette" />
 
       {/* HEADER */}
-      <header className="flex items-center justify-between mb-8 mt-4 border-b border-green-900/50 pb-4">
+      <header className="relative z-20 p-4 flex items-center justify-between border-b border-green-500/20 bg-black/60 backdrop-blur-md sticky top-0">
         <div className="flex items-center gap-3">
-          <motion.div 
-            animate={{ rotate: 360 }}
-            transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-            className="bg-green-900/20 p-2 rounded-full border border-green-500/30"
-          >
-            <Crosshair className="w-6 h-6 text-green-500" />
+          <motion.div animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: "linear" }} className="w-10 h-10 bg-green-900/40 rounded-lg flex items-center justify-center border border-green-500 shadow-[0_0_15px_#22c55e]">
+            <Ghost size={20} className="text-green-400" />
           </motion.div>
           <div>
-            <h1 className="text-2xl font-black tracking-tighter text-white glitch-text">DUST DEMONS</h1>
-            <p className="text-[10px] text-green-600 tracking-[0.2em] uppercase">Tactical Wallet Cleaner</p>
+            <p className="text-[10px] text-green-500 font-bold uppercase tracking-[0.2em] animate-pulse">DUST DEMON</p>
+            <h2 className="text-xs font-black text-white tracking-wider">{playerRank}</h2>
           </div>
         </div>
-        <div className="text-xs font-mono text-green-800 border border-green-900 px-2 py-1 rounded flex items-center gap-2">
-           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" /> ONLINE
+        <div className="flex items-center gap-3">
+            <div className="text-right hidden sm:block"><p className="text-[8px] text-red-500 uppercase font-bold">KILLS</p><p className="text-xl font-black text-white leading-none">{killCount}</p></div>
+            <div className="scale-90"><WalletMultiButton style={{ backgroundColor: '#050505', border: '1px solid #22c55e', height: '36px', fontSize: '12px', textTransform: 'uppercase' }} /></div>
         </div>
       </header>
 
-      {/* CONNECT / SCANNER */}
-      <section className="mb-8 flex flex-col items-center gap-6 relative z-10">
-        <div className="bg-black border border-green-900/50 p-2 rounded-xl shadow-[0_0_20px_rgba(0,255,0,0.1)]">
-          {/* We style the wallet button with global CSS usually, but this wrapper helps */}
-          <WalletMultiButton style={{ backgroundColor: '#050505', border: '1px solid #333' }} />
-        </div>
+      {/* CONTENT */}
+      <div className="flex-1 relative z-10 p-4 pb-40 overflow-y-auto">
         
-        {publicKey && (
-           <motion.button 
-             whileHover={{ scale: 1.05, boxShadow: "0 0 25px rgba(220, 38, 38, 0.4)" }}
-             whileTap={{ scale: 0.95 }}
-             onClick={(e) => handleSubmit(e)}
-             disabled={loading}
-             className={`
-               relative overflow-hidden group
-               bg-gradient-to-r from-red-950 to-black 
-               border border-red-500/50 hover:border-red-500 
-               text-red-100 font-bold py-4 px-12 rounded-lg 
-               transition-all flex items-center gap-3 uppercase tracking-wider
-               ${loading ? 'opacity-80 cursor-not-allowed' : ''}
-             `}
-           >
-             {loading && <div className="absolute inset-0 bg-red-500/10 animate-pulse" />}
-             {loading ? "Scanning Sector..." : "INITIATE SCAN"} 
-             {loading ? <Loader2 className="animate-spin" /> : <Search size={18} />}
-           </motion.button>
-        )}
-      </section>
-
-      {/* RADAR ANIMATION (LOADING) */}
-      <AnimatePresence>
-        {loading && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex flex-col items-center justify-center my-12"
-          >
-             <div className="relative w-48 h-48 border border-green-900 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(0,255,0,0.1)]">
-                {/* Radar Sweep */}
-                <motion.div 
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  className="w-full h-full absolute top-0 left-0 rounded-full"
-                  style={{ background: 'conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(34, 197, 94, 0.3) 360deg)' }}
-                />
-                <div className="absolute inset-0 border-[40px] border-black rounded-full" />
-                <div className="absolute w-2 h-2 bg-red-500 rounded-full top-10 left-12 animate-ping" />
-                <div className="absolute w-2 h-2 bg-red-500 rounded-full bottom-14 right-10 animate-ping delay-75" />
-             </div>
-             <p className="mt-6 text-green-500 text-xs tracking-widest animate-pulse">DETECTING ANOMALIES...</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* RESULTS DASHBOARD */}
-      <AnimatePresence>
-        {result && !loading && (
-          <motion.div 
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6 max-w-md mx-auto"
-          >
-            {/* STATS HUD */}
-            <div className="grid grid-cols-2 gap-3">
-               <div className="bg-green-900/5 border border-green-800/50 p-4 rounded-lg relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-1 opacity-20"><Terminal size={12}/></div>
-                  <p className="text-[10px] text-green-600 uppercase tracking-widest">Net Worth</p>
-                  <p className="text-xl font-black text-white">{result.net_worth}</p>
-               </div>
-               <div className="bg-red-900/10 border border-red-800/50 p-4 rounded-lg">
-                  <p className="text-[10px] text-red-600 uppercase tracking-widest">Threat Level</p>
-                  <p className="text-xl font-black text-red-500">
-                    {result.dust_demons.length + result.nft_demons.length > 0 ? 'CRITICAL' : 'SAFE'}
-                  </p>
-               </div>
-            </div>
-
-            {/* TABS */}
-            <div className="flex border-b border-gray-800">
-              <button 
-                onClick={() => setActiveTab('demons')}
-                className={`flex-1 pb-3 text-sm font-bold uppercase tracking-widest transition-colors ${
-                  activeTab === 'demons' ? 'text-red-500 border-b-2 border-red-500 shadow-[0_10px_20px_-10px_rgba(239,68,68,0.5)]' : 'text-gray-600 hover:text-gray-400'
-                }`}
-              >
-                HOSTILES [{result.dust_demons.length + result.nft_demons.length}]
-              </button>
-              <button 
-                onClick={() => setActiveTab('safe')}
-                className={`flex-1 pb-3 text-sm font-bold uppercase tracking-widest transition-colors ${
-                  activeTab === 'safe' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-600 hover:text-gray-400'
-                }`}
-              >
-                SAFE ASSETS
-              </button>
-            </div>
-
-            {/* LIST AREA */}
-            <div className="space-y-4 pb-20">
-              {activeTab === 'demons' ? (
-                <>
-                  {/* NFT DEMONS */}
-                  {result.nft_demons.map((nft) => (
-                    <DemonCard 
-                      key={nft.id} 
-                      data={nft} 
-                      type="NFT" 
-                      onBurn={() => handleExorcism(nft)} 
-                      isBurning={burningId === nft.id} 
-                    />
-                  ))}
-                  {/* DUST DEMONS */}
-                  {result.dust_demons.map((dust) => (
-                    <DemonCard 
-                      key={dust.id} 
-                      data={dust} 
-                      type="DUST" 
-                      onBurn={() => handleExorcism(dust)} 
-                      isBurning={burningId === dust.id} 
-                    />
-                  ))}
-                  
-                  {result.nft_demons.length === 0 && result.dust_demons.length === 0 && (
-                    <div className="text-center py-12 border border-green-900/30 rounded-lg border-dashed">
-                      <Shield className="w-12 h-12 text-green-900 mx-auto mb-3" />
-                      <p className="text-green-700 text-sm tracking-widest">SECTOR CLEAR. NO HOSTILES.</p>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="grid grid-cols-2 gap-2">
-                  {result.safe_assets.map((asset) => (
-                    <div key={asset.mint} className="bg-green-900/5 border border-green-900/30 p-3 rounded hover:bg-green-900/10 transition-colors">
-                      <h3 className="text-white text-xs font-bold">{asset.symbol}</h3>
-                      <p className="text-green-500 text-[10px]">{asset.balance.toFixed(2)}</p>
-                      <p className="text-gray-500 text-[10px] mt-1">{asset.total_value}</p>
-                    </div>
-                  ))}
+        {/* SCANNER */}
+        {view === 'SCANNER' && (
+          <div className="flex flex-col items-center justify-center h-[60vh]">
+            {!publicKey ? (
+              <p className="text-green-500 animate-pulse text-center font-bold tracking-widest text-sm bg-green-900/20 px-4 py-2 rounded border border-green-500/50">CONNECT POWER CELL</p>
+            ) : (
+              <motion.button whileTap={{ scale: 0.95 }} onClick={handleSubmit} disabled={loading} className="relative w-72 h-72 group">
+                <div className="absolute inset-0 bg-green-500/5 rounded-full blur-2xl group-hover:bg-green-500/10 transition-all duration-500" />
+                <motion.div animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }} className="absolute inset-0 border-2 border-dashed border-green-500/30 rounded-full" />
+                <motion.div animate={{ rotate: -360 }} transition={{ duration: 5, repeat: Infinity, ease: "linear" }} className="absolute inset-4 border border-green-500/50 rounded-full border-t-transparent border-l-transparent" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+                    {loading ? (
+                        <><Activity size={64} className="text-red-500 animate-bounce" /><p className="text-red-500 font-black mt-4 tracking-widest animate-pulse">SCANNING...</p></>
+                    ) : (
+                        <><Crosshair size={64} className="text-green-400 drop-shadow-[0_0_10px_#22c55e]" /><p className="text-white font-black text-xl mt-4 tracking-widest drop-shadow-md">SYSTEM SCAN</p><p className="text-green-600 text-xs tracking-[0.3em] mt-1">TAP TO ENGAGE</p></>
+                    )}
                 </div>
+              </motion.button>
+            )}
+          </div>
+        )}
+
+        {/* INVENTORY GRID (MULTI-SELECT ENABLED) */}
+        {view === 'INVENTORY' && result && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-end border-b border-green-900/50 pb-2 mb-4">
+                <div><p className="text-[10px] text-green-600 uppercase font-bold tracking-wider">NET WORTH</p><p className="text-2xl font-black text-white drop-shadow-md">{result.net_worth}</p></div>
+                <div className="text-right"><p className="text-[10px] text-red-600 uppercase font-bold tracking-wider">THREATS</p><p className="text-2xl font-black text-red-500 drop-shadow-md">{result.dust_demons.length + result.nft_demons.length}</p></div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pb-24">
+              {[...result.nft_demons, ...result.dust_demons].map((demon) => (
+                <EnemyCard 
+                    key={demon.id} 
+                    data={demon} 
+                    type={demon.id.includes('nft') ? 'NFT' : 'DUST'} 
+                    isSelected={selectedIds.includes(demon.id)}
+                    onToggle={() => toggleSelection(demon.id)}
+                />
+              ))}
+              
+              {result.nft_demons.length === 0 && result.dust_demons.length === 0 && (
+                <div className="col-span-2 text-center py-20 border-2 border-dashed border-green-900 rounded-2xl bg-green-900/5"><Shield size={48} className="mx-auto text-green-500 mb-4 opacity-50" /><p className="text-green-500 font-bold tracking-widest text-sm">SECTOR CLEAR</p></div>
               )}
             </div>
-          </motion.div>
+          </div>
+        )}
+      </div>
+
+      {/* NUKE BUTTON */}
+      <AnimatePresence>
+        {selectedIds.length > 0 && (
+            <motion.div initial={{ y: 100 }} animate={{ y: 0 }} exit={{ y: 100 }} className="fixed bottom-24 left-0 w-full px-6 z-40 flex justify-center">
+                <button 
+                    onClick={handleBatchBurn} disabled={isBurning}
+                    className="w-full max-w-sm bg-gradient-to-r from-red-600 to-red-800 text-white font-black text-lg py-4 rounded-xl shadow-[0_0_40px_rgba(220,38,38,0.6)] border border-red-400 flex items-center justify-center gap-3 active:scale-95 transition-all"
+                >
+                    {isBurning ? <Activity className="animate-spin" /> : <Flame fill="currentColor" />}
+                    {isBurning ? 'INCINERATING...' : `INCINERATE (${selectedIds.length})`}
+                </button>
+            </motion.div>
         )}
       </AnimatePresence>
 
-      {/* LOOT DROP POPUPS (The Dopamine Hit) */}
+      {/* BOTTOM NAV */}
+      <nav className="fixed bottom-0 left-0 w-full bg-black/95 border-t border-green-900 p-2 z-30 flex justify-around items-center backdrop-blur-xl pb-6">
+        <button onClick={() => setView('SCANNER')} className={`flex flex-col items-center p-2 transition-all ${view === 'SCANNER' ? 'text-green-400 scale-110' : 'text-gray-600'}`}><Crosshair size={24} /><span className="text-[9px] uppercase font-bold mt-1">Scanner</span></button>
+        <button onClick={() => { if(result) setView('INVENTORY'); }} className={`flex flex-col items-center p-2 transition-all ${view === 'INVENTORY' ? 'text-red-500 scale-110' : 'text-gray-600'}`}><Ghost size={24} /><span className="text-[9px] uppercase font-bold mt-1">Targets</span></button>
+        <button onClick={() => setMenuOpen(true)} className="flex flex-col items-center p-2 text-gray-400 hover:text-white transition-all"><Menu size={24} /><span className="text-[9px] uppercase font-bold mt-1">Menu</span></button>
+      </nav>
+
+      {/* MENU & LOOT DROPS (Standard) */}
       <AnimatePresence>
+        {menuOpen && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/90 backdrop-blur-sm z-40" onClick={() => setMenuOpen(false)} />
+            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'tween', duration: 0.3 }} className="fixed right-0 top-0 h-full w-full max-w-md bg-black border-l border-green-500/30 z-50 overflow-y-auto">
+              <div className="sticky top-0 bg-black/90 backdrop-blur-xl border-b border-green-500/30 p-4 flex items-center justify-between"><h2 className="text-green-500 font-black text-xl tracking-wider">COMMAND</h2><button onClick={() => setMenuOpen(false)} className="text-gray-400 hover:text-red-500"><X size={24} /></button></div>
+              <div className="flex overflow-x-auto border-b border-gray-800 bg-black/50 p-1">{['STATS', 'SHOP', 'HELP'].map(tab => (<button key={tab} onClick={() => setMenuTab(tab)} className={`px-4 py-3 text-xs font-bold whitespace-nowrap transition-all ${menuTab === tab ? 'text-green-500 bg-green-900/20 rounded' : 'text-gray-600'}`}>{tab}</button>))}</div>
+              <div className="p-4">
+                {menuTab === 'STATS' && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3"><div className="bg-gray-900/50 border border-green-500/30 p-4 rounded-xl"><p className="text-[10px] text-gray-500 uppercase font-bold">Confirmed Kills</p><p className="text-3xl font-black text-green-500">{killCount}</p></div><div className="bg-gray-900/50 border border-yellow-500/30 p-4 rounded-xl"><p className="text-[10px] text-gray-500 uppercase font-bold">Bounty Claimed</p><p className="text-3xl font-black text-yellow-500">{totalEarned.toFixed(3)}</p></div></div>
+                    <div className="space-y-2 mt-4"><h3 className="text-gray-500 text-xs font-bold uppercase mb-2">Medals</h3>{achievements.map(ach => (<div key={ach.id} className={`p-3 rounded-xl border flex items-center gap-3 ${ach.unlocked ? 'bg-green-900/10 border-green-500/50' : 'bg-gray-900/20 border-gray-800 opacity-50'}`}><ach.icon size={20} className={ach.unlocked ? 'text-green-500' : 'text-gray-600'} /><div className="flex-1"><h4 className="font-bold text-sm text-white">{ach.name}</h4><p className="text-[10px] text-gray-500">{ach.desc}</p></div></div>))}</div>
+                  </div>
+                )}
+                {menuTab === 'SHOP' && <div className="text-center py-10 opacity-50"><ShoppingCart size={40} className="mx-auto text-yellow-500 mb-2"/><p className="text-yellow-500 font-bold">SHOP OFFLINE</p></div>}
+              </div>
+            </motion.div>
+          </>
+        )}
         {lootDrops.map(loot => (
-          <motion.div
-            key={loot.id}
-            initial={{ opacity: 0, y: 0, scale: 0.5 }}
-            animate={{ opacity: 1, y: -100, scale: 1.2 }}
-            exit={{ opacity: 0 }}
-            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 pointer-events-none z-50"
-          >
-            <div className="text-yellow-400 font-black text-2xl text-shadow-glow flex items-center gap-1 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
-              <Zap size={24} fill="currentColor" /> {loot.text}
-            </div>
+          <motion.div key={loot.id} initial={{ opacity: 0, scale: 0.3, y: 0 }} animate={{ opacity: [0, 1, 1, 0], scale: [0.3, 1.5, 1.2, 0.8], y: [-50, -150, -200, -250] }} transition={{ duration: 2.5 }} className="fixed top-1/2 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none">
+            <div className="relative text-yellow-400 font-black text-2xl tracking-tighter flex items-center gap-2 drop-shadow-[0_0_20px_rgba(250,204,21,0.8)]"><Zap fill="currentColor" className="animate-bounce" /> {loot.text}</div>
           </motion.div>
         ))}
       </AnimatePresence>
-
     </main>
   );
 }
 
-// --- SUB COMPONENT FOR CARDS ---
-function DemonCard({ data, type, onBurn, isBurning }) {
+// --- SELECTABLE CARD COMPONENT ---
+function EnemyCard({ data, type, isSelected, onToggle }) {
   return (
     <motion.div 
       layout
+      onClick={onToggle}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ 
-        opacity: isBurning ? 0.5 : 1, 
-        scale: isBurning ? 0.95 : 1,
-        x: isBurning ? [0, -5, 5, -5, 5, 0] : 0 // Shake animation
+          opacity: 1, scale: isSelected ? 0.95 : 1,
+          borderColor: isSelected ? '#ef4444' : 'rgba(255,255,255,0.1)',
+          backgroundColor: isSelected ? 'rgba(239, 68, 68, 0.1)' : 'rgba(10,10,10,0.8)'
       }}
-      exit={{ opacity: 0, scale: 0, filter: "blur(10px)" }} // Explode fade out
-      transition={{ duration: 0.2 }}
-      className={`relative group bg-neutral-900/80 border ${type === 'NFT' ? 'border-purple-900/30' : 'border-red-900/30'} p-4 rounded-xl overflow-hidden backdrop-blur-sm`}
+      whileTap={{ scale: 0.92 }}
+      className={`relative rounded-xl border p-3 flex flex-col gap-2 cursor-pointer transition-all duration-200 overflow-hidden group ${isSelected ? 'shadow-[0_0_20px_rgba(239,68,68,0.3)]' : 'hover:border-gray-500'}`}
     >
-        {/* SCAN LINE EFFECT */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent translate-y-[-100%] group-hover:translate-y-[100%] transition-transform duration-1000 pointer-events-none" />
-
-        <div className="flex items-center justify-between relative z-10">
-            <div className="flex items-center gap-4">
-                <div className={`p-3 rounded-lg border ${type === 'NFT' ? 'bg-purple-900/10 border-purple-500/20 text-purple-500' : 'bg-red-900/10 border-red-500/20 text-red-500'}`}>
-                    {type === 'NFT' ? <Ghost size={20} /> : <Skull size={20} />}
-                </div>
-                <div>
-                    <h3 className="font-bold text-gray-200 text-sm tracking-wide">{data.name || data.symbol}</h3>
-                    <p className={`text-[10px] uppercase tracking-wider ${type === 'NFT' ? 'text-purple-400' : 'text-red-400'}`}>
-                        {type === 'NFT' ? 'Corrupted Asset' : 'Dust Remnant'}
-                    </p>
-                </div>
-            </div>
-
-            <button 
-                onClick={onBurn}
-                disabled={isBurning}
-                className="bg-neutral-800 hover:bg-red-600 text-neutral-400 hover:text-white p-3 rounded-lg transition-all duration-300 group-hover:scale-110 shadow-lg border border-neutral-700 hover:border-red-500"
-            >
-                {isBurning ? <Loader2 className="animate-spin" size={18} /> : <Flame size={18} />}
-            </button>
-        </div>
-
-        {/* REWARD PILL */}
-        <div className="absolute top-2 right-2 opacity-50 group-hover:opacity-100 transition-opacity">
-            <span className="text-[9px] bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded border border-yellow-500/20">
-                BOUNTY: 0.002 SOL
-            </span>
-        </div>
+      <div className={`absolute top-2 right-2 z-20 w-5 h-5 rounded-full border flex items-center justify-center transition-all ${isSelected ? 'bg-red-500 border-red-500' : 'border-gray-600 bg-black/50'}`}>{isSelected && <CheckCircle size={12} className="text-white" />}</div>
+      <div className="relative w-full aspect-square bg-gray-900 rounded-lg overflow-hidden border border-gray-800">
+        {data.image ? <img src={data.image} alt="Target" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" /> : <div className="w-full h-full flex items-center justify-center text-gray-700">{type === 'NFT' ? <Ghost size={32} /> : <Skull size={32} />}</div>}
+        {isSelected && <div className="absolute inset-0 bg-red-500/20 mix-blend-overlay animate-pulse" />}
+      </div>
+      <div>
+        <div className="flex justify-between items-center"><h3 className="font-bold text-gray-200 text-xs truncate max-w-[100px]">{data.name || "Unknown"}</h3><span className={`text-[8px] font-bold px-1 rounded ${type === 'NFT' ? 'bg-purple-900/50 text-purple-400' : 'bg-orange-900/50 text-orange-400'}`}>{type}</span></div>
+        <p className="text-[9px] text-gray-500 font-mono mt-1">VAL: {data.balance < 0.0001 ? "TRACE" : data.balance.toFixed(4)}</p>
+        <p className="text-[9px] text-yellow-600 mt-2 font-bold flex items-center gap-1"><Zap size={10} fill="currentColor" /> BOUNTY: 0.002</p>
+      </div>
     </motion.div>
-  )
+  );
 }

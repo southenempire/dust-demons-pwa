@@ -2,16 +2,19 @@ import axios from 'axios';
 import { Connection, PublicKey } from '@solana/web3.js';
 
 // Config: Use Mainnet
-// Note: In Next.js, use process.env for server-side secrets
 const RPC_ENDPOINT = process.env.RPC_URL || 'https://api.mainnet-beta.solana.com';
 const connection = new Connection(RPC_ENDPOINT);
 
-// Config: Jupiter API (Authenticated)
+// Config: Jupiter API
 const JUP_API_URL = "https://api.jup.ag/tokens/v2/search";
 const API_KEY = process.env.JUPITER_API_KEY;
 
-// Fallback Safe List
-const SAFE_KEYWORDS = ['USDT', 'USDC', 'SOL', 'JUP', 'JLP', 'PYUSD', 'RAY', 'BONK', 'WIF'];
+// EXPANDED SAFE LIST (Prevents burning DeFi positions)
+const SAFE_KEYWORDS = [
+    'USDT', 'USDC', 'SOL', 'JUP', 'JLP', 'PYUSD', 'RAY', 'BONK', 'WIF',
+    'Vault', 'Position', 'Lend', 'Staked', 'vSOL', 'bSOL', 'mSOL', 'JupSOL', 
+    'Infinitie', 'Sanctum', 'Liquidity', 'LP'
+];
 
 export async function scanWallet(walletAddress) {
     console.log(`\n🔍 Scanning wallet: ${walletAddress}...`);
@@ -21,11 +24,9 @@ export async function scanWallet(walletAddress) {
     let solBalance = 0;
 
     try {
-        // A. Native SOL
         const balanceLamports = await connection.getBalance(new PublicKey(walletAddress));
         solBalance = balanceLamports / 1e9; 
 
-        // B. All Tokens
         const response = await connection.getParsedTokenAccountsByOwner(
             new PublicKey(walletAddress),
             { programId: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA") }
@@ -39,7 +40,6 @@ export async function scanWallet(walletAddress) {
     // --- STEP 2: PREPARE DATA ---
     const SOL_MINT = 'So11111111111111111111111111111111111111112';
     
-    // Filter out zero balances
     const activeItems = tokenAccounts
         .map(t => {
             const info = t.account.data.parsed.info;
@@ -47,7 +47,6 @@ export async function scanWallet(walletAddress) {
                 mint: info.mint,
                 amount: info.tokenAmount.uiAmount,
                 decimals: info.tokenAmount.decimals,
-                // CRITICAL: We need raw amount for burning later
                 rawAmount: info.tokenAmount.amount 
             };
         })
@@ -55,30 +54,23 @@ export async function scanWallet(walletAddress) {
 
     const mintsToFetch = [...activeItems.map(t => t.mint), SOL_MINT];
 
-    // --- STEP 3: FETCH METADATA & PRICES (Official V2 API) ---
+    // --- STEP 3: FETCH METADATA & PRICES ---
     let apiData = new Map();
 
     try {
-        // Chunking: Jupiter allows max 100 mints per request. 
-        // We slice the array to be safe (taking first 100 for MVP).
-        const batch = mintsToFetch.slice(0, 100); 
+        // Fetch in chunks of 100
+        const chunk = (arr, size) => Array.from({ length: Math.ceil(arr.length / size) }, (v, i) => arr.slice(i * size, i * size + size));
+        const batches = chunk(mintsToFetch, 100);
 
-        const response = await axios.get(JUP_API_URL, {
-            params: {
-                query: batch.join(',') 
-            },
-            headers: {
-                'x-api-key': API_KEY ? API_KEY.trim() : ''
-            }
-        });
-
-        const results = response.data || [];
-        results.forEach(item => {
-            apiData.set(item.id, item);
-        });
-
+        for (const batch of batches) {
+             const response = await axios.get(JUP_API_URL, {
+                params: { query: batch.join(',') },
+                headers: { 'x-api-key': API_KEY ? API_KEY.trim() : '' }
+            });
+            (response.data || []).forEach(item => apiData.set(item.id, item));
+        }
     } catch (e) {
-        console.error("⚠️ Jupiter API Failed (Price/Metadata might be missing).");
+        console.error("⚠️ Jupiter API Failed.");
     }
 
     // --- STEP 4: THE CLASSIFIER ---
@@ -89,7 +81,6 @@ export async function scanWallet(walletAddress) {
 
     const classify = (mint, amount, decimals, rawAmount, isNative = false) => {
         const data = apiData.get(mint);
-        
         const price = data ? (data.usdPrice || 0) : 0;
         const valueUsd = amount * price;
         totalNetWorth += valueUsd;
@@ -97,70 +88,66 @@ export async function scanWallet(walletAddress) {
         let name = data ? data.name : (isNative ? "Solana" : "Unknown Token");
         let symbol = data ? data.symbol : (isNative ? "SOL" : mint.slice(0,6));
         const isVerified = data ? data.tags.includes('verified') : false;
+        
+        // GRAB THE IMAGE URL
+        const image = data ? data.logoURI : null;
 
-        // --- GAME LOGIC ---
-
-        // A. NFT DETECTION
-        const isLikelyNFT = decimals === 0 && amount === 1 && !data;
-        if (isLikelyNFT) {
-            nftDemons.push({
-                id: `nft_${mint.slice(0,4)}`,
-                name: "Unknown NFT",
-                symbol: "NFT",
-                mint: mint,
-                balance: amount,
-                decimals: decimals,
-                value_usd: 0,
-                visual_type: "NFT_DEMON"
-            });
-            return;
-        }
-
-        // B. SAFE ASSET DETECTION
-        const isWhitelisted = SAFE_KEYWORDS.some(k => symbol.includes(k));
+        // --- SAFETY LOGIC UPDATE ---
+        // 1. Check Keywords
+        const isSafeKeyword = SAFE_KEYWORDS.some(k => 
+            symbol.toLowerCase().includes(k.toLowerCase()) || 
+            name.toLowerCase().includes(k.toLowerCase())
+        );
+        
+        // 2. Check Value
         const isValuable = valueUsd > 1.00;
 
-        if (isNative || isWhitelisted || isValuable || isVerified) {
+        // 3. AUTO-SAFEGUARD: If it's verified OR matches keywords, it is SAFE.
+        if (isNative || isSafeKeyword || isValuable || isVerified) {
             safeAssets.push({
-                name: name,
-                symbol: symbol,
-                mint: mint,
-                balance: amount,
-                decimals: decimals,
-                price_per_token: price,
-                total_value: valueUsd,
+                name, symbol, mint, balance: amount, decimals,
+                price_per_token: price, total_value: valueUsd,
+                image: image, // Pass image to frontend
                 is_verified: isVerified
             });
             return;
         }
 
-        // C. DUST DEMON
+        // --- DEMON LOGIC ---
+        // NFT Detection (Low decimals, low amount, no price data)
+        const isLikelyNFT = decimals === 0 && amount === 1 && !data;
+        
+        if (isLikelyNFT) {
+            nftDemons.push({
+                id: `nft_${mint.slice(0,4)}`,
+                name: "Unknown NFT",
+                symbol: "NFT",
+                mint, balance: amount, decimals, rawAmount,
+                value_usd: 0,
+                image: image, // Might be null for unknown NFTs
+                visual_type: "NFT_DEMON"
+            });
+            return;
+        }
+
+        // Otherwise, it's DUST
         dustDemons.push({
             id: `dust_${mint.slice(0,4)}`,
-            name: name,
-            symbol: symbol,
-            mint: mint,
-            balance: amount,
-            decimals: decimals, 
+            name, symbol, mint, balance: amount, decimals, rawAmount,
             total_value: valueUsd,
+            image: image,
             visual_type: "DUST_MITE"
         });
     };
 
-    // Process SOL
     if (solBalance > 0) classify(SOL_MINT, solBalance, 9, 0, true);
-
-
-    // Process Tokens
     activeItems.forEach(t => classify(t.mint, t.amount, t.decimals, t.rawAmount, false));
 
-    // --- OUTPUT ---
-    // FIXED: Mapping camelCase variables to snake_case keys for the frontend
     return {
         wallet: walletAddress,
-        net_worth: `$${totalNetWorth.toFixed(2)}`, 
-        safe_assets: safeAssets,   // Map safeAssets -> safe_assets
-        dust_demons: dustDemons,   // Map dustDemons -> dust_demons
-        nft_demons: nftDemons      // Map nftDemons -> nft_demons
+        net_worth: `$${totalNetWorth.toFixed(2)}`,
+        safe_assets: safeAssets,
+        dust_demons: dustDemons,
+        nft_demons: nftDemons
     };
 }

@@ -1,63 +1,30 @@
-import { 
-    Transaction, 
-    PublicKey, 
-    SystemProgram 
-} from '@solana/web3.js';
-import { 
-    createBurnInstruction, 
-    createCloseAccountInstruction, 
-    getAssociatedTokenAddress,
-    TOKEN_PROGRAM_ID
-} from '@solana/spl-token';
+import { Transaction, PublicKey } from '@solana/web3.js';
+import { createBurnInstruction, createCloseAccountInstruction, getAssociatedTokenAddress } from '@solana/spl-token';
 
-/**
- * THE EXORCIST
- * Creates a transaction to Burn tokens and Close the account.
- * * @param {string} userWalletPubKey - The user's public key (string)
- * @param {object} demon - The demon object from the scanner (must have mint & decimals & rawAmount)
- * @param {Connection} connection - Solana connection object
- */
+// SINGLE BURN
 export async function prepareExorcism(userWalletPubKey, demon, connection) {
-    const user = new PublicKey(userWalletPubKey);
-    const mint = new PublicKey(demon.mint);
-    
-    // 1. Get the token account address
-    // (We find the address where the demon lives)
-    const tokenAccount = await getAssociatedTokenAddress(mint, user);
+    return prepareBatchExorcism(userWalletPubKey, [demon], connection);
+}
 
+// BATCH BURN (MULTI-SELECT)
+export async function prepareBatchExorcism(userWalletPubKey, demons, connection) {
+    const user = new PublicKey(userWalletPubKey);
     const tx = new Transaction();
 
-    // STEP A: BURN THE BODY 🔥
-    // If there is any balance, we must burn it first. You can't close an account with tokens in it.
-    if (demon.balance > 0) {
-        console.log(`🔥 Adding Burn Instruction for: ${demon.mint} (Amount: ${demon.balance})`);
-        
-        // We use the rawAmount we saved in the engine (essential for the blockchain)
-        // If rawAmount is missing, we try to calculate it, but engine should provide it.
-        const amountToBurn = demon.rawAmount || Math.floor(demon.balance * (10 ** demon.decimals));
+    // Solana allows ~1232 bytes per tx. We cap at 8-10 burns to be safe.
+    for (const demon of demons) {
+        const mint = new PublicKey(demon.mint);
+        const tokenAccount = await getAssociatedTokenAddress(mint, user);
 
-        tx.add(
-            createBurnInstruction(
-                tokenAccount, // Account to burn from
-                mint,         // The Token Mint
-                user,         // The Owner
-                amountToBurn  // The Exact Amount
-            )
-        );
+        // 1. Burn Token
+        if (demon.balance > 0) {
+            const amount = demon.rawAmount || Math.floor(demon.balance * (10 ** demon.decimals));
+            tx.add(createBurnInstruction(tokenAccount, mint, user, amount));
+        }
+        // 2. Reclaim Rent
+        tx.add(createCloseAccountInstruction(tokenAccount, user, user));
     }
 
-    // STEP B: CLOSE THE COFFIN ⚰️
-    // This is the instruction that gives the user their 0.002 SOL back.
-    tx.add(
-        createCloseAccountInstruction(
-            tokenAccount, // Account to close
-            user,         // Destination for the rent SOL (The User)
-            user          // Authority (The User)
-        )
-    );
-
-    // STEP C: PREPARE TRANSACTION
-    // We need a recent blockhash to make the transaction valid
     const { blockhash } = await connection.getLatestBlockhash();
     tx.recentBlockhash = blockhash;
     tx.feePayer = user;
