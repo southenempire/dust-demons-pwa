@@ -57,22 +57,43 @@ export default function Home() {
 
   const audioRefs = useRef({});
 
-  // LOAD STATS ON MOUNT
+ // LOAD STATS & TOKEN MAP (ROBUST VERSION)
   useEffect(() => {
     setIsMounted(true);
     const saved = localStorage.getItem('demon_stats');
     if (saved) {
         setStats(JSON.parse(saved));
     }
-    
-    fetch('https://token.jup.ag/strict') 
-      .then(res => res.json())
-      .then(data => {
-        const map = {};
-        data.forEach(t => { map[t.address] = t });
-        setTokenMap(map);
-      })
-      .catch(err => console.warn("Token map load error", err));
+
+    // ROBUST TOKEN LIST FETCHER
+    const loadTokenMap = async () => {
+        try {
+            // Attempt 1: Official Jupiter List
+            const res = await fetch('https://token.jup.ag/strict');
+            if (!res.ok) throw new Error("Blocked");
+            const data = await res.json();
+            const map = {};
+            data.forEach(t => { map[t.address] = t });
+            setTokenMap(map);
+        } catch (err) {
+            console.warn("Primary token list failed, attempting backup...");
+            try {
+                // Attempt 2: GitHub Backup (Censorship Resistant)
+                const res = await fetch('https://raw.githubusercontent.com/solana-labs/token-list/main/src/tokens/solana.tokenlist.json');
+                const data = await res.json();
+                const map = {};
+                // The structure might differ slightly, handle gracefully
+                const tokens = data.tokens || data;
+                tokens.forEach(t => { map[t.address] = t });
+                setTokenMap(map);
+            } catch (err2) {
+                console.warn("All token lists failed. App will run in 'Unknown Asset' mode.");
+                // We do not set an error state here, we just let the app run without logos/symbols.
+            }
+        }
+    };
+
+    loadTokenMap();
 
     const loadSound = (key, url) => {
       if (typeof window !== 'undefined') {
@@ -89,7 +110,6 @@ export default function Home() {
     loadSound('success', 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3');
     loadSound('alert', 'https://assets.mixkit.co/active_storage/sfx/2865/2865-preview.mp3');
   }, []);
-
   // SAVE STATS ON CHANGE
   useEffect(() => {
      if (isMounted) {
