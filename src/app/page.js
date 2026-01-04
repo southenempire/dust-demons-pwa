@@ -31,7 +31,6 @@ export default function Home() {
   const [selectedIds, setSelectedIds] = useState([]); 
   const [lootDrops, setLootDrops] = useState([]);
   const [shake, setShake] = useState(false);
-  
   const [lastTx, setLastTx] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
@@ -39,20 +38,10 @@ export default function Home() {
   const [phantomErrorId, setPhantomErrorId] = useState(null);
   const [tokenMap, setTokenMap] = useState({}); 
   const [priceMap, setPriceMap] = useState({}); 
-  
   const [stats, setStats] = useState({ totalBurned: 0, solReclaimed: 0.0 });
   const [currentRank, setCurrentRank] = useState('VOID STALKER');
   const [rankColor, setRankColor] = useState('#00ff41');
-
-  const [modal, setModal] = useState({ 
-    isOpen: false, 
-    type: 'INFO', 
-    title: '', 
-    message: '', 
-    actionLabel: '', 
-    onConfirm: null 
-  });
-
+  const [modal, setModal] = useState({ isOpen: false, type: 'INFO', title: '', message: '', actionLabel: '', onConfirm: null });
   const audioRefs = useRef({});
 
   useEffect(() => {
@@ -72,9 +61,7 @@ export default function Home() {
           const data = await res.json();
           const list = data.tokens || data;
           setTokenMap(list.reduce((acc, t) => ({ ...acc, [t.address]: t }), {}));
-        } catch (err) {
-          console.error("Token list failure", err);
-        }
+        } catch {}
       }
     };
     fetchTokens();
@@ -85,7 +72,6 @@ export default function Home() {
       audio.volume = 0.5;
       audioRefs.current[key] = audio;
     };
-
     const sfx = {
       scan: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3',
       burn: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3',
@@ -97,64 +83,41 @@ export default function Home() {
     Object.entries(sfx).forEach(([k, v]) => loadAudio(k, v));
   }, []);
 
-  useEffect(() => {
-     if (isMounted) localStorage.setItem('demon_stats', JSON.stringify(stats));
-  }, [stats, isMounted]);
+  useEffect(() => { if (isMounted) localStorage.setItem('demon_stats', JSON.stringify(stats)); }, [stats, isMounted]);
 
   const playSound = (key) => {
     if (!audioEnabled) return;
     const audio = audioRefs.current[key];
-    if (audio) {
-      audio.currentTime = 0;
-      audio.play().catch(() => {});
-    }
+    if (audio) { audio.currentTime = 0; audio.play().catch(() => {}); }
   };
 
   const showModal = (type, title, message, actionLabel = 'OK', onConfirm = null) => {
     playSound('alert');
     setModal({ isOpen: true, type, title, message, actionLabel, onConfirm });
   };
-
   const closeModal = () => setModal(prev => ({ ...prev, isOpen: false }));
 
   useEffect(() => {
-    if (isMounted && publicKey) {
-      setResult(null);
-      setView('SCANNER');
-      setSelectedIds([]);
-      setLastTx(null);
-    }
+    if (isMounted && publicKey) { setResult(null); setView('SCANNER'); setSelectedIds([]); setLastTx(null); }
   }, [publicKey, isMounted]);
 
   useEffect(() => {
     const count = selectedIds.length;
-    let rank = 'VOID STALKER';
-    let color = '#00ff41'; 
-
+    let rank = 'VOID STALKER', color = '#00ff41'; 
     if (count === 0) {
        if (stats.totalBurned > 100) { rank = 'ENTROPY GOD'; color = '#d946ef'; }
        else if (stats.totalBurned > 50) { rank = 'PROTOCOL DEMON'; color = '#ef4444'; }
        else { rank = 'AWAITING TARGETS'; color = '#333'; }
-    } else if (count < 5) {
-      rank = 'VOID STALKER'; color = '#00ff41'; 
-    } else if (count < 15) {
-      rank = 'GLITCH SLAYER'; color = '#fbbf24'; 
-    } else if (count < 30) {
-      rank = 'DATA REAPER'; color = '#f97316'; 
-    } else if (count < 50) {
-      rank = 'PROTOCOL DEMON'; color = '#ef4444'; 
-    } else {
-      rank = 'ENTROPY GOD'; color = '#d946ef'; 
-    }
-    
-    setCurrentRank(rank);
-    setRankColor(color);
+    } else if (count < 5) { rank = 'VOID STALKER'; color = '#00ff41'; } 
+    else if (count < 15) { rank = 'GLITCH SLAYER'; color = '#fbbf24'; } 
+    else if (count < 30) { rank = 'DATA REAPER'; color = '#f97316'; } 
+    else if (count < 50) { rank = 'PROTOCOL DEMON'; color = '#ef4444'; } 
+    else { rank = 'ENTROPY GOD'; color = '#d946ef'; }
+    setCurrentRank(rank); setRankColor(color);
   }, [selectedIds, stats]);
 
   const triggerHaptic = (pattern = 50) => {
-    if (hapticsEnabled && typeof window !== 'undefined' && window.navigator?.vibrate) {
-      window.navigator.vibrate(pattern);
-    }
+    if (hapticsEnabled && typeof window !== 'undefined' && window.navigator?.vibrate) window.navigator.vibrate(pattern);
   };
 
   async function fetchPrices(mints) {
@@ -162,10 +125,10 @@ export default function Home() {
     try {
       const chunks = [];
       for (let i = 0; i < mints.length; i += 100) chunks.push(mints.slice(i, i + 100));
-      
       let prices = {};
       for (const chunk of chunks) {
         const res = await fetch(`https://api.jup.ag/price/v2?ids=${chunk.join(',')}`);
+        if (!res.ok) continue; 
         const data = await res.json();
         if (data.data) prices = { ...prices, ...data.data };
       }
@@ -175,11 +138,7 @@ export default function Home() {
 
   async function handleScan() {
     if (!publicKey) return;
-    setLoading(true);
-    setView('INVENTORY');
-    triggerHaptic(100);
-    playSound('scan');
-    
+    setLoading(true); setView('INVENTORY'); triggerHaptic(100); playSound('scan');
     try {
       let nftAssets = [];
       try {
@@ -188,55 +147,41 @@ export default function Home() {
       } catch {}
 
       const accounts = await connection.getParsedTokenAccountsByOwner(publicKey, { programId: TOKEN_PROGRAM_ID });
-      const rawTokens = [];
-      const mintsToCheck = [];
+      const rawTokens = [], mintsToCheck = [];
 
       for (const item of accounts.value) {
         const info = item.account.data.parsed.info;
         const mint = info.mint;
-        
         if (nftAssets.some(n => n.mint === mint) || SAFE_MINTS.includes(mint)) continue;
-
         const meta = tokenMap[mint];
         mintsToCheck.push(mint);
-
         rawTokens.push({
-          mint,
-          tokenAccount: item.pubkey.toString(),
+          mint, tokenAccount: item.pubkey.toString(),
           name: meta ? meta.name : `Token ${mint.slice(0, 4)}...`,
           image: meta ? meta.logoURI : null, 
-          balance: info.tokenAmount.amount, 
-          uiBalance: info.tokenAmount.uiAmount
+          balance: info.tokenAmount.amount, uiBalance: info.tokenAmount.uiAmount
         });
       }
-
       const prices = await fetchPrices(mintsToCheck);
       setPriceMap(prices);
-
       const targets = [...nftAssets, ...rawTokens].map((a, i) => {
         const nameLower = (a.name || '').toLowerCase();
         const isScam = nameLower.includes('visit') || nameLower.includes('.com') || nameLower.includes('reward');
         const isEmpty = parseFloat(a.balance || '0') === 0;
-        
         let val = 0;
         if (prices[a.mint]) val = parseFloat(prices[a.mint].price) * (a.uiBalance || 0);
-
         const isTradeable = val > 0.01; 
         const isDust = !isScam && !isEmpty && !isTradeable;
         const isPhantom = !a.mint;
-
         return {
           id: a.mint || `unknown-${i}`,
           tokenAccount: a.tokenAccount || a.pubkey || null, 
           name: a.name || 'UNKNOWN',
           type: isEmpty ? 'EMPTY' : (isScam ? 'SCAM' : (isTradeable ? 'VALUE' : 'DUST')),
-          image: a.image,
-          displayVal: a.uiBalance !== undefined ? a.uiBalance : (a.val || '0'), 
-          usdValue: val, 
-          isScam, isDust, isTradeable, isEmpty, isPhantom
+          image: a.image, displayVal: a.uiBalance !== undefined ? a.uiBalance : (a.val || '0'), 
+          usdValue: val, isScam, isDust, isTradeable, isEmpty, isPhantom
         };
       });
-
       targets.sort((a, b) => (a.isScam ? -1 : (b.isScam ? 1 : (a.isDust ? -1 : 1))));
       setResult({ targets });
     } catch (error) {
@@ -248,57 +193,37 @@ export default function Home() {
 
   const toggleSelect = (target) => {
     if (target.isPhantom) {
-      playSound('error');
-      triggerHaptic([50, 50, 50]);
-      setPhantomErrorId(target.id); 
-      setTimeout(() => setPhantomErrorId(null), 1500);
+      playSound('error'); triggerHaptic([50, 50, 50]);
+      setPhantomErrorId(target.id); setTimeout(() => setPhantomErrorId(null), 1500);
       return;
     }
-
     if (target.isTradeable) {
-       showModal('WARNING', 'VALUE DETECTED', `Asset worth $${target.usdValue.toFixed(2)}. Swap instead?`, 'SWAP', 
+       showModal('WARNING', 'VALUE DETECTED', `Worth $${target.usdValue.toFixed(2)}. Swap?`, 'SWAP', 
           () => window.open(`https://jup.ag/swap/${target.id}-SOL`, '_blank'));
        return;
     }
-
-    playSound('select');
-    triggerHaptic(30);
+    playSound('select'); triggerHaptic(30);
     setSelectedIds(prev => prev.includes(target.id) ? prev.filter(i => i !== target.id) : [...prev, target.id]);
   };
 
   const handleSelectAllDust = () => {
     if (!result?.targets) return;
     const dust = result.targets.filter(t => (t.isDust || t.isEmpty) && !t.isPhantom && !t.isTradeable).map(t => t.id);
-    
-    if (!dust.length) {
-      showModal('INFO', 'NO DUST', 'No safe dust found.');
-      return;
-    }
-
-    if (dust.every(id => selectedIds.includes(id))) {
-      setSelectedIds([]); playSound('error');
-    } else {
-      setSelectedIds(dust); playSound('select'); triggerHaptic([50, 50]);
-    }
+    if (!dust.length) { showModal('INFO', 'NO DUST', 'No safe dust found.'); return; }
+    if (dust.every(id => selectedIds.includes(id))) { setSelectedIds([]); playSound('error'); } 
+    else { setSelectedIds(dust); playSound('select'); triggerHaptic([50, 50]); }
   };
 
   async function executeExorcism() {
-    closeModal();
-    setBurningId('MASS_BURN');
-    triggerHaptic([50, 50, 50]);
-    
+    closeModal(); setBurningId('MASS_BURN'); triggerHaptic([50, 50, 50]);
     try {
-      const txs = [];
-      let burned = 0;
+      const txs = []; let burned = 0;
       const { blockhash } = await connection.getLatestBlockhash('finalized');
-
       for (let i = 0; i < selectedIds.length; i += 10) {
         const chunk = selectedIds.slice(i, i + 10);
         const tx = new Transaction();
-        tx.feePayer = publicKey;
-        tx.recentBlockhash = blockhash;
+        tx.feePayer = publicKey; tx.recentBlockhash = blockhash;
         let hasIx = false;
-
         for (const id of chunk) {
           const t = result.targets.find(x => x.id === id);
           if (!t) continue;
@@ -306,56 +231,48 @@ export default function Home() {
               const mint = new PublicKey(t.id);
               const tokenAcc = t.tokenAccount ? new PublicKey(t.tokenAccount) : await getAssociatedTokenAddress(mint, publicKey);
               const info = await connection.getAccountInfo(tokenAcc);
-              
               if (info) {
                   const bal = await connection.getTokenAccountBalance(tokenAcc);
-                  if (BigInt(bal.value.amount) > BigInt(0)) {
-                      tx.add(createBurnInstruction(tokenAcc, mint, publicKey, BigInt(bal.value.amount)));
-                  }
+                  if (BigInt(bal.value.amount) > BigInt(0)) tx.add(createBurnInstruction(tokenAcc, mint, publicKey, BigInt(bal.value.amount)));
                   tx.add(createCloseAccountInstruction(tokenAcc, publicKey, publicKey));
-                  hasIx = true;
-                  burned++;
+                  hasIx = true; burned++;
               }
           } catch {}
         }
         if (hasIx) txs.push(tx);
       }
-
-      if (!txs.length) {
-          showModal('INFO', 'INVALID', 'No valid targets.');
-          setBurningId(null);
-          return;
-      }
-
+      if (!txs.length) { showModal('INFO', 'INVALID', 'No valid targets.'); setBurningId(null); return; }
       const signed = await signAllTransactions(txs);
       setLoading(true);
       const sigs = await Promise.all(signed.map(t => connection.sendRawTransaction(t.serialize())));
       await connection.confirmTransaction(sigs[sigs.length - 1], 'confirmed');
-      
-      setLastTx(sigs[sigs.length - 1]);
-      setShake(true);
-      triggerHaptic([100, 50, 100]); 
-      playSound('burn');
-      setTimeout(() => playSound('success'), 500);
-
+      setLastTx(sigs[sigs.length - 1]); setShake(true); triggerHaptic([100, 50, 100]); 
+      playSound('burn'); setTimeout(() => playSound('success'), 500);
       const rent = (burned * 0.002).toFixed(3);
       setStats(p => ({ totalBurned: p.totalBurned + burned, solReclaimed: p.solReclaimed + parseFloat(rent) }));
       setLootDrops(p => [...p, { id: Date.now(), text: `+${rent} SOL` }]);
       setResult(p => ({ ...p, targets: p.targets.filter(t => !selectedIds.includes(t.id)) }));
       setSelectedIds([]);
-      
     } catch (err) {
       showModal('DANGER', 'FAILED', err.message);
     } finally {
-      setBurningId(null);
-      setLoading(false);
+      setBurningId(null); setLoading(false);
       setTimeout(() => setShake(false), 500);
       setTimeout(() => setLootDrops(p => p.filter(l => l.id !== Date.now())), 3000);
     }
   }
 
+  const confirmExorcism = () => {
+    if (!selectedIds.length || !publicKey) return;
+    const isLarge = selectedIds.length > 10;
+    const msg = isLarge 
+      ? `Targeting ${selectedIds.length} entities. High-bandwidth signing required.`
+      : `Delete ${selectedIds.length} assets to reclaim rent? Irreversible.`;
+    showModal('DANGER', isLarge ? 'MASS PROTOCOL' : 'CONFIRM BURN', msg, 'EXECUTE', executeExorcism);
+  };
+
   const handleShare = () => {
-    const text = `I just reclaimed ${stats.solReclaimed.toFixed(3)} SOL from digital dust using Dust Demons 😈🧹\n\nClean your wallet here: https://dust-demons.sol\n\nPowered by @JupiterExchange`;
+    const text = `I just reclaimed ${stats.solReclaimed.toFixed(3)} SOL using Dust Demons 😈🧹\nhttps://dust-demons.sol\nPowered by @JupiterExchange`;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -363,11 +280,7 @@ export default function Home() {
 
   return (
     <main style={{ minHeight: '100vh', backgroundColor: '#000', color: '#fff', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: 'monospace' }}>
-      <div style={{
-          position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 9999,
-          background: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03))',
-          backgroundSize: '100% 2px, 3px 100%', opacity: 0.6
-      }} />
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 9999, background: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03))', backgroundSize: '100% 2px, 3px 100%', opacity: 0.6 }} />
 
       <header style={{ zIndex: 100, padding: '12px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #222', background: 'rgba(5,5,5,0.9)', backdropFilter: 'blur(10px)' }}>
         <div style={{ display: 'flex', gap: '15px' }}>
@@ -402,7 +315,7 @@ export default function Home() {
                      </div>
                 </div>
                 <div style={{ background: '#111', padding: '15px', borderRadius: '8px', border: '1px solid #222', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                     <img src="/jupiter-logo.png" alt="Jupiter" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
+                     <img src="/demon-logo.jpg" alt="Logo" style={{ width: '32px', height: '32px', objectFit: 'contain', borderRadius: '50%' }} />
                      <div>
                         <h4 style={{ margin: 0, fontSize: '12px', color: '#fff', fontWeight: 'bold' }}>POWERED BY JUPITER</h4>
                         <p style={{ margin: 0, fontSize: '10px', color: '#00ff41' }}>V6 API Integration</p>

@@ -2,16 +2,13 @@
 
 import React, { useMemo } from 'react';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 export default function AppWalletProvider({ children }) {
-  // 🚀 NUCLEAR FIX: We found a valid key.
-  // We switched 'wss://' to 'https://' because the app needs HTTP to send transactions.
-  const endpoint = 'https://mainnet.helius-rpc.com/?api-key=bacbe1c4-e2b2-453a-b52d-b2465e08a9dc';
+  // NEW KEY INTEGRATED
+  const endpoint = 'https://mainnet.helius-rpc.com/?api-key=691928df-d5b6-40c4-aa85-f00f6723d838';
 
-  // Empty wallets list allows auto-detection of mobile/browser wallets
   const wallets = useMemo(() => [], []);
 
   return (
