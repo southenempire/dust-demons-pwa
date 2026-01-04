@@ -1,38 +1,31 @@
-/* --- WALLET BUTTON OVERRIDES (Fixing the UI) --- */
-.wallet-adapter-button {
+/* --- SURGICAL BUTTON FIX --- */
+
+/* 1. Force the button to be a single purple block */
+.wallet-adapter-button-trigger {
   width: 100% !important;
-  height: 48px !important;
+  height: 50px !important;
   background-color: #5b21b6 !important;
-  /* Matches your Purple theme */
-  color: #fff !important;
+  /* Your Theme Purple */
+  border: 1px solid #8b5cf6 !important;
+  border-radius: 6px !important;
+  justify-content: center !important;
   font-family: monospace !important;
   font-weight: 900 !important;
-  text-transform: uppercase !important;
-  border-radius: 4px !important;
-  justify-content: center !important;
-  border: 1px solid #8b5cf6 !important;
-  transition: all 0.2s ease-in-out !important;
+  color: #fff !important;
+
+  /* 2. PREVENT TEXT WRAPPING (Fixes the "Select Wallet" stacking issue) */
+  white-space: nowrap !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
-.wallet-adapter-button:not([disabled]):hover {
-  background-color: #4c1d95 !important;
-  border-color: #a78bfa !important;
-}
-
-/* Hide the ugly generic icon if you want a cleaner look */
+/* 3. Hide the ugly default icon to make it cleaner */
 .wallet-adapter-button-start-icon {
   display: none !important;
 }
 
-/* Fix mobile modal z-index so it appears ABOVE your scanner */
-.wallet-adapter-modal-wrapper {
-  background: #0a0a0a !important;
-  border: 1px solid #00ff41 !important;
-  font-family: monospace !important;
-}
-
-.wallet-adapter-modal-title {
-  color: #00ff41 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 2px !important;
+/* 4. Make sure the text inside is visible */
+.wallet-adapter-button {
+  font-size: 14px !important;
+  line-height: 1 !important;
 }

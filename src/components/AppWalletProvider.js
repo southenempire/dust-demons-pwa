@@ -3,24 +3,17 @@
 import React, { useMemo } from 'react';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 export default function AppWalletProvider({ children }) {
-  const network = WalletAdapterNetwork.Mainnet;
-  
-  // FALLBACK: Use public RPC if env var is missing (Prevents "System Failure" crash)
+  // 1. HARDCODED FALLBACK: This guarantees the "System Failure" stops.
+  // We prioritize the Env Var, but if it fails, we use the public mainnet.
   const endpoint = process.env.NEXT_PUBLIC_RPC_URL || 'https://api.mainnet-beta.solana.com';
 
-  const wallets = useMemo(
-    () => [
-      // Standard adapters. Mobile wallets (Jupiter/Phantom) inject themselves automatically.
-      new PhantomWalletAdapter(),
-      new SolflareWalletAdapter(),
-    ],
-    [network]
-  );
+  // 2. AUTO-DETECT MODE: We removed the specific wallet list.
+  // This allows Jupiter Mobile, Phantom, Solflare, and Backpack to auto-inject.
+  const wallets = useMemo(() => [], []);
 
   return (
     <ConnectionProvider endpoint={endpoint}>
