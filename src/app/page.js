@@ -57,59 +57,51 @@ export default function Home() {
 
   const audioRefs = useRef({});
 
- // LOAD STATS & TOKEN MAP (ROBUST VERSION)
+  // INIT DATA
   useEffect(() => {
     setIsMounted(true);
     const saved = localStorage.getItem('demon_stats');
-    if (saved) {
-        setStats(JSON.parse(saved));
-    }
+    if (saved) setStats(JSON.parse(saved));
 
-    // ROBUST TOKEN LIST FETCHER
-    const loadTokenMap = async () => {
+    const fetchTokens = async () => {
+      try {
+        const res = await fetch('https://token.jup.ag/strict');
+        if (!res.ok) throw new Error("Jup blocked");
+        const data = await res.json();
+        setTokenMap(data.reduce((acc, t) => ({ ...acc, [t.address]: t }), {}));
+      } catch (e) {
         try {
-            // Attempt 1: Official Jupiter List
-            const res = await fetch('https://token.jup.ag/strict');
-            if (!res.ok) throw new Error("Blocked");
-            const data = await res.json();
-            const map = {};
-            data.forEach(t => { map[t.address] = t });
-            setTokenMap(map);
+          const res = await fetch('https://raw.githubusercontent.com/solana-labs/token-list/main/src/tokens/solana.tokenlist.json');
+          const data = await res.json();
+          const list = data.tokens || data;
+          setTokenMap(list.reduce((acc, t) => ({ ...acc, [t.address]: t }), {}));
         } catch (err) {
-            console.warn("Primary token list failed, attempting backup...");
-            try {
-                // Attempt 2: GitHub Backup (Censorship Resistant)
-                const res = await fetch('https://raw.githubusercontent.com/solana-labs/token-list/main/src/tokens/solana.tokenlist.json');
-                const data = await res.json();
-                const map = {};
-                // The structure might differ slightly, handle gracefully
-                const tokens = data.tokens || data;
-                tokens.forEach(t => { map[t.address] = t });
-                setTokenMap(map);
-            } catch (err2) {
-                console.warn("All token lists failed. App will run in 'Unknown Asset' mode.");
-                // We do not set an error state here, we just let the app run without logos/symbols.
-            }
+          console.error("Token list failure", err);
         }
-    };
-
-    loadTokenMap();
-
-    const loadSound = (key, url) => {
-      if (typeof window !== 'undefined') {
-        const audio = new Audio(url);
-        audio.volume = 0.5;
-        audioRefs.current[key] = audio;
       }
     };
 
-    loadSound('scan', 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
-    loadSound('burn', 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
-    loadSound('select', 'https://assets.mixkit.co/active_storage/sfx/2577/2577-preview.mp3');
-    loadSound('error', 'https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3'); 
-    loadSound('success', 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3');
-    loadSound('alert', 'https://assets.mixkit.co/active_storage/sfx/2865/2865-preview.mp3');
+    fetchTokens();
+
+    const loadAudio = (key, url) => {
+      if (typeof window === 'undefined') return;
+      const audio = new Audio(url);
+      audio.volume = 0.5;
+      audioRefs.current[key] = audio;
+    };
+
+    const sfx = {
+      scan: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3',
+      burn: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3',
+      select: 'https://assets.mixkit.co/active_storage/sfx/2577/2577-preview.mp3',
+      error: 'https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3',
+      success: 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3',
+      alert: 'https://assets.mixkit.co/active_storage/sfx/2865/2865-preview.mp3'
+    };
+
+    Object.entries(sfx).forEach(([k, v]) => loadAudio(k, v));
   }, []);
+
   // SAVE STATS ON CHANGE
   useEffect(() => {
      if (isMounted) {
