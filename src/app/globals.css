@@ -1,56 +1,36 @@
-@import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Ensure the app fills the entire mobile screen with no white borders */
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #000;
+  overflow: hidden;
+  /* Prevents bounce scroll on iOS */
+  height: 100%;
 }
-/* Starfield / Dust Effect */
-.stars-animation {
+
+main {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+  position: relative;
+}
+
+/* Kills the white "box" look by removing shadows and borders from main containers */
+.app-container {
+  box-shadow: none !important;
+  border: none !important;
+  width: 100vw !important;
+}
+
+/* Standard Mobile Game Background Texture */
+.cyber-grid {
+  position: absolute;
+  inset: 0;
   background-image:
-    radial-gradient(white, rgba(255, 255, 255, .2) 2px, transparent 3px),
-    radial-gradient(white, rgba(255, 255, 255, .15) 1px, transparent 2px),
-    radial-gradient(white, rgba(255, 255, 255, .1) 2px, transparent 3px);
-  background-size: 550px 550px, 350px 350px, 250px 250px;
-  background-position: 0 0, 40px 60px, 130px 270px;
-  animation: starMove 100s linear infinite;
-}
-
-@keyframes starMove {
-  from {
-    transform: translateY(0);
-  }
-
-  to {
-    transform: translateY(-2000px);
-  }
-}
-
-@keyframes shine {
-  to {
-    background-position: 200% center;
-  }
-}
-
-.animate-shine {
-  animation: shine 3s linear infinite;
+    linear-gradient(rgba(0, 255, 65, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 65, 0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
 }
