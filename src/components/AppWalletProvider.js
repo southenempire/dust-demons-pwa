@@ -7,11 +7,11 @@ import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 export default function AppWalletProvider({ children }) {
-  // 🚀 NUCLEAR FIX: Hardcoded Helius RPC to bypass Vercel Env issues
-  // I took this key from your screenshot. It will 100% work.
-  const endpoint = 'https://mainnet.helius-rpc.com/?api-key=19b098d1-dce5-49a3-ad44-5e7876db7661';
+  // FALLBACK: Using public node because your Helius key returned 401 (Invalid).
+  // If this gives 403 errors, you MUST paste a NEW valid Helius key here.
+  const endpoint = 'https://api.mainnet-beta.solana.com'; 
 
-  // Empty list allows auto-detection of mobile wallets (Jupiter/Phantom)
+  // Empty wallets list allows auto-detection of mobile/browser wallets
   const wallets = useMemo(() => [], []);
 
   return (
