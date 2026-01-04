@@ -1,31 +1,59 @@
-/* --- SURGICAL BUTTON FIX --- */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* 1. Force the button to be a single purple block */
+:root {
+  --bg-color: #000000;
+  --text-color: #ffffff;
+  --panel-bg: #111111;
+  --border-color: #333333;
+}
+
+[data-theme='light'] {
+  --bg-color: #ffffff;
+  --text-color: #000000;
+  --panel-bg: #f3f4f6;
+  --border-color: #e5e7eb;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100dvh;
+  background-color: var(--bg-color) !important;
+  color: var(--text-color) !important;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  position: fixed;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
 .wallet-adapter-button-trigger {
   width: 100% !important;
-  height: 50px !important;
+  height: 48px !important;
   background-color: #5b21b6 !important;
-  /* Your Theme Purple */
   border: 1px solid #8b5cf6 !important;
   border-radius: 6px !important;
-  justify-content: center !important;
+  color: #fff !important;
   font-family: monospace !important;
   font-weight: 900 !important;
-  color: #fff !important;
-
-  /* 2. PREVENT TEXT WRAPPING (Fixes the "Select Wallet" stacking issue) */
+  font-size: 14px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
   white-space: nowrap !important;
   display: flex !important;
+  justify-content: center !important;
   align-items: center !important;
+  padding: 0 16px !important;
 }
 
-/* 3. Hide the ugly default icon to make it cleaner */
 .wallet-adapter-button-start-icon {
   display: none !important;
-}
-
-/* 4. Make sure the text inside is visible */
-.wallet-adapter-button {
-  font-size: 14px !important;
-  line-height: 1 !important;
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Skull, Ghost, Crosshair, Zap, Menu, Activity, Shield, CheckCircle2, Circle, AlertTriangle, ExternalLink, WifiOff, Coins, Volume2, VolumeX, Vibrate, FileText, X, EyeOff, Trash2, Target, ArrowRightLeft, AlertOctagon } from 'lucide-react';
+import { Skull, Ghost, Crosshair, Zap, Menu, Activity, Shield, CheckCircle2, Circle, AlertTriangle, ExternalLink, WifiOff, Coins, Volume2, VolumeX, Vibrate, FileText, X, EyeOff, Trash2, Target, ArrowRightLeft, AlertOctagon, Sun, Moon, Monitor } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
@@ -37,6 +37,7 @@ export default function Home() {
   // Settings
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
+  const [themeMode, setThemeMode] = useState('dark'); 
   
   const [phantomErrorId, setPhantomErrorId] = useState(null);
   const [tokenMap, setTokenMap] = useState({}); 
@@ -52,27 +53,51 @@ export default function Home() {
 
   const audioRefs = useRef({});
 
+  // THEME ENGINE
+  useEffect(() => {
+    const applyTheme = () => {
+      const root = document.documentElement;
+      let effectiveTheme = themeMode;
+      
+      if (themeMode === 'system') {
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        effectiveTheme = systemDark ? 'dark' : 'light';
+      }
+
+      root.setAttribute('data-theme', effectiveTheme);
+    };
+
+    applyTheme();
+    
+    if (themeMode === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handler = () => applyTheme();
+      mediaQuery.addEventListener('change', handler);
+      return () => mediaQuery.removeEventListener('change', handler);
+    }
+  }, [themeMode]);
+
   useEffect(() => {
     setIsMounted(true);
-    const saved = localStorage.getItem('demon_stats');
-    if (saved) setStats(JSON.parse(saved));
+    const savedStats = localStorage.getItem('demon_stats');
+    if (savedStats) setStats(JSON.parse(savedStats));
+    
+    const savedTheme = localStorage.getItem('demon_theme');
+    if (savedTheme) setThemeMode(savedTheme);
 
     const fetchTokens = async () => {
       try {
-        // 1. Jupiter
         const res = await fetch('https://token.jup.ag/strict');
         if (!res.ok) throw new Error("Blocked");
         const data = await res.json();
         setTokenMap(data.reduce((acc, t) => ({ ...acc, [t.address]: t }), {}));
       } catch (e) {
         try {
-          // 2. GitHub Backup
           const res = await fetch('https://raw.githubusercontent.com/solana-labs/token-list/main/src/tokens/solana.tokenlist.json');
           const data = await res.json();
           const list = data.tokens || data;
           setTokenMap(list.reduce((acc, t) => ({ ...acc, [t.address]: t }), {}));
         } catch (e2) {
-           // 3. Static Fallback (If internet is super restricted)
            console.warn("Using static fallback");
            const staticMap = {};
            SAFE_MINTS.forEach(m => staticMap[m] = { name: "Safe Asset", logoURI: "" });
@@ -101,8 +126,11 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-     if (isMounted) localStorage.setItem('demon_stats', JSON.stringify(stats));
-  }, [stats, isMounted]);
+     if (isMounted) {
+       localStorage.setItem('demon_stats', JSON.stringify(stats));
+       localStorage.setItem('demon_theme', themeMode);
+     }
+  }, [stats, themeMode, isMounted]);
 
   const playSound = (key) => {
     if (!audioEnabled) return;
@@ -315,37 +343,36 @@ export default function Home() {
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  if (!isMounted) return <div style={{ background: '#000', height: '100dvh', width: '100vw' }} />;
+  if (!isMounted) return <div style={{ background: 'var(--bg-color)', height: '100dvh', width: '100vw' }} />;
 
   return (
     <main style={{ 
-      height: '100dvh', /* Forces app to fit exact screen height on mobile */
-      width: '100vw', 
-      backgroundColor: '#000', 
-      color: '#fff', 
-      position: 'relative', 
-      overflow: 'hidden', /* Stops "rubber banding" scroll */
-      display: 'flex', 
-      flexDirection: 'column', 
-      fontFamily: 'monospace' 
+      height: '100dvh', width: '100vw', 
+      backgroundColor: 'var(--bg-color)', 
+      color: 'var(--text-color)', 
+      position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: 'monospace' 
     }}>
       
-      {/* CRT SCANLINE OVERLAY */ }
+      {/* CRT SCANLINE OVERLAY */}
       <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 9999,
-          background: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03))',
+          backgroundImage: themeMode === 'light' ? 'none' : 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03))',
           backgroundSize: '100% 2px, 3px 100%', opacity: 0.6
       }} />
 
-      <header style={{ zIndex: 100, padding: '12px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #222', background: 'rgba(5,5,5,0.9)', backdropFilter: 'blur(10px)' }}>
+      <header style={{ zIndex: 100, padding: '12px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-color)', backdropFilter: 'blur(10px)' }}>
         <div style={{ display: 'flex', gap: '15px' }}>
-          <div style={{ background: '#111', border: `1px solid ${rankColor}`, padding: '5px 10px', borderRadius: '4px' }}>
-            <p style={{ margin: 0, fontSize: '8px', color: rankColor, fontWeight: 'bold' }}>RANK</p>
-            <h2 style={{ margin: 0, fontSize: '12px', fontWeight: '900', color: '#fff' }}>{currentRank}</h2>
+          {/* LOGO ADDED BACK TO HEADER */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+             <img src="/demon-logo.jpg" alt="Logo" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
+             <div style={{ background: 'var(--panel-bg)', border: `1px solid ${rankColor}`, padding: '5px 10px', borderRadius: '4px' }}>
+               <p style={{ margin: 0, fontSize: '8px', color: rankColor, fontWeight: 'bold' }}>RANK</p>
+               <h2 style={{ margin: 0, fontSize: '12px', fontWeight: '900', color: 'var(--text-color)' }}>{currentRank}</h2>
+             </div>
           </div>
-          <div style={{ background: '#111', border: '1px solid #333', padding: '5px 10px', borderRadius: '4px' }}>
+          <div style={{ background: 'var(--panel-bg)', border: '1px solid var(--border-color)', padding: '5px 10px', borderRadius: '4px' }}>
             <p style={{ margin: 0, fontSize: '8px', color: '#fbbf24' }}>CAREER LOOT</p>
-            <h2 style={{ margin: 0, fontSize: '12px', fontWeight: '900', color: '#fff' }}>{stats.solReclaimed.toFixed(3)} SOL</h2>
+            <h2 style={{ margin: 0, fontSize: '12px', fontWeight: '900', color: 'var(--text-color)' }}>{stats.solReclaimed.toFixed(3)} SOL</h2>
           </div>
         </div>
         <div style={{ transform: 'scale(0.85)' }}><WalletMultiButton /></div>
@@ -353,71 +380,101 @@ export default function Home() {
 
       <AnimatePresence>
         {showMenu && (
-          <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 500 }} style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.95)', padding: '20px', display: 'flex', flexDirection: 'column' }}>
-             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '1px solid #333', paddingBottom: '15px' }}>
-                <h2 style={{ margin: 0, fontSize: '18px', color: '#00ff41' }}>SETTINGS</h2>
-                <button onClick={() => setShowMenu(false)} style={{ background: 'none', border: 'none', color: '#fff' }}><X size={24} /></button>
+          <motion.div 
+            initial={{ y: '100%' }} 
+            animate={{ y: 0 }} 
+            exit={{ y: '100%' }} 
+            transition={{ type: 'spring', damping: 25, stiffness: 500 }} 
+            style={{ 
+              position: 'fixed', 
+              inset: 0, 
+              zIndex: 2000, 
+              backgroundColor: themeMode === 'light' ? '#ffffff' : '#000000', // Explicit Logic
+              padding: '20px', 
+              display: 'flex', 
+              flexDirection: 'column' 
+            }}
+          >
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '1px solid var(--border-color)', paddingBottom: '15px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                   {/* LOGO ADDED TO SETTINGS HEADER */}
+                   <img src="/demon-logo.jpg" alt="Logo" style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
+                   <h2 style={{ margin: 0, fontSize: '18px', color: '#00ff41' }}>SETTINGS</h2>
+                </div>
+                <button onClick={() => setShowMenu(false)} style={{ background: 'none', border: 'none', color: 'var(--text-color)' }}><X size={24} /></button>
              </div>
+             
              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div style={{ background: '#111', padding: '15px', borderRadius: '8px', border: '1px solid #333' }}>
+                
+                {/* THEME TOGGLE */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--panel-bg)', padding: '15px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                   <span style={{ fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-color)' }}>
+                      {themeMode === 'light' ? <Sun size={16}/> : (themeMode === 'dark' ? <Moon size={16}/> : <Monitor size={16}/>)}
+                      THEME
+                   </span>
+                   <div style={{ display: 'flex', gap: '5px', background: 'var(--bg-color)', padding: '4px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                      <button onClick={() => setThemeMode('light')} style={{ padding: '6px', borderRadius: '4px', background: themeMode === 'light' ? '#00ff41' : 'transparent', color: themeMode === 'light' ? '#000' : 'var(--text-color)', border: 'none' }}><Sun size={16}/></button>
+                      <button onClick={() => setThemeMode('dark')} style={{ padding: '6px', borderRadius: '4px', background: themeMode === 'dark' ? '#00ff41' : 'transparent', color: themeMode === 'dark' ? '#000' : 'var(--text-color)', border: 'none' }}><Moon size={16}/></button>
+                      <button onClick={() => setThemeMode('system')} style={{ padding: '6px', borderRadius: '4px', background: themeMode === 'system' ? '#00ff41' : 'transparent', color: themeMode === 'system' ? '#000' : 'var(--text-color)', border: 'none' }}><Monitor size={16}/></button>
+                   </div>
+                </div>
+
+                <div style={{ background: 'var(--panel-bg)', padding: '15px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                         <span style={{ fontSize: '12px', color: '#888' }}>TOTAL BURNED</span>
-                        <span style={{ fontSize: '12px', color: '#fff', fontWeight: 'bold' }}>{stats.totalBurned}</span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-color)', fontWeight: 'bold' }}>{stats.totalBurned}</span>
                      </div>
                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ fontSize: '12px', color: '#888' }}>TOTAL RECLAIMED</span>
                         <span style={{ fontSize: '12px', color: '#fbbf24', fontWeight: 'bold' }}>{stats.solReclaimed.toFixed(4)} SOL</span>
                      </div>
                 </div>
-                <div style={{ background: '#111', padding: '15px', borderRadius: '8px', border: '1px solid #222', display: 'flex', alignItems: 'center', gap: '15px' }}>
+
+                {/* FIXED JUPITER LOGO: USES RELIABLE PUBLIC URL */}
+                <div style={{ background: 'var(--panel-bg)', padding: '15px', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '15px' }}>
                      <img 
-                       src="/demon-logo.jpg" 
-                       onError={(e) => { e.target.onerror = null; e.target.src = "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png"; }}
-                       alt="Logo" 
-                       style={{ width: '32px', height: '32px', objectFit: 'contain', borderRadius: '50%' }} 
+                       src="https://static.jup.ag/jup/icon.png"
+                       onError={(e) => { e.target.style.display = 'none'; }}
+                       alt="Jupiter Logo" 
+                       style={{ width: '32px', height: '32px', objectFit: 'contain' }} 
                      />
                      <div>
-                        <h4 style={{ margin: 0, fontSize: '12px', color: '#fff', fontWeight: 'bold' }}>POWERED BY JUPITER</h4>
-                        <p style={{ margin: 0, fontSize: '10px', color: '#00ff41' }}>V6 API Integration</p>
+                        <h4 style={{ margin: 0, fontSize: '12px', color: 'var(--text-color)', fontWeight: 'bold', letterSpacing: '0.5px' }}>POWERED BY JUPITER</h4>
+                        <p style={{ margin: 0, fontSize: '10px', color: '#00ff41', marginTop: '2px' }}>Intelligence Provider V6 API</p>
                      </div>
                 </div>
-                <div style={{ marginTop: '20px', padding: '15px', background: '#0a0a0a', border: '1px solid #333', borderRadius: '6px', position: 'relative', overflow: 'hidden' }}>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-color)' }}>
+                      {audioEnabled ? <Volume2 color="#00ff41" /> : <VolumeX color="#666" />}
+                      <span>AUDIO FEEDBACK</span>
+                   </div>
+                   <button onClick={() => setAudioEnabled(!audioEnabled)} style={{ background: audioEnabled ? '#00ff41' : 'var(--panel-bg)', color: audioEnabled ? '#000' : 'var(--text-color)', border: 'none', padding: '5px 15px', fontWeight: 'bold' }}>{audioEnabled ? 'ON' : 'OFF'}</button>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-color)' }}>
+                      <Vibrate color={hapticsEnabled ? '#00ff41' : '#666'} />
+                      <span>HAPTIC RECOIL</span>
+                   </div>
+                   <button onClick={() => setHapticsEnabled(!hapticsEnabled)} style={{ background: hapticsEnabled ? '#00ff41' : 'var(--panel-bg)', color: hapticsEnabled ? '#000' : 'var(--text-color)', border: 'none', padding: '5px 15px', fontWeight: 'bold' }}>{hapticsEnabled ? 'ON' : 'OFF'}</button>
+                </div>
+
+                <div style={{ marginTop: '20px', padding: '15px', background: 'var(--panel-bg)', border: '1px solid var(--border-color)', borderRadius: '6px', position: 'relative', overflow: 'hidden' }}>
                     <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '4px', background: '#fbbf24' }} />
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
                         <FileText size={16} color="#fbbf24" />
-                        <h4 style={{ margin: 0, fontSize: '14px', color: '#fbbf24', fontWeight: '900' }}>HOW TO PLAY</h4>
+                        <h4 style={{ margin: 0, fontSize: '14px', color: '#fbbf24', fontWeight: '900', letterSpacing: '1px' }}>HOW TO PLAY</h4>
                     </div>
                     <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12px', color: '#aaa', lineHeight: '1.8' }}>
-                        <li><strong>SCAN:</strong> Find rent accounts and dust.</li>
-                        <li><strong>TARGETS:</strong> <span style={{color:'#fbbf24'}}>Yellow</span>=Dust. <span style={{color:'#3b82f6'}}>Blue</span>=Value. <span style={{color:'#ff0055'}}>Red</span>=Scam.</li>
-                        <li><strong>BURN:</strong> Reclaim 0.002 SOL rent per account.</li>
-                        <li><strong>RANK UP:</strong> Become the <strong>ENTROPY GOD</strong>.</li>
+                        <li><strong>INITIATE SCAN:</strong> Identify rent accounts and dust in your wallet.</li>
+                        <li><strong>IDENTIFY THREATS:</strong> <span style={{color:'#fbbf24'}}>Yellow</span> is Dust (Safe). <span style={{color:'#3b82f6'}}>Blue</span> is Value (Swap). <span style={{color:'#ff0055'}}>Red</span> is Scam.</li>
+                        <li><strong>BURN & PROFIT:</strong> Select targets to reclaim 0.002 SOL rent per account.</li>
+                        <li><strong>RANK UP:</strong> Burn massive batches to achieve <strong>ENTROPY GOD</strong> status.</li>
                     </ul>
                 </div>
              </div>
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {modal.isOpen && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-                <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} style={{ width: '100%', maxWidth: '320px', background: '#0a0a0a', border: `1px solid ${modal.type === 'DANGER' ? '#ff0055' : (modal.type === 'WARNING' ? '#fbbf24' : '#00ff41')}`, borderRadius: '4px', padding: '24px', boxShadow: `0 0 30px ${modal.type === 'DANGER' ? 'rgba(255,0,85,0.2)' : 'rgba(0,255,65,0.1)'}` }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                        {modal.type === 'DANGER' ? <AlertOctagon color="#ff0055" /> : (modal.type === 'WARNING' ? <AlertTriangle color="#fbbf24" /> : <Activity color="#00ff41" />)}
-                        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#fff', letterSpacing: '1px' }}>{modal.title}</h3>
-                    </div>
-                    <p style={{ fontSize: '13px', color: '#888', lineHeight: '1.5', marginBottom: '24px' }}>{modal.message}</p>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <button onClick={closeModal} style={{ flex: 1, padding: '12px', background: '#111', border: '1px solid #333', color: '#fff', fontWeight: 'bold', borderRadius: '4px' }}>CANCEL</button>
-                        {modal.onConfirm ? (
-                             <button onClick={() => { modal.onConfirm(); closeModal(); }} style={{ flex: 1, padding: '12px', background: modal.type === 'DANGER' ? '#ff0055' : (modal.type === 'WARNING' ? '#fbbf24' : '#00ff41'), border: 'none', color: '#000', fontWeight: '900', borderRadius: '4px' }}>{modal.actionLabel}</button>
-                        ) : (
-                             <button onClick={closeModal} style={{ flex: 1, padding: '12px', background: '#00ff41', border: 'none', color: '#000', fontWeight: '900', borderRadius: '4px' }}>ACKNOWLEDGE</button>
-                        )}
-                    </div>
-                </motion.div>
-            </motion.div>
         )}
       </AnimatePresence>
 
@@ -438,7 +495,7 @@ export default function Home() {
                   <p style={{ color: '#00ff41', fontWeight: 'bold', marginTop: '12px', letterSpacing: '2px' }}>INITIATE SCAN</p>
                </div>
             </motion.button>
-            {!publicKey && <p style={{ color: '#333', fontSize: '10px', marginTop: '20px' }}>NEURAL LINK REQUIRED</p>}
+            {!publicKey && <p style={{ color: '#666', fontSize: '10px', marginTop: '20px' }}>NEURAL LINK REQUIRED</p>}
           </div>
         )}
 
@@ -446,14 +503,14 @@ export default function Home() {
           <div style={{ maxWidth: '500px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', color: '#00ff41', marginBottom: '20px', fontSize: '12px', letterSpacing: '2px' }}>DECODING BLOCKCHAIN DATA...</div>
             {[1, 2, 3, 4, 5].map((i) => (
-               <motion.div key={i} initial={{ opacity: 0.3 }} animate={{ opacity: [0.3, 0.6, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }} style={{ height: '80px', background: '#111', marginBottom: '12px', borderRadius: '4px', border: '1px solid #222' }} />
+               <motion.div key={i} initial={{ opacity: 0.3 }} animate={{ opacity: [0.3, 0.6, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }} style={{ height: '80px', background: 'var(--panel-bg)', marginBottom: '12px', borderRadius: '4px', border: '1px solid var(--border-color)' }} />
             ))}
           </div>
         )}
 
         {view === 'INVENTORY' && !loading && result && (
           <div style={{ maxWidth: '500px', margin: '0 auto' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px', padding: '12px', background: '#0a0a0a', border: `1px solid ${selectedIds.length > 0 ? rankColor : '#222'}`, position: 'sticky', top: 0, zIndex: 20 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px', padding: '12px', background: 'var(--panel-bg)', border: `1px solid ${selectedIds.length > 0 ? rankColor : 'var(--border-color)'}`, position: 'sticky', top: 0, zIndex: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <p style={{ fontSize: '10px', color: '#666' }}>SELECTED</p>
@@ -461,11 +518,11 @@ export default function Home() {
                       <h3 style={{ margin: 0, color: rankColor }}>{selectedIds.length} / {result.targets.length}</h3>
                     </div>
                   </div>
-                  <button onClick={handleSelectAllDust} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: '#111', border: '1px solid #fbbf24', color: '#fbbf24', padding: '6px 12px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }}>
+                  <button onClick={handleSelectAllDust} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'var(--bg-color)', border: '1px solid #fbbf24', color: '#fbbf24', padding: '6px 12px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }}>
                      <Target size={12} /> LOCK ON DUST
                   </button>
               </div>
-              <button onClick={confirmExorcism} disabled={!selectedIds.length || burningId} style={{ width: '100%', padding: '10px 20px', background: selectedIds.length ? '#ff0055' : '#111', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold' }}>
+              <button onClick={confirmExorcism} disabled={!selectedIds.length || burningId} style={{ width: '100%', padding: '10px 20px', background: selectedIds.length ? '#ff0055' : 'var(--bg-color)', color: selectedIds.length ? '#fff' : 'var(--text-color)', border: 'none', borderRadius: '4px', fontWeight: 'bold' }}>
                 {burningId ? <Activity className="animate-spin" size={16} /> : `BURN ${selectedIds.length} ASSETS`}
               </button>
             </div>
@@ -474,14 +531,14 @@ export default function Home() {
                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ background: '#00ff4111', border: '1px solid #00ff41', padding: '10px', marginBottom: '15px', borderRadius: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                  <div>
                     <span style={{ fontSize: '10px', color: '#00ff41', fontWeight: 'bold', display: 'block' }}>MISSION SUCCESSFUL</span>
-                    <a href={`https://solscan.io/tx/${lastTx}`} target="_blank" style={{ fontSize: '9px', color: '#fff', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'underline' }}>VIEW ON SOLSCAN <ExternalLink size={8} /></a>
+                    <a href={`https://solscan.io/tx/${lastTx}`} target="_blank" style={{ fontSize: '9px', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'underline' }}>VIEW ON SOLSCAN <ExternalLink size={8} /></a>
                  </div>
                  <button onClick={handleShare} style={{ background: '#00ff41', color: '#000', border: 'none', padding: '6px 12px', fontSize: '10px', fontWeight: '900', borderRadius: '4px' }}>BRAG ON X 🚀</button>
                </motion.div>
             )}
 
             {!result.targets.length ? (
-              <div style={{ textAlign: 'center', padding: '40px', color: '#333' }}>
+              <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-color)' }}>
                 <Shield size={48} style={{ margin: '0 auto 10px auto', opacity: 0.2 }} /> NO THREATS DETECTED
               </div>
             ) : (
@@ -493,10 +550,10 @@ export default function Home() {
         )}
       </div>
 
-      <nav style={{ position: 'fixed', bottom: 0, width: '100%', height: '80px', background: 'rgba(5,5,5,0.95)', borderTop: '1px solid #222', display: 'flex', justifyContent: 'space-around', alignItems: 'center', zIndex: 1000, paddingBottom: '20px' }}>
-        <button onClick={() => setView('SCANNER')} style={{ background: 'none', border: 'none', color: view === 'SCANNER' ? '#00ff41' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}><Crosshair size={24} /><span style={{ fontSize: '9px', fontWeight: 'bold' }}>SCANNER</span></button>
-        <button onClick={() => setView('INVENTORY')} style={{ background: 'none', border: 'none', color: view === 'INVENTORY' ? '#ff0055' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}><Ghost size={24} /><span style={{ fontSize: '9px', fontWeight: 'bold' }}>TARGETS</span></button>
-        <button onClick={() => setShowMenu(true)} style={{ background: 'none', border: 'none', color: '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}><Menu size={24} /><span style={{ fontSize: '9px', fontWeight: 'bold' }}>MENU</span></button>
+      <nav style={{ position: 'fixed', bottom: 0, width: '100%', height: '80px', background: 'var(--bg-color)', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-around', alignItems: 'center', zIndex: 1000, paddingBottom: '20px' }}>
+        <button onClick={() => setView('SCANNER')} style={{ background: 'none', border: 'none', color: view === 'SCANNER' ? '#00ff41' : 'var(--text-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}><Crosshair size={24} /><span style={{ fontSize: '9px', fontWeight: 'bold' }}>SCANNER</span></button>
+        <button onClick={() => setView('INVENTORY')} style={{ background: 'none', border: 'none', color: view === 'INVENTORY' ? '#ff0055' : 'var(--text-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}><Ghost size={24} /><span style={{ fontSize: '9px', fontWeight: 'bold' }}>TARGETS</span></button>
+        <button onClick={() => setShowMenu(true)} style={{ background: 'none', border: 'none', color: 'var(--text-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}><Menu size={24} /><span style={{ fontSize: '9px', fontWeight: 'bold' }}>MENU</span></button>
       </nav>
 
       {shake && <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(255,0,0,0.15)', zIndex: 2000, pointerEvents: 'none' }} />}
@@ -519,7 +576,7 @@ function BountyPoster({ data, selected, onSelect, showError }) {
   const [imgError, setImgError] = useState(false);
 
   return (
-    <motion.div onClick={onSelect} whileTap={!isPhantom ? { scale: 0.98 } : { x: [0, -5, 5, -5, 5, 0] }} style={{ background: selected ? 'rgba(0,255,65,0.05)' : '#0a0a0a', borderTop: `1px solid ${mainColor}`, borderRight: `1px solid ${mainColor}`, borderBottom: `1px solid ${mainColor}`, borderLeft: `4px ${isPhantom ? 'dashed' : 'solid'} ${accentColor}`, padding: '12px', marginBottom: '12px', position: 'relative', borderRadius: '4px', cursor: isPhantom ? 'not-allowed' : 'pointer', overflow: 'hidden' }}>
+    <motion.div onClick={onSelect} whileTap={!isPhantom ? { scale: 0.98 } : { x: [0, -5, 5, -5, 5, 0] }} style={{ background: selected ? 'rgba(0,255,65,0.05)' : 'var(--panel-bg)', borderTop: `1px solid ${mainColor}`, borderRight: `1px solid ${mainColor}`, borderBottom: `1px solid ${mainColor}`, borderLeft: `4px ${isPhantom ? 'dashed' : 'solid'} ${accentColor}`, padding: '12px', marginBottom: '12px', position: 'relative', borderRadius: '4px', cursor: isPhantom ? 'not-allowed' : 'pointer', overflow: 'hidden' }}>
       <AnimatePresence>
         {showError && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, backgroundColor: 'rgba(20, 0, 0, 0.9)' }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, zIndex: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '1px solid #ff0055' }}>
@@ -530,34 +587,34 @@ function BountyPoster({ data, selected, onSelect, showError }) {
 
       <div style={{ display: 'flex', gap: '15px' }}>
         <div style={{ position: 'relative', width: '70px', height: '90px', flexShrink: 0 }}>
-          <div style={{ width: '100%', height: '100%', background: '#000', border: '1px solid #333', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '100%', height: '100%', background: 'var(--bg-color)', border: '1px solid var(--border-color)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {data.image && !imgError ? (
               <img src={data.image} onError={() => setImgError(true)} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: selected ? 1 : 0.6, filter: isPhantom ? 'grayscale(100%)' : 'none' }} />
             ) : (isEmpty ? <Trash2 color="#999" size={30} /> : isScam ? <Skull color="#ff0055" size={30} /> : isTradeable ? <ArrowRightLeft color="#3b82f6" size={30} /> : isDust ? <Coins color="#fbbf24" size={30} /> : <Circle color="#333" size={30} />)}
           </div>
-          <div style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#000', borderRadius: '50%' }}>
-            {isPhantom ? <EyeOff size={20} color="#444" /> : selected ? <CheckCircle2 size={20} color="#00ff41" fill="#000" /> : <Circle size={20} color="#333" />}
+          <div style={{ position: 'absolute', top: '-6px', right: '-6px', background: 'var(--bg-color)', borderRadius: '50%' }}>
+            {isPhantom ? <EyeOff size={20} color="#444" /> : selected ? <CheckCircle2 size={20} color="#00ff41" fill="#000" /> : <Circle size={20} color="var(--border-color)" />}
           </div>
         </div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '900', color: selected ? '#00ff41' : (isPhantom ? '#666' : '#fff'), letterSpacing: '0.5px', maxWidth: '180px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{data.name}</h4>
+            <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '900', color: selected ? '#00ff41' : (isPhantom ? '#666' : 'var(--text-color)'), letterSpacing: '0.5px', maxWidth: '180px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{data.name}</h4>
             {isScam && <AlertTriangle size={14} color="#ff0055" />}
             {isTradeable && <ArrowRightLeft size={14} color="#3b82f6" />}
             {(isDust || isEmpty) && <Coins size={14} color="#fbbf24" />}
           </div>
           <div style={{ display: 'flex', gap: '5px', marginTop: '6px' }}>
              {isPhantom ? (
-               <span style={{ fontSize: '9px', padding: '2px 4px', background: '#111', color: '#666', border: '1px solid #333' }}><WifiOff size={8} /> ERROR</span>
+               <span style={{ fontSize: '9px', padding: '2px 4px', background: 'var(--bg-color)', color: '#666', border: '1px solid var(--border-color)' }}><WifiOff size={8} /> ERROR</span>
              ) : (
-               <span style={{ fontSize: '9px', padding: '2px 4px', background: '#111', color: isScam ? '#ff0055' : (isTradeable ? '#3b82f6' : (isDust || isEmpty ? '#fbbf24' : '#666')), border: `1px solid ${isScam ? '#ff0055' : (isTradeable ? '#1d4ed8' : (isDust || isEmpty ? '#fbbf24' : '#222'))}` }}>
+               <span style={{ fontSize: '9px', padding: '2px 4px', background: 'var(--bg-color)', color: isScam ? '#ff0055' : (isTradeable ? '#3b82f6' : (isDust || isEmpty ? '#fbbf24' : '#666')), border: `1px solid ${isScam ? '#ff0055' : (isTradeable ? '#1d4ed8' : (isDust || isEmpty ? '#fbbf24' : 'var(--border-color)'))}` }}>
                  {isScam ? 'SCAM - HIGH RISK' : (isEmpty ? 'EMPTY ACCOUNT' : (isTradeable ? `VALUE: $${data.usdValue.toFixed(2)}` : 'DUST'))}
                </span>
              )}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', borderTop: '1px solid #1a1a1a', paddingTop: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', borderTop: '1px solid var(--border-color)', paddingTop: '8px' }}>
              <p style={{ margin: 0, fontSize: '13px', fontWeight: '900', color: isPhantom ? '#444' : '#fbbf24', display: 'flex', alignItems: 'center', gap: '4px' }}><Zap size={10} fill="currentColor" /> {isPhantom ? 'UNKNOWN' : (isEmpty ? '0 BAL' : data.displayVal)}</p>
-             <span style={{ fontSize: '8px', padding: '2px 6px', background: selected ? '#00ff41' : '#111', color: selected ? '#000' : '#444', borderRadius: '2px', fontWeight: 'bold' }}>{isPhantom ? 'LOCKED' : (selected ? 'LOCKED ON' : 'ACTIVE')}</span>
+             <span style={{ fontSize: '8px', padding: '2px 6px', background: selected ? '#00ff41' : 'var(--bg-color)', color: selected ? '#000' : '#444', borderRadius: '2px', fontWeight: 'bold' }}>{isPhantom ? 'LOCKED' : (selected ? 'LOCKED ON' : 'ACTIVE')}</span>
           </div>
         </div>
       </div>
