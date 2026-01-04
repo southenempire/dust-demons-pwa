@@ -33,15 +33,23 @@ export default function Home() {
   const [shake, setShake] = useState(false);
   const [lastTx, setLastTx] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
+  
+  // Settings
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
+  
   const [phantomErrorId, setPhantomErrorId] = useState(null);
   const [tokenMap, setTokenMap] = useState({}); 
   const [priceMap, setPriceMap] = useState({}); 
+  
   const [stats, setStats] = useState({ totalBurned: 0, solReclaimed: 0.0 });
   const [currentRank, setCurrentRank] = useState('VOID STALKER');
   const [rankColor, setRankColor] = useState('#00ff41');
-  const [modal, setModal] = useState({ isOpen: false, type: 'INFO', title: '', message: '', actionLabel: '', onConfirm: null });
+
+  const [modal, setModal] = useState({ 
+    isOpen: false, type: 'INFO', title: '', message: '', actionLabel: '', onConfirm: null 
+  });
+
   const audioRefs = useRef({});
 
   useEffect(() => {
@@ -51,17 +59,25 @@ export default function Home() {
 
     const fetchTokens = async () => {
       try {
+        // 1. Jupiter
         const res = await fetch('https://token.jup.ag/strict');
         if (!res.ok) throw new Error("Blocked");
         const data = await res.json();
         setTokenMap(data.reduce((acc, t) => ({ ...acc, [t.address]: t }), {}));
       } catch (e) {
         try {
+          // 2. GitHub Backup
           const res = await fetch('https://raw.githubusercontent.com/solana-labs/token-list/main/src/tokens/solana.tokenlist.json');
           const data = await res.json();
           const list = data.tokens || data;
           setTokenMap(list.reduce((acc, t) => ({ ...acc, [t.address]: t }), {}));
-        } catch {}
+        } catch (e2) {
+           // 3. Static Fallback (If internet is super restricted)
+           console.warn("Using static fallback");
+           const staticMap = {};
+           SAFE_MINTS.forEach(m => staticMap[m] = { name: "Safe Asset", logoURI: "" });
+           setTokenMap(staticMap);
+        }
       }
     };
     fetchTokens();
@@ -72,6 +88,7 @@ export default function Home() {
       audio.volume = 0.5;
       audioRefs.current[key] = audio;
     };
+
     const sfx = {
       scan: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3',
       burn: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3',
@@ -83,7 +100,9 @@ export default function Home() {
     Object.entries(sfx).forEach(([k, v]) => loadAudio(k, v));
   }, []);
 
-  useEffect(() => { if (isMounted) localStorage.setItem('demon_stats', JSON.stringify(stats)); }, [stats, isMounted]);
+  useEffect(() => {
+     if (isMounted) localStorage.setItem('demon_stats', JSON.stringify(stats));
+  }, [stats, isMounted]);
 
   const playSound = (key) => {
     if (!audioEnabled) return;
@@ -95,15 +114,19 @@ export default function Home() {
     playSound('alert');
     setModal({ isOpen: true, type, title, message, actionLabel, onConfirm });
   };
+
   const closeModal = () => setModal(prev => ({ ...prev, isOpen: false }));
 
   useEffect(() => {
-    if (isMounted && publicKey) { setResult(null); setView('SCANNER'); setSelectedIds([]); setLastTx(null); }
+    if (isMounted && publicKey) {
+      setResult(null); setView('SCANNER'); setSelectedIds([]); setLastTx(null);
+    }
   }, [publicKey, isMounted]);
 
   useEffect(() => {
     const count = selectedIds.length;
-    let rank = 'VOID STALKER', color = '#00ff41'; 
+    let rank = 'VOID STALKER';
+    let color = '#00ff41'; 
     if (count === 0) {
        if (stats.totalBurned > 100) { rank = 'ENTROPY GOD'; color = '#d946ef'; }
        else if (stats.totalBurned > 50) { rank = 'PROTOCOL DEMON'; color = '#ef4444'; }
@@ -117,7 +140,9 @@ export default function Home() {
   }, [selectedIds, stats]);
 
   const triggerHaptic = (pattern = 50) => {
-    if (hapticsEnabled && typeof window !== 'undefined' && window.navigator?.vibrate) window.navigator.vibrate(pattern);
+    if (hapticsEnabled && typeof window !== 'undefined' && window.navigator?.vibrate) {
+      window.navigator.vibrate(pattern);
+    }
   };
 
   async function fetchPrices(mints) {
@@ -139,6 +164,7 @@ export default function Home() {
   async function handleScan() {
     if (!publicKey) return;
     setLoading(true); setView('INVENTORY'); triggerHaptic(100); playSound('scan');
+    
     try {
       let nftAssets = [];
       try {
@@ -147,7 +173,8 @@ export default function Home() {
       } catch {}
 
       const accounts = await connection.getParsedTokenAccountsByOwner(publicKey, { programId: TOKEN_PROGRAM_ID });
-      const rawTokens = [], mintsToCheck = [];
+      const rawTokens = [];
+      const mintsToCheck = [];
 
       for (const item of accounts.value) {
         const info = item.account.data.parsed.info;
@@ -162,8 +189,10 @@ export default function Home() {
           balance: info.tokenAmount.amount, uiBalance: info.tokenAmount.uiAmount
         });
       }
+
       const prices = await fetchPrices(mintsToCheck);
       setPriceMap(prices);
+
       const targets = [...nftAssets, ...rawTokens].map((a, i) => {
         const nameLower = (a.name || '').toLowerCase();
         const isScam = nameLower.includes('visit') || nameLower.includes('.com') || nameLower.includes('reward');
@@ -173,6 +202,7 @@ export default function Home() {
         const isTradeable = val > 0.01; 
         const isDust = !isScam && !isEmpty && !isTradeable;
         const isPhantom = !a.mint;
+
         return {
           id: a.mint || `unknown-${i}`,
           tokenAccount: a.tokenAccount || a.pubkey || null, 
@@ -182,6 +212,7 @@ export default function Home() {
           usdValue: val, isScam, isDust, isTradeable, isEmpty, isPhantom
         };
       });
+
       targets.sort((a, b) => (a.isScam ? -1 : (b.isScam ? 1 : (a.isDust ? -1 : 1))));
       setResult({ targets });
     } catch (error) {
@@ -219,11 +250,13 @@ export default function Home() {
     try {
       const txs = []; let burned = 0;
       const { blockhash } = await connection.getLatestBlockhash('finalized');
+
       for (let i = 0; i < selectedIds.length; i += 10) {
         const chunk = selectedIds.slice(i, i + 10);
         const tx = new Transaction();
         tx.feePayer = publicKey; tx.recentBlockhash = blockhash;
         let hasIx = false;
+
         for (const id of chunk) {
           const t = result.targets.find(x => x.id === id);
           if (!t) continue;
@@ -233,7 +266,9 @@ export default function Home() {
               const info = await connection.getAccountInfo(tokenAcc);
               if (info) {
                   const bal = await connection.getTokenAccountBalance(tokenAcc);
-                  if (BigInt(bal.value.amount) > BigInt(0)) tx.add(createBurnInstruction(tokenAcc, mint, publicKey, BigInt(bal.value.amount)));
+                  if (BigInt(bal.value.amount) > BigInt(0)) {
+                      tx.add(createBurnInstruction(tokenAcc, mint, publicKey, BigInt(bal.value.amount)));
+                  }
                   tx.add(createCloseAccountInstruction(tokenAcc, publicKey, publicKey));
                   hasIx = true; burned++;
               }
@@ -241,13 +276,17 @@ export default function Home() {
         }
         if (hasIx) txs.push(tx);
       }
+
       if (!txs.length) { showModal('INFO', 'INVALID', 'No valid targets.'); setBurningId(null); return; }
+
       const signed = await signAllTransactions(txs);
       setLoading(true);
       const sigs = await Promise.all(signed.map(t => connection.sendRawTransaction(t.serialize())));
       await connection.confirmTransaction(sigs[sigs.length - 1], 'confirmed');
+      
       setLastTx(sigs[sigs.length - 1]); setShake(true); triggerHaptic([100, 50, 100]); 
       playSound('burn'); setTimeout(() => playSound('success'), 500);
+
       const rent = (burned * 0.002).toFixed(3);
       setStats(p => ({ totalBurned: p.totalBurned + burned, solReclaimed: p.solReclaimed + parseFloat(rent) }));
       setLootDrops(p => [...p, { id: Date.now(), text: `+${rent} SOL` }]);
@@ -276,11 +315,27 @@ export default function Home() {
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  if (!isMounted) return <div style={{ background: '#000', height: '100vh', width: '100vw' }} />;
+  if (!isMounted) return <div style={{ background: '#000', height: '100dvh', width: '100vw' }} />;
 
   return (
-    <main style={{ minHeight: '100vh', backgroundColor: '#000', color: '#fff', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: 'monospace' }}>
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 9999, background: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03))', backgroundSize: '100% 2px, 3px 100%', opacity: 0.6 }} />
+    <main style={{ 
+      height: '100dvh', /* Forces app to fit exact screen height on mobile */
+      width: '100vw', 
+      backgroundColor: '#000', 
+      color: '#fff', 
+      position: 'relative', 
+      overflow: 'hidden', /* Stops "rubber banding" scroll */
+      display: 'flex', 
+      flexDirection: 'column', 
+      fontFamily: 'monospace' 
+    }}>
+      
+      {/* CRT SCANLINE OVERLAY */ }
+      <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 9999,
+          background: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03))',
+          backgroundSize: '100% 2px, 3px 100%', opacity: 0.6
+      }} />
 
       <header style={{ zIndex: 100, padding: '12px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #222', background: 'rgba(5,5,5,0.9)', backdropFilter: 'blur(10px)' }}>
         <div style={{ display: 'flex', gap: '15px' }}>
@@ -315,7 +370,12 @@ export default function Home() {
                      </div>
                 </div>
                 <div style={{ background: '#111', padding: '15px', borderRadius: '8px', border: '1px solid #222', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                     <img src="/demon-logo.jpg" alt="Logo" style={{ width: '32px', height: '32px', objectFit: 'contain', borderRadius: '50%' }} />
+                     <img 
+                       src="/demon-logo.jpg" 
+                       onError={(e) => { e.target.onerror = null; e.target.src = "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png"; }}
+                       alt="Logo" 
+                       style={{ width: '32px', height: '32px', objectFit: 'contain', borderRadius: '50%' }} 
+                     />
                      <div>
                         <h4 style={{ margin: 0, fontSize: '12px', color: '#fff', fontWeight: 'bold' }}>POWERED BY JUPITER</h4>
                         <p style={{ margin: 0, fontSize: '10px', color: '#00ff41' }}>V6 API Integration</p>
@@ -361,7 +421,15 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: '120px', zIndex: 10 }}>
+      <div style={{ 
+        flex: 1, 
+        overflowY: 'auto', 
+        overflowX: 'hidden',
+        padding: '16px', 
+        paddingBottom: '100px', 
+        zIndex: 10,
+        position: 'relative'
+      }}>
         {view === 'SCANNER' && !loading && (
           <div style={{ display: 'flex', flexDirection: 'column', height: '65vh', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
             <motion.button whileTap={{ scale: 0.9 }} onClick={handleScan} style={{ background: 'none', border: 'none', cursor: 'pointer', alignSelf: 'center' }}>
