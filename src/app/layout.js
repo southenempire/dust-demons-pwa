@@ -1,5 +1,5 @@
 import './globals.css';
-import AppWalletProvider from '../components/AppWalletProvider'; // Adjust path as needed
+import AppWalletProvider from '../components/AppWalletProvider'; // <--- THIS MATCHES src/components/AppWalletProvider.js
 
 export const metadata = {
   title: 'Dust Demons',
@@ -17,6 +17,3 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
-
-
-
