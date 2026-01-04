@@ -1,36 +1,38 @@
-/* Ensure the app fills the entire mobile screen with no white borders */
-html,
-body {
-  margin: 0;
-  padding: 0;
-  background-color: #000;
-  overflow: hidden;
-  /* Prevents bounce scroll on iOS */
-  height: 100%;
+/* --- WALLET BUTTON OVERRIDES (Fixing the UI) --- */
+.wallet-adapter-button {
+  width: 100% !important;
+  height: 48px !important;
+  background-color: #5b21b6 !important;
+  /* Matches your Purple theme */
+  color: #fff !important;
+  font-family: monospace !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  border-radius: 4px !important;
+  justify-content: center !important;
+  border: 1px solid #8b5cf6 !important;
+  transition: all 0.2s ease-in-out !important;
 }
 
-main {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #000;
-  position: relative;
+.wallet-adapter-button:not([disabled]):hover {
+  background-color: #4c1d95 !important;
+  border-color: #a78bfa !important;
 }
 
-/* Kills the white "box" look by removing shadows and borders from main containers */
-.app-container {
-  box-shadow: none !important;
-  border: none !important;
-  width: 100vw !important;
+/* Hide the ugly generic icon if you want a cleaner look */
+.wallet-adapter-button-start-icon {
+  display: none !important;
 }
 
-/* Standard Mobile Game Background Texture */
-.cyber-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(0, 255, 65, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 255, 65, 0.02) 1px, transparent 1px);
-  background-size: 40px 40px;
-  pointer-events: none;
+/* Fix mobile modal z-index so it appears ABOVE your scanner */
+.wallet-adapter-modal-wrapper {
+  background: #0a0a0a !important;
+  border: 1px solid #00ff41 !important;
+  font-family: monospace !important;
+}
+
+.wallet-adapter-modal-title {
+  color: #00ff41 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 2px !important;
 }
