@@ -1,18 +1,15 @@
-import { Inter } from "next/font/google";
-import "./globals.css";
-import AppWalletProvider from "./components/AppWalletProvider";
-
-const inter = Inter({ subsets: ["latin"] });
+import './globals.css';
+import AppWalletProvider from '../components/AppWalletProvider'; // Adjust path as needed
 
 export const metadata = {
-  title: "Dust Demons",
-  description: "Clean your wallet. Reclaim your rent.",
+  title: 'Dust Demons',
+  description: 'Solana Rent Recovery',
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body>
         <AppWalletProvider>
           {children}
         </AppWalletProvider>
@@ -20,3 +17,6 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
+
+
+
