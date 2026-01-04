@@ -8,8 +8,10 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { PublicKey, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { createBurnInstruction, createCloseAccountInstruction, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { fetchMyBounties } from '@/utils/nftFetcher';
+import confetti from 'canvas-confetti';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
+// 🛡️ HARDCODED BACKUP: If network fails, we still know these are safe/popular
 const SAFE_MINTS = [
   'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC
   'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB', // USDT
@@ -34,10 +36,10 @@ export default function Home() {
   const [lastTx, setLastTx] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
   
-  // Settings
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
   const [themeMode, setThemeMode] = useState('dark'); 
+  const [isJupiterMobile, setIsJupiterMobile] = useState(false);
   
   const [phantomErrorId, setPhantomErrorId] = useState(null);
   const [tokenMap, setTokenMap] = useState({}); 
@@ -53,22 +55,53 @@ export default function Home() {
 
   const audioRefs = useRef({});
 
-  // THEME ENGINE
+  // 🎊 IMPROVED CONFETTI: Bigger burst for better "Flow"
+  const triggerConfetti = () => {
+    const duration = 3000;
+    const end = Date.now() + duration;
+
+    (function frame() {
+      confetti({
+        particleCount: 5,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: ['#00ff41', '#fbbf24'] // Matrix Green & Gold
+      });
+      confetti({
+        particleCount: 5,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: ['#00ff41', '#fbbf24']
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    }());
+  };
+
   useEffect(() => {
     const applyTheme = () => {
       const root = document.documentElement;
       let effectiveTheme = themeMode;
-      
       if (themeMode === 'system') {
         const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         effectiveTheme = systemDark ? 'dark' : 'light';
       }
-
       root.setAttribute('data-theme', effectiveTheme);
     };
-
     applyTheme();
     
+    // DETECT JUPITER
+    if (typeof navigator !== 'undefined') {
+        const ua = navigator.userAgent || '';
+        if (ua.includes('Jupiter') || window?.solana?.isJupiter) {
+            setIsJupiterMobile(true);
+        }
+    }
+
     if (themeMode === 'system') {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       const handler = () => applyTheme();
@@ -81,7 +114,6 @@ export default function Home() {
     setIsMounted(true);
     const savedStats = localStorage.getItem('demon_stats');
     if (savedStats) setStats(JSON.parse(savedStats));
-    
     const savedTheme = localStorage.getItem('demon_theme');
     if (savedTheme) setThemeMode(savedTheme);
 
@@ -92,17 +124,9 @@ export default function Home() {
         const data = await res.json();
         setTokenMap(data.reduce((acc, t) => ({ ...acc, [t.address]: t }), {}));
       } catch (e) {
-        try {
-          const res = await fetch('https://raw.githubusercontent.com/solana-labs/token-list/main/src/tokens/solana.tokenlist.json');
-          const data = await res.json();
-          const list = data.tokens || data;
-          setTokenMap(list.reduce((acc, t) => ({ ...acc, [t.address]: t }), {}));
-        } catch (e2) {
-           console.warn("Using static fallback");
-           const staticMap = {};
-           SAFE_MINTS.forEach(m => staticMap[m] = { name: "Safe Asset", logoURI: "" });
-           setTokenMap(staticMap);
-        }
+        console.warn("Primary list failed, using backup.");
+        // 🛡️ FALLBACK: If network fails, proceed with empty map (we just won't show logos, but app works)
+        setTokenMap({}); 
       }
     };
     fetchTokens();
@@ -153,8 +177,7 @@ export default function Home() {
 
   useEffect(() => {
     const count = selectedIds.length;
-    let rank = 'VOID STALKER';
-    let color = '#00ff41'; 
+    let rank = 'VOID STALKER', color = '#00ff41'; 
     if (count === 0) {
        if (stats.totalBurned > 100) { rank = 'ENTROPY GOD'; color = '#d946ef'; }
        else if (stats.totalBurned > 50) { rank = 'PROTOCOL DEMON'; color = '#ef4444'; }
@@ -176,16 +199,11 @@ export default function Home() {
   async function fetchPrices(mints) {
     if (!mints.length) return {};
     try {
-      const chunks = [];
-      for (let i = 0; i < mints.length; i += 100) chunks.push(mints.slice(i, i + 100));
-      let prices = {};
-      for (const chunk of chunks) {
-        const res = await fetch(`https://api.jup.ag/price/v2?ids=${chunk.join(',')}`);
-        if (!res.ok) continue; 
-        const data = await res.json();
-        if (data.data) prices = { ...prices, ...data.data };
-      }
-      return prices;
+      // 🛡️ SILENT FAIL: If API returns 401, just return empty object instead of crashing scan
+      const res = await fetch(`https://api.jup.ag/price/v2?ids=${mints.slice(0, 100).join(',')}`);
+      if (!res.ok) return {}; 
+      const data = await res.json();
+      return data.data || {};
     } catch { return {}; }
   }
 
@@ -201,8 +219,7 @@ export default function Home() {
       } catch {}
 
       const accounts = await connection.getParsedTokenAccountsByOwner(publicKey, { programId: TOKEN_PROGRAM_ID });
-      const rawTokens = [];
-      const mintsToCheck = [];
+      const rawTokens = [], mintsToCheck = [];
 
       for (const item of accounts.value) {
         const info = item.account.data.parsed.info;
@@ -313,7 +330,10 @@ export default function Home() {
       await connection.confirmTransaction(sigs[sigs.length - 1], 'confirmed');
       
       setLastTx(sigs[sigs.length - 1]); setShake(true); triggerHaptic([100, 50, 100]); 
-      playSound('burn'); setTimeout(() => playSound('success'), 500);
+      playSound('burn'); 
+      triggerConfetti(); // 🎉
+      
+      setTimeout(() => playSound('success'), 500);
 
       const rent = (burned * 0.002).toFixed(3);
       setStats(p => ({ totalBurned: p.totalBurned + burned, solReclaimed: p.solReclaimed + parseFloat(rent) }));
@@ -353,7 +373,6 @@ export default function Home() {
       position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: 'monospace' 
     }}>
       
-      {/* CRT SCANLINE OVERLAY */}
       <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 9999,
           backgroundImage: themeMode === 'light' ? 'none' : 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03))',
@@ -362,7 +381,6 @@ export default function Home() {
 
       <header style={{ zIndex: 100, padding: '12px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-color)', backdropFilter: 'blur(10px)' }}>
         <div style={{ display: 'flex', gap: '15px' }}>
-          {/* LOGO ADDED BACK TO HEADER */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
              <img src="/demon-logo.jpg" alt="Logo" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
              <div style={{ background: 'var(--panel-bg)', border: `1px solid ${rankColor}`, padding: '5px 10px', borderRadius: '4px' }}>
@@ -378,26 +396,24 @@ export default function Home() {
         <div style={{ transform: 'scale(0.85)' }}><WalletMultiButton /></div>
       </header>
 
+      {isJupiterMobile && (
+        <div style={{ background: '#00ff41', color: '#000', textAlign: 'center', fontSize: '10px', fontWeight: '900', padding: '4px', letterSpacing: '1px' }}>
+           ⚡ JUPITER MOBILE NATIVE MODE ACTIVE
+        </div>
+      )}
+
       <AnimatePresence>
         {showMenu && (
           <motion.div 
-            initial={{ y: '100%' }} 
-            animate={{ y: 0 }} 
-            exit={{ y: '100%' }} 
-            transition={{ type: 'spring', damping: 25, stiffness: 500 }} 
+            initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 500 }} 
             style={{ 
-              position: 'fixed', 
-              inset: 0, 
-              zIndex: 2000, 
-              backgroundColor: themeMode === 'light' ? '#ffffff' : '#000000', // Explicit Logic
-              padding: '20px', 
-              display: 'flex', 
-              flexDirection: 'column' 
+              position: 'fixed', inset: 0, zIndex: 2000, 
+              backgroundColor: themeMode === 'light' ? '#ffffff' : '#000000', 
+              padding: '20px', display: 'flex', flexDirection: 'column' 
             }}
           >
              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '1px solid var(--border-color)', paddingBottom: '15px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                   {/* LOGO ADDED TO SETTINGS HEADER */}
                    <img src="/demon-logo.jpg" alt="Logo" style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
                    <h2 style={{ margin: 0, fontSize: '18px', color: '#00ff41' }}>SETTINGS</h2>
                 </div>
@@ -405,8 +421,6 @@ export default function Home() {
              </div>
              
              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                
-                {/* THEME TOGGLE */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--panel-bg)', padding: '15px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                    <span style={{ fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-color)' }}>
                       {themeMode === 'light' ? <Sun size={16}/> : (themeMode === 'dark' ? <Moon size={16}/> : <Monitor size={16}/>)}
@@ -430,34 +444,12 @@ export default function Home() {
                      </div>
                 </div>
 
-                {/* FIXED JUPITER LOGO: USES RELIABLE PUBLIC URL */}
                 <div style={{ background: 'var(--panel-bg)', padding: '15px', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                     <img 
-                       src="https://static.jup.ag/jup/icon.png"
-                       onError={(e) => { e.target.style.display = 'none'; }}
-                       alt="Jupiter Logo" 
-                       style={{ width: '32px', height: '32px', objectFit: 'contain' }} 
-                     />
+                     <img src="https://static.jup.ag/jup/icon.png" onError={(e) => { e.target.style.display = 'none'; }} alt="Jupiter Logo" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
                      <div>
                         <h4 style={{ margin: 0, fontSize: '12px', color: 'var(--text-color)', fontWeight: 'bold', letterSpacing: '0.5px' }}>POWERED BY JUPITER</h4>
                         <p style={{ margin: 0, fontSize: '10px', color: '#00ff41', marginTop: '2px' }}>Intelligence Provider V6 API</p>
                      </div>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-color)' }}>
-                      {audioEnabled ? <Volume2 color="#00ff41" /> : <VolumeX color="#666" />}
-                      <span>AUDIO FEEDBACK</span>
-                   </div>
-                   <button onClick={() => setAudioEnabled(!audioEnabled)} style={{ background: audioEnabled ? '#00ff41' : 'var(--panel-bg)', color: audioEnabled ? '#000' : 'var(--text-color)', border: 'none', padding: '5px 15px', fontWeight: 'bold' }}>{audioEnabled ? 'ON' : 'OFF'}</button>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-color)' }}>
-                      <Vibrate color={hapticsEnabled ? '#00ff41' : '#666'} />
-                      <span>HAPTIC RECOIL</span>
-                   </div>
-                   <button onClick={() => setHapticsEnabled(!hapticsEnabled)} style={{ background: hapticsEnabled ? '#00ff41' : 'var(--panel-bg)', color: hapticsEnabled ? '#000' : 'var(--text-color)', border: 'none', padding: '5px 15px', fontWeight: 'bold' }}>{hapticsEnabled ? 'ON' : 'OFF'}</button>
                 </div>
 
                 <div style={{ marginTop: '20px', padding: '15px', background: 'var(--panel-bg)', border: '1px solid var(--border-color)', borderRadius: '6px', position: 'relative', overflow: 'hidden' }}>
@@ -478,15 +470,7 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      <div style={{ 
-        flex: 1, 
-        overflowY: 'auto', 
-        overflowX: 'hidden',
-        padding: '16px', 
-        paddingBottom: '100px', 
-        zIndex: 10,
-        position: 'relative'
-      }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', paddingBottom: '100px', zIndex: 10, position: 'relative' }}>
         {view === 'SCANNER' && !loading && (
           <div style={{ display: 'flex', flexDirection: 'column', height: '65vh', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
             <motion.button whileTap={{ scale: 0.9 }} onClick={handleScan} style={{ background: 'none', border: 'none', cursor: 'pointer', alignSelf: 'center' }}>
