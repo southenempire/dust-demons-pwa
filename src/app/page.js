@@ -11,7 +11,7 @@ import { fetchMyBounties } from '@/utils/nftFetcher';
 import confetti from 'canvas-confetti';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
-// 🛡️ HARDCODED BACKUP: If network fails, we still know these are safe/popular
+// 🛡️ HARDCODED BACKUP
 const SAFE_MINTS = [
   'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC
   'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB', // USDT
@@ -20,6 +20,9 @@ const SAFE_MINTS = [
   '4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R', // RAY
   'HzwqbKZw8RnJC2DVFrMp21571a81X1e56z6V7V2c62d', // BONK
 ];
+
+// 🔑 JUPITER API KEY (Get from portal.jup.ag)
+const JUPITER_API_KEY = 'a338f239-2d73-4caa-a9a5-a691d51a54f2'; 
 
 export default function Home() {
   const { publicKey, signAllTransactions } = useWallet();
@@ -55,30 +58,14 @@ export default function Home() {
 
   const audioRefs = useRef({});
 
-  // 🎊 IMPROVED CONFETTI: Bigger burst for better "Flow"
+  // 🎊 CONFETTI ENGINE
   const triggerConfetti = () => {
     const duration = 3000;
     const end = Date.now() + duration;
-
     (function frame() {
-      confetti({
-        particleCount: 5,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0 },
-        colors: ['#00ff41', '#fbbf24'] // Matrix Green & Gold
-      });
-      confetti({
-        particleCount: 5,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1 },
-        colors: ['#00ff41', '#fbbf24']
-      });
-
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
-      }
+      confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#00ff41', '#fbbf24'] });
+      confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#00ff41', '#fbbf24'] });
+      if (Date.now() < end) requestAnimationFrame(frame);
     }());
   };
 
@@ -94,12 +81,9 @@ export default function Home() {
     };
     applyTheme();
     
-    // DETECT JUPITER
     if (typeof navigator !== 'undefined') {
         const ua = navigator.userAgent || '';
-        if (ua.includes('Jupiter') || window?.solana?.isJupiter) {
-            setIsJupiterMobile(true);
-        }
+        if (ua.includes('Jupiter') || window?.solana?.isJupiter) setIsJupiterMobile(true);
     }
 
     if (themeMode === 'system') {
@@ -124,9 +108,13 @@ export default function Home() {
         const data = await res.json();
         setTokenMap(data.reduce((acc, t) => ({ ...acc, [t.address]: t }), {}));
       } catch (e) {
-        console.warn("Primary list failed, using backup.");
-        // 🛡️ FALLBACK: If network fails, proceed with empty map (we just won't show logos, but app works)
-        setTokenMap({}); 
+        console.warn("Using backup token list.");
+        try {
+          const res = await fetch('https://raw.githubusercontent.com/solana-labs/token-list/main/src/tokens/solana.tokenlist.json');
+          const data = await res.json();
+          const list = data.tokens || data;
+          setTokenMap(list.reduce((acc, t) => ({ ...acc, [t.address]: t }), {}));
+        } catch { setTokenMap({}); }
       }
     };
     fetchTokens();
@@ -196,14 +184,25 @@ export default function Home() {
     }
   };
 
+  // 🚀 FIXED: Includes API Key Header to fix 401 Error
   async function fetchPrices(mints) {
     if (!mints.length) return {};
     try {
-      // 🛡️ SILENT FAIL: If API returns 401, just return empty object instead of crashing scan
-      const res = await fetch(`https://api.jup.ag/price/v2?ids=${mints.slice(0, 100).join(',')}`);
-      if (!res.ok) return {}; 
-      const data = await res.json();
-      return data.data || {};
+      const chunks = [];
+      for (let i = 0; i < mints.length; i += 100) chunks.push(mints.slice(i, i + 100));
+      let prices = {};
+      for (const chunk of chunks) {
+        // Headers are now included
+        const res = await fetch(`https://api.jup.ag/price/v2?ids=${chunk.join(',')}`, {
+            headers: {
+                'x-api-key': JUPITER_API_KEY
+            }
+        });
+        if (!res.ok) continue; 
+        const data = await res.json();
+        if (data.data) prices = { ...prices, ...data.data };
+      }
+      return prices;
     } catch { return {}; }
   }
 
@@ -382,6 +381,7 @@ export default function Home() {
       <header style={{ zIndex: 100, padding: '12px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-color)', backdropFilter: 'blur(10px)' }}>
         <div style={{ display: 'flex', gap: '15px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+             {/* HEADER LOGO */}
              <img src="/demon-logo.jpg" alt="Logo" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
              <div style={{ background: 'var(--panel-bg)', border: `1px solid ${rankColor}`, padding: '5px 10px', borderRadius: '4px' }}>
                <p style={{ margin: 0, fontSize: '8px', color: rankColor, fontWeight: 'bold' }}>RANK</p>
@@ -445,9 +445,9 @@ export default function Home() {
                 </div>
 
                 <div style={{ background: 'var(--panel-bg)', padding: '15px', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                     <img src="https://static.jup.ag/jup/icon.png" onError={(e) => { e.target.style.display = 'none'; }} alt="Jupiter Logo" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
+                     <img src="/demon-logo.jpg" alt="Dust Demon Logo" style={{ width: '32px', height: '32px', objectFit: 'contain', borderRadius: '50%' }} />
                      <div>
-                        <h4 style={{ margin: 0, fontSize: '12px', color: 'var(--text-color)', fontWeight: 'bold', letterSpacing: '0.5px' }}>POWERED BY JUPITER</h4>
+                        <h4 style={{ margin: 0, fontSize: '12px', color: 'var(--text-color)', fontWeight: 'bold', letterSpacing: '0.5px' }}>POWERED BY DUST DEMONS</h4>
                         <p style={{ margin: 0, fontSize: '10px', color: '#00ff41', marginTop: '2px' }}>Intelligence Provider V6 API</p>
                      </div>
                 </div>
