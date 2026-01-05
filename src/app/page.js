@@ -21,7 +21,7 @@ const SAFE_MINTS = [
   'HzwqbKZw8RnJC2DVFrMp21571a81X1e56z6V7V2c62d', // BONK
 ];
 
-// 🔑 JUPITER API KEY (Get from portal.jup.ag)
+// 🔑 JUPITER API KEY (Inserted)
 const JUPITER_API_KEY = 'a338f239-2d73-4caa-a9a5-a691d51a54f2'; 
 
 export default function Home() {
@@ -81,9 +81,12 @@ export default function Home() {
     };
     applyTheme();
     
+    // DETECT JUPITER
     if (typeof navigator !== 'undefined') {
         const ua = navigator.userAgent || '';
-        if (ua.includes('Jupiter') || window?.solana?.isJupiter) setIsJupiterMobile(true);
+        if (ua.includes('Jupiter') || window?.solana?.isJupiter) {
+            setIsJupiterMobile(true);
+        }
     }
 
     if (themeMode === 'system') {
@@ -103,18 +106,15 @@ export default function Home() {
 
     const fetchTokens = async () => {
       try {
-        const res = await fetch('https://token.jup.ag/strict');
+        // 🚀 FIXED: Switched to GitHub Raw (100% Uptime, No API Key needed for list)
+        const res = await fetch('https://raw.githubusercontent.com/solana-labs/token-list/main/src/tokens/solana.tokenlist.json');
         if (!res.ok) throw new Error("Blocked");
         const data = await res.json();
-        setTokenMap(data.reduce((acc, t) => ({ ...acc, [t.address]: t }), {}));
+        const list = data.tokens || data; 
+        setTokenMap(list.reduce((acc, t) => ({ ...acc, [t.address]: t }), {}));
       } catch (e) {
-        console.warn("Using backup token list.");
-        try {
-          const res = await fetch('https://raw.githubusercontent.com/solana-labs/token-list/main/src/tokens/solana.tokenlist.json');
-          const data = await res.json();
-          const list = data.tokens || data;
-          setTokenMap(list.reduce((acc, t) => ({ ...acc, [t.address]: t }), {}));
-        } catch { setTokenMap({}); }
+        console.warn("Token list failed, defaulting to basic.");
+        setTokenMap({}); 
       }
     };
     fetchTokens();
@@ -184,7 +184,7 @@ export default function Home() {
     }
   };
 
-  // 🚀 FIXED: Includes API Key Header to fix 401 Error
+  // 🚀 FIXED: Includes YOUR API Key Header to fix 401 Error
   async function fetchPrices(mints) {
     if (!mints.length) return {};
     try {
