@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Skull, Ghost, Crosshair, Zap, Menu, Activity, Shield, CheckCircle2, Circle, AlertTriangle, ExternalLink, WifiOff, Coins, Volume2, VolumeX, Vibrate, FileText, X, EyeOff, Trash2, Target, ArrowRightLeft, AlertOctagon, Sun, Moon, Monitor, ChevronRight, Wallet, Radar, Flame, Scan, Terminal, Settings, Info } from 'lucide-react';
+import { Skull, Ghost, Crosshair, Zap, Menu, Activity, Shield, CheckCircle2, Circle, AlertTriangle, ExternalLink, WifiOff, Coins, Volume2, VolumeX, Vibrate, FileText, X, EyeOff, Trash2, Target, ArrowRightLeft, AlertOctagon, Sun, Moon, Monitor, ChevronRight, Wallet, Radar, Flame, Scan, Terminal, Settings, Info, Trophy, Star, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
@@ -25,29 +25,19 @@ const FALLBACK_METADATA = {
 const SAFE_MINTS = Object.keys(FALLBACK_METADATA);
 const JUPITER_API_KEY = 'a338f239-2d73-4caa-a9a5-a691d51a54f2'; 
 
-// 🎨 THEME CONFIGURATION (Dynamic Colors)
+// 🎨 THEME CONFIGURATION
 const THEMES = {
   dark: {
-    bg: '#030303',
-    panel: '#0a0a0a',
-    border: '#222',
-    text: '#e0e0e0',
-    textDim: '#666',
-    accent: '#00ff41',
-    grid: 'rgba(0, 255, 65, 0.03)',
-    vignette: 'radial-gradient(circle at center, transparent 0%, #000 90%)',
-    modal: '#111'
+    bg: '#030303', panel: '#0a0a0a', border: '#222', text: '#e0e0e0', textDim: '#666',
+    accent: '#00ff41', grid: 'rgba(0, 255, 65, 0.03)', vignette: 'radial-gradient(circle at center, transparent 0%, #000 90%)', modal: '#111'
   },
   light: {
-    bg: '#eef2f5',
-    panel: '#ffffff',
-    border: '#cbd5e1',
-    text: '#0f172a',
-    textDim: '#64748b',
-    accent: '#00ff41', // Keep neon green for brand identity
-    grid: 'rgba(0, 0, 0, 0.05)',
-    vignette: 'radial-gradient(circle at center, transparent 50%, rgba(0,0,0,0.05) 100%)',
-    modal: '#fff'
+    bg: '#eef2f5', panel: '#ffffff', border: '#cbd5e1', text: '#0f172a', textDim: '#64748b',
+    accent: '#00ff41', grid: 'rgba(0, 0, 0, 0.05)', vignette: 'radial-gradient(circle at center, transparent 50%, rgba(0,0,0,0.05) 100%)', modal: '#fff'
+  },
+  jupiter: {
+    bg: '#000000', panel: '#131c21', border: '#1f2937', text: '#ffffff', textDim: '#9ca3af',
+    accent: '#00c2ff', grid: 'rgba(0, 194, 255, 0.05)', vignette: 'radial-gradient(circle at center, transparent 0%, #000 80%)', modal: '#111'
   }
 };
 
@@ -72,11 +62,6 @@ const itemVariants = {
   show: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
 };
 
-const scannerVariants = {
-  idle: { rotate: 0 },
-  scan: { rotate: 360, transition: { duration: 3, repeat: Infinity, ease: "linear" } }
-};
-
 export default function Home() {
   const { publicKey, signAllTransactions } = useWallet();
   const { connection } = useConnection();
@@ -91,17 +76,22 @@ export default function Home() {
   const [shake, setShake] = useState(false);
   const [lastTx, setLastTx] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(0); 
   
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
   const [themeMode, setThemeMode] = useState('dark'); 
   const [isJupiterMobile, setIsJupiterMobile] = useState(false);
   
-  const [phantomErrorId, setPhantomErrorId] = useState(null);
   const [tokenMap, setTokenMap] = useState(FALLBACK_METADATA); 
   const [priceMap, setPriceMap] = useState({}); 
   
-  const [stats, setStats] = useState({ totalBurned: 0, solReclaimed: 0.0 });
+  const [stats, setStats] = useState({ totalBurned: 0, solReclaimed: 0.0, xp: 0, level: 1 });
+  const [dailyMissions, setDailyMissions] = useState([
+      { id: 1, text: "Incinerate 3 Targets", target: 3, current: 0, completed: false, xp: 100 },
+      { id: 2, text: "Reclaim 0.01 SOL", target: 0.01, current: 0, completed: false, xp: 200 }
+  ]);
+  
   const [currentRank, setCurrentRank] = useState('VOID STALKER');
   const [rankColor, setRankColor] = useState('#00ff41');
 
@@ -109,28 +99,65 @@ export default function Home() {
     isOpen: false, type: 'INFO', title: '', message: '', actionLabel: '', onConfirm: null 
   });
 
-  const theme = THEMES[themeMode];
+  const getActiveTheme = () => {
+      if (isJupiterMobile) return THEMES.jupiter;
+      if (themeMode === 'system') {
+          if (typeof window !== 'undefined' && window.matchMedia) {
+              return window.matchMedia('(prefers-color-scheme: dark)').matches ? THEMES.dark : THEMES.light;
+          }
+          return THEMES.dark;
+      }
+      return THEMES[themeMode] || THEMES.dark;
+  };
+  
+  const theme = getActiveTheme();
   const audioRefs = useRef({});
+  // 🛡️ REFS for Load State
+  const isFirstLoad = useRef(true);
+
+  // 🛡️ RANK UPDATE LOGIC (SILENT ON LOAD FIX)
+  useEffect(() => {
+      const levels = ['VOID STALKER', 'DUST HUNTER', 'ENTROPY KILLER', 'SOLANA REAPER', 'JUPITER VANGUARD', 'GOD OF VOID'];
+      const newRank = levels[Math.min(Math.floor(stats.xp / 500), levels.length - 1)];
+      
+      if (newRank !== currentRank) {
+          setCurrentRank(newRank);
+          // ONLY trigger if the time-lock has expired
+          if (!isFirstLoad.current) {
+              triggerConfetti();
+              if (audioEnabled) playSound('success');
+          }
+          
+          if (newRank === 'JUPITER VANGUARD') setRankColor('#00c2ff');
+          else if (newRank === 'GOD OF VOID') setRankColor('#fbbf24');
+      }
+  }, [stats.xp]);
 
   const triggerConfetti = () => {
     const duration = 3000;
     const end = Date.now() + duration;
     (function frame() {
-      confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#00ff41', '#fbbf24'] });
-      confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#00ff41', '#fbbf24'] });
+      confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: [theme.accent, '#fbbf24'] });
+      confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: [theme.accent, '#fbbf24'] });
       if (Date.now() < end) requestAnimationFrame(frame);
     }());
   };
 
-  // 🛡️ EFFECT 1: INITIALIZATION
   useEffect(() => {
     setIsMounted(true);
     const savedStats = localStorage.getItem('demon_stats');
     if (savedStats) setStats(JSON.parse(savedStats));
 
+    // 🛡️ SILENT LOAD TIMER: Disable animations after 1 second
+    setTimeout(() => {
+        isFirstLoad.current = false;
+    }, 1000);
+
     if (typeof navigator !== 'undefined') {
         const ua = navigator.userAgent || '';
-        if (ua.includes('Jupiter') || window?.solana?.isJupiter) setIsJupiterMobile(true);
+        if (ua.includes('Jupiter') || window?.solana?.isJupiter) {
+            setIsJupiterMobile(true);
+        }
     }
 
     const fetchTokens = async () => {
@@ -175,6 +202,16 @@ export default function Home() {
     };
     Object.entries(sfx).forEach(([k, v]) => loadAudio(k, v));
   }, []);
+
+  useEffect(() => {
+      localStorage.setItem('demon_stats', JSON.stringify(stats));
+  }, [stats]);
+
+  useEffect(() => {
+      if (publicKey && connection) {
+          connection.getBalance(publicKey).then(bal => setWalletBalance(bal / LAMPORTS_PER_SOL));
+      }
+  }, [publicKey, connection]);
 
   const playSound = (key) => {
     if (!audioEnabled) return;
@@ -265,7 +302,8 @@ export default function Home() {
         const isScam = nameLower.includes('visit') || nameLower.includes('.com') || nameLower.includes('reward');
         const isEmpty = parseFloat(a.balance || '0') === 0;
         const isKnownSafe = SAFE_MINTS.includes(a.mint);
-        const isHighValue = val > 1.0;
+        
+        const isHighValue = val > 10.0; // 🚀 $10 THRESHOLD
         
         const isRentClaimable = isKnownSafe && isEmpty;
         const isSafe = (isKnownSafe || isHighValue) && !isRentClaimable; 
@@ -274,7 +312,7 @@ export default function Home() {
         const isDust = !isScam && !isEmpty && !isSafe && !isTradeable;
         const isPhantom = !a.mint;
 
-        if (isSafe && !isRentClaimable) return null;
+        if (isKnownSafe && !isHighValue && !isRentClaimable) return null;
 
         return {
           id: a.mint || `unknown-${i}`,
@@ -282,7 +320,7 @@ export default function Home() {
           name: a.name || 'UNKNOWN',
           type: isEmpty ? 'EMPTY' : (isScam ? 'SCAM' : (isSafe ? 'SAFE' : 'DUST')),
           image: a.image, displayVal: a.uiBalance !== undefined ? a.uiBalance : (a.val || '0'), 
-          usdValue: val, isScam, isDust, isTradeable, isEmpty, isPhantom, isSafe, isRentClaimable
+          usdValue: val, isScam, isDust, isTradeable, isEmpty, isPhantom, isSafe, isRentClaimable, isHighValue
         };
       }).filter(Boolean);
 
@@ -301,9 +339,25 @@ export default function Home() {
     setLoading(false);
   }
 
-  const handleSwap = (target) => {
-      playSound('success'); 
-      window.location.href = `https://jup.ag/swap/${target.id}-SOL`;
+ const handleSwap = (target) => {
+      playSound('success');
+      
+      if (window.Jupiter) {
+          window.Jupiter.init({
+              displayMode: 'modal',
+              endpoint: 'https://api.mainnet-beta.solana.com', 
+              strictTokenList: false,
+              formProps: {
+                  initialInputMint: target.id,
+                  initialOutputMint: 'So11111111111111111111111111111111111111112', 
+                  fixedOutputMint: true,
+              },
+          });
+          setStats(p => ({ ...p, xp: p.xp + 50 })); 
+      } else {
+          console.warn("Jupiter Script not loaded yet, redirecting...");
+          window.location.href = `https://jup.ag/swap/${target.id}-SOL`;
+      }
   };
 
   const toggleSelect = (target) => {
@@ -374,7 +428,20 @@ export default function Home() {
       setTimeout(() => playSound('success'), 500);
 
       const rent = (burned * 0.002).toFixed(3);
-      setStats(p => ({ totalBurned: p.totalBurned + burned, solReclaimed: p.solReclaimed + parseFloat(rent) }));
+      setStats(p => {
+          const newTotal = p.totalBurned + burned;
+          const newSol = p.solReclaimed + parseFloat(rent);
+          
+          const newMissions = dailyMissions.map(m => {
+              if (m.id === 1) return { ...m, current: newTotal, completed: newTotal >= m.target };
+              if (m.id === 2) return { ...m, current: newSol, completed: newSol >= m.target };
+              return m;
+          });
+          
+          const xpGain = burned * 10;
+          return { ...p, totalBurned: newTotal, solReclaimed: newSol, xp: p.xp + xpGain };
+      });
+
       setLootDrops(p => [...p, { id: Date.now(), text: `+${rent} SOL` }]);
       setResult(p => ({ ...p, targets: p.targets.filter(t => !selectedIds.includes(t.id)) }));
       setSelectedIds([]);
@@ -406,7 +473,6 @@ export default function Home() {
       position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: 'monospace' 
     }}>
       
-      {/* 🚀 DYNAMIC BACKGROUND */}
       <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
           backgroundImage: `linear-gradient(${theme.grid} 1px, transparent 1px), linear-gradient(90deg, ${theme.grid} 1px, transparent 1px)`,
@@ -416,26 +482,25 @@ export default function Home() {
 
       <div className="scanner-line" style={{
           position: 'absolute', top: 0, left: 0, right: 0, height: '4px',
-          background: 'linear-gradient(90deg, transparent, #00ff41, transparent)',
-          boxShadow: '0 0 15px #00ff41',
+          background: `linear-gradient(90deg, transparent, ${theme.accent}, transparent)`,
+          boxShadow: `0 0 15px ${theme.accent}`,
           zIndex: 5, animation: 'scan 2.5s linear infinite', pointerEvents: 'none'
       }} />
       <style jsx>{`@keyframes scan { 0% { top: -10%; opacity: 0; } 20% { opacity: 1; } 100% { top: 110%; opacity: 0; } }`}</style>
 
-      {/* 🚀 MODAL OVERLAY */}
       <AnimatePresence>
         {modal.isOpen && (
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
           >
-             <div style={{ background: theme.modal, border: `1px solid ${modal.type === 'DANGER' ? '#ff0055' : '#00ff41'}`, padding: '24px', borderRadius: '8px', maxWidth: '300px', width: '100%', textAlign: 'center', boxShadow: '0 0 30px rgba(0,0,0,0.5)' }}>
-                <h3 style={{ color: modal.type === 'DANGER' ? '#ff0055' : '#00ff41', margin: '0 0 10px 0', fontSize: '18px', fontWeight: '900' }}>{modal.title}</h3>
+             <div style={{ background: theme.modal, border: `1px solid ${modal.type === 'DANGER' ? '#ff0055' : theme.accent}`, padding: '24px', borderRadius: '8px', maxWidth: '300px', width: '100%', textAlign: 'center', boxShadow: '0 0 30px rgba(0,0,0,0.5)' }}>
+                <h3 style={{ color: modal.type === 'DANGER' ? '#ff0055' : theme.accent, margin: '0 0 10px 0', fontSize: '18px', fontWeight: '900' }}>{modal.title}</h3>
                 <p style={{ color: theme.textDim, fontSize: '12px', marginBottom: '20px' }}>{modal.message}</p>
                 <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
                    <button onClick={closeModal} style={{ padding: '10px 20px', background: 'transparent', border: `1px solid ${theme.border}`, color: theme.textDim, borderRadius: '4px', fontWeight: 'bold' }}>CANCEL</button>
                    {modal.onConfirm && (
-                     <button onClick={modal.onConfirm} style={{ padding: '10px 20px', background: modal.type === 'DANGER' ? '#ff0055' : '#00ff41', border: 'none', color: '#fff', borderRadius: '4px', fontWeight: 'bold' }}>{modal.actionLabel}</button>
+                     <button onClick={modal.onConfirm} style={{ padding: '10px 20px', background: modal.type === 'DANGER' ? '#ff0055' : theme.accent, border: 'none', color: '#fff', borderRadius: '4px', fontWeight: 'bold' }}>{modal.actionLabel}</button>
                    )}
                 </div>
              </div>
@@ -452,9 +517,18 @@ export default function Home() {
                <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px', color: theme.text }}>{currentRank}</h2>
              </div>
           </div>
-          <div style={{ background: theme.panel, border: `1px solid ${theme.border}`, padding: '4px 10px', borderRadius: '2px' }}>
-            <p style={{ margin: 0, fontSize: '8px', color: '#fbbf24', letterSpacing: '1px' }}>LOOT</p>
-            <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text }}>{stats.solReclaimed.toFixed(3)} SOL</h2>
+          <div style={{ display: 'flex', gap: '10px' }}>
+             <div style={{ background: theme.panel, border: `1px solid ${theme.border}`, padding: '4px 10px', borderRadius: '2px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <Wallet size={12} color={theme.accent} />
+                <div>
+                    <p style={{ margin: 0, fontSize: '8px', color: theme.textDim }}>BALANCE</p>
+                    <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text }}>{walletBalance.toFixed(3)} SOL</h2>
+                </div>
+             </div>
+             <div style={{ background: theme.panel, border: `1px solid ${theme.border}`, padding: '4px 10px', borderRadius: '2px' }}>
+                <p style={{ margin: 0, fontSize: '8px', color: '#fbbf24', letterSpacing: '1px' }}>LOOT</p>
+                <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text }}>{stats.solReclaimed.toFixed(3)}</h2>
+             </div>
           </div>
         </div>
         <div style={{ transform: 'scale(0.85)' }}><WalletMultiButton /></div>
@@ -474,8 +548,8 @@ export default function Home() {
           >
              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: `1px solid ${theme.border}`, paddingBottom: '15px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                   <Terminal size={24} color="#00ff41" />
-                   <h2 style={{ margin: 0, fontSize: '18px', color: '#00ff41', fontFamily: 'monospace' }}>SYSTEM CONFIG</h2>
+                   <Terminal size={24} color={theme.accent} />
+                   <h2 style={{ margin: 0, fontSize: '18px', color: theme.accent, fontFamily: 'monospace' }}>SYSTEM CONFIG</h2>
                 </div>
                 <button onClick={() => setShowMenu(false)} style={{ background: 'none', border: 'none', color: theme.text }}><X size={24} /></button>
              </div>
@@ -495,9 +569,9 @@ export default function Home() {
                 <div style={{ background: theme.panel, padding: '15px', borderRadius: '4px', border: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', gap: '15px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 'bold', color: theme.text }}>
-                            {audioEnabled ? <Volume2 size={16} color="#00ff41" /> : <VolumeX size={16} color={theme.textDim} />} AUDIO
+                            {audioEnabled ? <Volume2 size={16} color={theme.accent} /> : <VolumeX size={16} color={theme.textDim} />} AUDIO
                         </span>
-                        <button onClick={() => setAudioEnabled(!audioEnabled)} style={{ background: audioEnabled ? 'rgba(0,255,65,0.2)' : theme.bg, border: `1px solid ${audioEnabled ? '#00ff41' : theme.border}`, color: audioEnabled ? '#00ff41' : theme.textDim, padding: '4px 12px', fontSize: '10px', fontWeight: 'bold', borderRadius: '2px' }}>
+                        <button onClick={() => setAudioEnabled(!audioEnabled)} style={{ background: audioEnabled ? `${theme.accent}20` : theme.bg, border: `1px solid ${audioEnabled ? theme.accent : theme.border}`, color: audioEnabled ? theme.accent : theme.textDim, padding: '4px 12px', fontSize: '10px', fontWeight: 'bold', borderRadius: '2px' }}>
                             {audioEnabled ? 'ONLINE' : 'MUTED'}
                         </button>
                     </div>
@@ -511,11 +585,12 @@ export default function Home() {
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 'bold', color: theme.text }}>
-                            {themeMode === 'light' ? <Sun size={16} color="#00ff41" /> : <Moon size={16} color="#00ff41" />} THEME
+                            {themeMode === 'light' ? <Sun size={16} color={theme.accent} /> : (themeMode === 'system' ? <Monitor size={16} color={theme.accent} /> : <Moon size={16} color={theme.accent} />)} THEME
                         </span>
                         <div style={{ display: 'flex', gap: '5px' }}>
-                            <button onClick={() => setThemeMode('dark')} style={{ padding: '6px', background: themeMode === 'dark' ? '#00ff41' : theme.bg, color: themeMode === 'dark' ? '#000' : theme.textDim, border: `1px solid ${theme.border}`, borderRadius: '2px' }}><Moon size={14}/></button>
-                            <button onClick={() => setThemeMode('light')} style={{ padding: '6px', background: themeMode === 'light' ? '#00ff41' : theme.bg, color: themeMode === 'light' ? '#000' : theme.textDim, border: `1px solid ${theme.border}`, borderRadius: '2px' }}><Sun size={14}/></button>
+                            <button onClick={() => setThemeMode('dark')} style={{ padding: '6px', background: themeMode === 'dark' ? theme.accent : theme.bg, color: themeMode === 'dark' ? '#000' : theme.textDim, border: `1px solid ${theme.border}`, borderRadius: '2px' }}><Moon size={14}/></button>
+                            <button onClick={() => setThemeMode('light')} style={{ padding: '6px', background: themeMode === 'light' ? theme.accent : theme.bg, color: themeMode === 'light' ? '#000' : theme.textDim, border: `1px solid ${theme.border}`, borderRadius: '2px' }}><Sun size={14}/></button>
+                            <button onClick={() => setThemeMode('system')} style={{ padding: '6px', background: themeMode === 'system' ? theme.accent : theme.bg, color: themeMode === 'system' ? '#000' : theme.textDim, border: `1px solid ${theme.border}`, borderRadius: '2px' }}><Monitor size={14}/></button>
                         </div>
                     </div>
                 </div>
@@ -552,25 +627,26 @@ export default function Home() {
                 onClick={handleScan} 
                 style={{ background: 'none', border: 'none', cursor: 'pointer', position: 'relative' }}
             >
-               <motion.div variants={radarVariants} animate="ping" style={{ position: 'absolute', inset: -25, border: '1px solid #00ff41', borderRadius: '50%', opacity: 0.5 }} />
-               <motion.div variants={radarVariants} animate="ping" style={{ position: 'absolute', inset: -50, border: '1px solid #00ff41', borderRadius: '50%', opacity: 0.2, animationDelay: '0.5s' }} />
+               <motion.div variants={radarVariants} animate="ping" style={{ position: 'absolute', inset: -25, border: `1px solid ${theme.accent}`, borderRadius: '50%', opacity: 0.5 }} />
+               <motion.div variants={radarVariants} animate="ping" style={{ position: 'absolute', inset: -50, border: `1px solid ${theme.accent}`, borderRadius: '50%', opacity: 0.2, animationDelay: '0.5s' }} />
 
-               <div style={{ width: '160px', height: '160px', borderRadius: '50%', border: '2px solid #00ff41', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: theme.panel, boxShadow: '0 0 40px rgba(0,255,65,0.2)', position: 'relative' }}>
-                  <div style={{ position: 'absolute', width: '100%', height: '2px', background: '#00ff41', top: '50%', opacity: 0.3 }} />
-                  <div style={{ position: 'absolute', height: '100%', width: '2px', background: '#00ff41', left: '50%', opacity: 0.3 }} />
-                  <Crosshair size={70} color="#00ff41" strokeWidth={1} />
-                  <p style={{ color: '#00ff41', fontWeight: '900', marginTop: '12px', letterSpacing: '4px', fontSize: '12px' }}>INITIATE</p>
+               <div style={{ width: '160px', height: '160px', borderRadius: '50%', border: `2px solid ${theme.accent}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: theme.panel, boxShadow: `0 0 40px ${theme.accent}40`, position: 'relative' }}>
+                  <div style={{ position: 'absolute', width: '100%', height: '2px', background: theme.accent, top: '50%', opacity: 0.3 }} />
+                  <div style={{ position: 'absolute', height: '100%', width: '2px', background: theme.accent, left: '50%', opacity: 0.3 }} />
+                  <Crosshair size={70} color={theme.accent} strokeWidth={1} />
+                  <p style={{ color: theme.accent, fontWeight: '900', marginTop: '12px', letterSpacing: '4px', fontSize: '12px' }}>INITIATE</p>
                </div>
             </motion.button>
             {!publicKey && <p style={{ color: theme.textDim, fontSize: '10px', marginTop: '40px', letterSpacing: '2px', fontWeight: 'bold' }}>[ AWAITING UPLINK ]</p>}
           </div>
         )}
 
-        {loading && <div style={{ textAlign: 'center', color: '#00ff41', marginTop: '150px', letterSpacing: '3px', fontWeight: '900', fontSize: '12px', animation: 'pulse 1s infinite' }}>SCANNING SECTOR...</div>}
+        {loading && <div style={{ textAlign: 'center', color: theme.accent, marginTop: '150px', letterSpacing: '3px', fontWeight: '900', fontSize: '12px', animation: 'pulse 1s infinite' }}>SCANNING SECTOR...</div>}
 
         {view === 'INVENTORY' && !loading && result && (
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px', padding: '10px', background: theme.panel, border: `1px solid ${selectedIds.length > 0 ? rankColor : theme.border}`, position: 'sticky', top: 0, zIndex: 20, borderRadius: '4px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
+            {/* 🚀 FIXED UI OVERLAP: Added padding and flex-col/gap */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px', padding: '16px', background: theme.panel, border: `1px solid ${selectedIds.length > 0 ? rankColor : theme.border}`, position: 'sticky', top: 0, zIndex: 20, borderRadius: '4px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <h3 style={{ margin: 0, color: rankColor, fontSize: '12px', fontWeight: '900', letterSpacing: '1px' }}>TARGETS: {selectedIds.length}</h3>
                   <button onClick={handleToggleSelectAll} style={{ background: theme.bg, border: '1px solid #fbbf24', color: '#fbbf24', padding: '6px 12px', borderRadius: '2px', fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px' }}>
@@ -607,7 +683,7 @@ export default function Home() {
       </div>
 
       <nav style={{ position: 'fixed', bottom: 0, width: '100%', height: '70px', background: theme.bg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', alignItems: 'center', zIndex: 1000, paddingBottom: '10px' }}>
-        <button onClick={() => setView('SCANNER')} style={{ background: 'none', border: 'none', color: view === 'SCANNER' ? '#00ff41' : theme.textDim, transition: '0.2s' }}><Crosshair size={28} /></button>
+        <button onClick={() => setView('SCANNER')} style={{ background: 'none', border: 'none', color: view === 'SCANNER' ? theme.accent : theme.textDim, transition: '0.2s' }}><Crosshair size={28} /></button>
         <button onClick={() => setView('INVENTORY')} style={{ background: 'none', border: 'none', color: view === 'INVENTORY' ? '#ff0055' : theme.textDim, transition: '0.2s' }}><Ghost size={28} /></button>
         <button onClick={() => setShowMenu(true)} style={{ background: 'none', border: 'none', color: theme.textDim, transition: '0.2s' }}><Settings size={28} /></button>
       </nav>
@@ -626,15 +702,16 @@ export default function Home() {
 }
 
 function BountyPoster({ data, selected, onSelect, onSwap, theme }) {
-  const { isScam, isRentClaimable, isEmpty, isSafe } = data;
+  const { isScam, isRentClaimable, isEmpty, isSafe, isHighValue } = data;
   
-  const mainColor = isRentClaimable ? '#00ff41' : (isScam ? '#ff0055' : '#fbbf24');
+  // 🚀 FIXED: RENT = Green, SCAM = Red, SWAP (High Value) = Blue, DUST = Yellow
+  const mainColor = isRentClaimable ? '#00ff41' : (isScam ? '#ff0055' : (isHighValue ? '#3b82f6' : '#fbbf24'));
   const bgStyle = selected ? `rgba(${isRentClaimable ? '0,255,65' : '255,191,36'}, 0.1)` : theme.panel;
   const [imgError, setImgError] = useState(false);
 
   return (
     <motion.div 
-      onClick={isSafe && !isRentClaimable ? onSwap : onSelect}
+      onClick={isHighValue ? onSwap : onSelect} // Swap if High Value, Select if Dust
       whileHover={{ scale: 1.02, boxShadow: `0 0 20px ${mainColor}30` }} 
       whileTap={{ scale: 0.95 }} 
       style={{ 
@@ -656,7 +733,7 @@ function BountyPoster({ data, selected, onSelect, onSwap, theme }) {
 
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(180deg, ${mainColor}15 0%, transparent 100%)`, position: 'relative' }}>
          <div style={{ position: 'absolute', top: 6, right: 6 }}>
-            {isRentClaimable ? <Wallet size={14} color="#00ff41" /> : (isScam ? <Skull size={14} color="#ff0055" /> : (isSafe ? <Shield size={14} color="#3b82f6" /> : <Target size={14} color="#fbbf24" />))}
+            {isRentClaimable ? <Wallet size={14} color="#00ff41" /> : (isScam ? <Skull size={14} color="#ff0055" /> : (isHighValue ? <ArrowRightLeft size={14} color="#3b82f6" /> : <Target size={14} color="#fbbf24" />))}
          </div>
          
          <div style={{ width: '60px', height: '60px', borderRadius: '50%', border: `2px solid ${mainColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', boxShadow: `0 0 15px ${mainColor}20` }}>
@@ -678,7 +755,7 @@ function BountyPoster({ data, selected, onSelect, onSwap, theme }) {
                background: isRentClaimable ? 'rgba(0,255,65,0.15)' : 'rgba(100,100,100,0.1)', 
                color: mainColor, fontWeight: '900', border: `1px solid ${mainColor}40`, textTransform: 'uppercase'
             }}>
-                {isRentClaimable ? 'CLAIM RENT' : (isScam ? 'THREAT' : 'TARGET')}
+                {isRentClaimable ? 'CLAIM RENT' : (isScam ? 'THREAT' : (isHighValue ? 'SWAP' : 'TARGET'))}
             </span>
          </div>
          {!isEmpty && !isRentClaimable && <p style={{ margin: '4px 0 0 0', fontSize: '9px', color: theme.textDim, textAlign: 'center', fontFamily: 'monospace' }}>{data.displayVal}</p>}
