@@ -1,57 +1,56 @@
-// src/utils/nftFetcher.js
+import { PublicKey } from '@solana/web3.js';
 
-// You really need a dedicated RPC for this. Use a free Helius or QuickNode one if you can.
-// If you don't have one, this public one might be rate-limited.
-const RPC_URL = "https://mainnet.helius-rpc.com/?api-key=bacbe1c4-e2b2-453a-b52d-b2465e08a9dc";
+// 🛡️ HELIUS / RPC CONFIGURATION
+const HELIUS_API_KEY = '6e729352-0402-4522-8367-7703e3396658'; // Use your actual key if different
+const RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
 
-
-// Helper to fix CORS and optimize images
-const toCorsUrl = (url) => {
-  if (!url) return "";
-  // We use wsrv.nl as a proxy. It fixes CORS and converts images to WebP for speed.
-  return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=500&h=500&output=webp`;
-};
-
-export const fetchMyBounties = async (walletAddress) => {
+export async function fetchMyBounties(walletAddress) {
   if (!walletAddress) return [];
-  
+
   try {
+    new PublicKey(walletAddress); // Validate address
+
     const response = await fetch(RPC_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         jsonrpc: '2.0',
-        id: 'hunter-game',
+        id: 'dust-demons-scanner',
         method: 'getAssetsByOwner',
         params: {
           ownerAddress: walletAddress.toString(),
           page: 1,
-          limit: 10,
-          displayOptions: { showNativeBalance: false },
+          limit: 100,
+          displayOptions: {
+            showFungible: true,
+            showNativeBalance: true,
+          },
         },
       }),
     });
 
+    if (!response.ok) return [];
+
     const { result } = await response.json();
-    
     if (!result || !result.items) return [];
 
-    // Filter and Map with the CORS fix
-    return result.items
-      .filter(item => item.content?.links?.image)
-      .map(item => ({
+    return result.items.map((item) => {
+      const isCompressed = item.compression?.compressed || false;
+      return {
         id: item.id,
-        name: item.content.metadata.name || "Unknown Target",
-        // WRAP THE URL HERE
-        image: toCorsUrl(item.content.links.image), 
-      }));
+        mint: item.id,
+        name: item.content?.metadata?.name || 'Unknown Asset',
+        image: item.content?.links?.image || null,
+        isScam: false,
+        isRentClaimable: false,
+        type: isCompressed ? 'CNFT' : 'NFT',
+        uiBalance: 1,
+        isSafe: false
+      };
+    });
 
   } catch (error) {
-    console.error("Error fetching NFTs", error);
-    // Return dummy data if fetch fails so the game doesn't crash
-    return [
-        { id: '1', name: 'Training Bot 1', image: 'https://wsrv.nl/?url=https://arweave.net/u2x4H5rZ5gO4X0j7X4g5' },
-        { id: '2', name: 'Training Bot 2', image: 'https://wsrv.nl/?url=https://arweave.net/A4x4H5rZ5gO4X0j7X4g5' }
-    ]; 
+    console.warn("NFT Scanner Error:", error);
+    return []; 
   }
-};
+}
