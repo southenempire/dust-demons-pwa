@@ -90,6 +90,18 @@ export default function Home() {
   const [predictionHistory, setPredictionHistory] = useState([]);
   const [timeUntilNextPrediction, setTimeUntilNextPrediction] = useState(null);
 
+  // 💰 JUPSOL YIELD STATE
+  const [jupsolBalance, setJupsolBalance] = useState(0);
+  const [jupsolAPY, setJupsolAPY] = useState(7.5); // Default APY estimate
+  const [jupsolValueUSD, setJupsolValueUSD] = useState(0);
+  const [estimatedEarnings, setEstimatedEarnings] = useState({
+    daily: 0,
+    weekly: 0,
+    monthly: 0,
+    yearly: 0
+  });
+  const [calculatorAmount, setCalculatorAmount] = useState(''); // For custom yield calculator
+
   const getActiveTheme = () => {
     if (isJupiterMobile) return THEMES.jupiter;
     if (themeMode === 'system') {
@@ -244,6 +256,13 @@ export default function Home() {
     }
   }, [publicKey]);
 
+  // 💰 FETCH JUPSOL BALANCE
+  useEffect(() => {
+    if (publicKey && connection && currentSOLPrice > 0) {
+      fetchJupSOLBalance();
+    }
+  }, [publicKey, connection, currentSOLPrice]);
+
   // 🎲 LOAD PREDICTION DATA & FETCH SOL PRICE
   useEffect(() => {
     if (isMounted) {
@@ -370,6 +389,46 @@ export default function Home() {
       playSound('alert');
       showModal('INFO', 'PREDICTION MISSED', `Your prediction was incorrect.\\n+${bonusXP} XP for trying!`);
       setStats(s => ({ ...s, xp: s.xp + bonusXP }));
+    }
+  };
+
+  // 💰 JUPSOL YIELD LOGIC
+  const JUPSOL_MINT = 'jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjx93v';
+
+  const fetchJupSOLBalance = async () => {
+    if (!publicKey || !connection) return;
+
+    try {
+      const jupsolMint = new PublicKey(JUPSOL_MINT);
+      const tokenAccounts = await connection.getParsedTokenAccountsByOwner(publicKey, {
+        mint: jupsolMint
+      });
+
+      if (tokenAccounts.value.length > 0) {
+        const balance = tokenAccounts.value[0].account.data.parsed.info.tokenAmount.uiAmount;
+        setJupsolBalance(balance || 0);
+
+        // Calculate USD value
+        if (currentSOLPrice > 0) {
+          const valueUSD = balance * currentSOLPrice;
+          setJupsolValueUSD(valueUSD);
+
+          // Calculate earnings estimates
+          const yearlyEarnings = (balance * jupsolAPY) / 100;
+          setEstimatedEarnings({
+            daily: yearlyEarnings / 365,
+            weekly: yearlyEarnings / 52,
+            monthly: yearlyEarnings / 12,
+            yearly: yearlyEarnings
+          });
+        }
+      } else {
+        setJupsolBalance(0);
+        setJupsolValueUSD(0);
+        setEstimatedEarnings({ daily: 0, weekly: 0, monthly: 0, yearly: 0 });
+      }
+    } catch (error) {
+      console.error('Failed to fetch JupSOL balance:', error);
     }
   };
 
@@ -763,222 +822,145 @@ export default function Home() {
               style={{
                 padding: '25px',
                 background: 'linear-gradient(135deg, #1a0033 0%, #2d0052 100%)',
-                border: `3px solid #a855f7`,
-                borderRadius: '12px',
-                marginBottom: '20px',
-                boxShadow: '0 0 40px rgba(168, 85, 247, 0.5), inset 0 0 20px rgba(168, 85, 247, 0.1)',
-                position: 'relative',
-                overflow: 'hidden'
+                border: `2px solid #a855f7`,
+                borderRadius: '10px',
+                padding: '15px',
+                boxShadow: '0 0 20px rgba(168, 85, 247, 0.3)',
+                marginBottom: '15px'
               }}
             >
-              {/* Animated Background Pattern */}
-              <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(168, 85, 247, 0.05) 10px, rgba(168, 85, 247, 0.05) 20px)',
-                pointerEvents: 'none'
-              }} />
-
-              {/* Header */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', marginBottom: '20px', position: 'relative' }}>
-                <motion.div
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  style={{ fontSize: '48px', filter: 'drop-shadow(0 0 10px rgba(168, 85, 247, 0.8))' }}
-                >
-                  🔮
-                </motion.div>
+              {/* Compact Header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '15px' }}>
+                <div style={{ fontSize: '32px' }}>🔮</div>
                 <div style={{ textAlign: 'center' }}>
-                  <h2 style={{
-                    margin: 0,
-                    fontSize: '28px',
-                    fontWeight: '900',
-                    background: 'linear-gradient(90deg, #a855f7, #ec4899, #a855f7)',
-                    backgroundSize: '200% 100%',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    letterSpacing: '2px',
-                    textShadow: '0 0 20px rgba(168, 85, 247, 0.5)'
-                  }}>
+                  <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: '#a855f7', letterSpacing: '1px' }}>
                     MARKET PROPHECY
                   </h2>
-                  <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#c084fc', letterSpacing: '1px' }}>
-                    ⚡ PREDICT • EARN • DOMINATE ⚡
+                  <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#c084fc' }}>
+                    Predict • Earn • Win
                   </p>
                 </div>
               </div>
 
-              {/* Animated Price Ticker */}
-              <motion.div
-                animate={{
-                  boxShadow: [
-                    '0 0 20px rgba(168, 85, 247, 0.3)',
-                    '0 0 40px rgba(168, 85, 247, 0.6)',
-                    '0 0 20px rgba(168, 85, 247, 0.3)'
-                  ]
-                }}
-                transition={{ duration: 2, repeat: Infinity }}
-                style={{
-                  background: 'linear-gradient(135deg, #000000 0%, #1a0033 100%)',
-                  padding: '20px',
-                  borderRadius: '10px',
-                  marginBottom: '20px',
-                  border: `2px solid ${priceDirection === 'up' ? '#00ff41' : priceDirection === 'down' ? '#ff0055' : '#a855f7'}`,
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}
-              >
-                {/* Price Direction Indicator */}
+              {/* Compact Price Ticker */}
+              <div style={{
+                background: 'linear-gradient(135deg, #000000 0%, #1a0033 100%)',
+                padding: '15px',
+                borderRadius: '8px',
+                marginBottom: '15px',
+                border: `2px solid ${priceDirection === 'up' ? '#00ff41' : priceDirection === 'down' ? '#ff0055' : '#a855f7'}`,
+                position: 'relative'
+              }}>
                 {priceDirection && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: [0, 1, 0], y: priceDirection === 'up' ? -40 : 40 }}
-                    transition={{ duration: 1 }}
-                    style={{
-                      position: 'absolute',
-                      top: '50%',
-                      right: '20px',
-                      fontSize: '32px',
-                      color: priceDirection === 'up' ? '#00ff41' : '#ff0055'
-                    }}
-                  >
+                  <div style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '15px',
+                    fontSize: '24px',
+                    color: priceDirection === 'up' ? '#00ff41' : '#ff0055'
+                  }}>
                     {priceDirection === 'up' ? '📈' : '📉'}
-                  </motion.div>
+                  </div>
                 )}
-
-                <p style={{ margin: 0, fontSize: '11px', color: '#9333ea', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: '900' }}>
+                <p style={{ margin: 0, fontSize: '10px', color: '#9333ea', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '900' }}>
                   🎰 LIVE SOL PRICE
                 </p>
-                <motion.h1
-                  key={currentSOLPrice}
-                  initial={{ scale: 1.2, color: priceDirection === 'up' ? '#00ff41' : priceDirection === 'down' ? '#ff0055' : '#a855f7' }}
-                  animate={{ scale: 1, color: '#a855f7' }}
-                  transition={{ duration: 0.5 }}
-                  style={{
-                    margin: '10px 0 0 0',
-                    fontSize: '48px',
-                    fontWeight: '900',
-                    fontFamily: 'monospace',
-                    textShadow: '0 0 20px rgba(168, 85, 247, 0.8)',
-                    letterSpacing: '2px'
-                  }}
-                >
+                <h1 style={{
+                  margin: '8px 0 0 0',
+                  fontSize: '32px',
+                  fontWeight: '900',
+                  fontFamily: 'monospace',
+                  color: '#a855f7',
+                  textShadow: '0 0 15px rgba(168, 85, 247, 0.8)',
+                  letterSpacing: '1px'
+                }}>
                   ${currentSOLPrice.toFixed(2)}
-                </motion.h1>
+                </h1>
                 {previousSOLPrice > 0 && currentSOLPrice !== previousSOLPrice && (
                   <p style={{
                     margin: '5px 0 0 0',
-                    fontSize: '11px',
+                    fontSize: '10px',
                     color: currentSOLPrice > previousSOLPrice ? '#00ff41' : '#ff0055',
                     fontWeight: '900'
                   }}>
                     {currentSOLPrice > previousSOLPrice ? '▲' : '▼'} ${Math.abs(currentSOLPrice - previousSOLPrice).toFixed(2)}
                   </p>
                 )}
-              </motion.div>
+              </div>
 
               {/* Prediction Buttons or Status */}
               {!dailyPrediction || dailyPrediction.date !== new Date().toDateString() ? (
                 <div>
-                  <p style={{ fontSize: '14px', color: '#c084fc', marginBottom: '20px', textAlign: 'center', fontWeight: '900', letterSpacing: '1px' }}>
-                    🎲 PLACE YOUR BET 🎲
+                  <p style={{ fontSize: '12px', color: '#c084fc', marginBottom: '12px', textAlign: 'center', fontWeight: '900' }}>
+                    🎲 PLACE YOUR BET
                   </p>
-                  <p style={{ fontSize: '12px', color: theme.text, marginBottom: '15px', textAlign: 'center' }}>
-                    Will SOL be <strong style={{ color: '#00ff41' }}>HIGHER</strong> or <strong style={{ color: '#ff0055' }}>LOWER</strong> in 24 hours?
+                  <p style={{ fontSize: '11px', color: theme.text, marginBottom: '12px', textAlign: 'center' }}>
+                    Will SOL be <strong style={{ color: '#00ff41' }}>HIGHER</strong> or <strong style={{ color: '#ff0055' }}>LOWER</strong> in 24h?
                   </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                     <motion.button
-                      whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(0, 255, 65, 0.6)' }}
+                      whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => makePrediction('up')}
                       style={{
-                        padding: '25px',
-                        background: 'linear-gradient(135deg, #00ff41 0%, #00c2ff 100%)',
-                        border: '3px solid #00ff41',
-                        borderRadius: '10px',
+                        padding: '15px',
+                        background: 'linear-gradient(135deg, #00ff41 0%, #00cc33 100%)',
+                        border: '2px solid #00ff41',
+                        borderRadius: '8px',
                         color: '#000',
                         fontWeight: '900',
-                        fontSize: '16px',
+                        fontSize: '14px',
                         cursor: 'pointer',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        gap: '8px',
-                        boxShadow: '0 0 20px rgba(0, 255, 65, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.2)',
-                        textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
-                        position: 'relative',
-                        overflow: 'hidden'
+                        gap: '5px',
+                        boxShadow: '0 0 15px rgba(0, 255, 65, 0.4)'
                       }}
                     >
-                      <div style={{
-                        position: 'absolute',
-                        top: '-50%',
-                        left: '-50%',
-                        width: '200%',
-                        height: '200%',
-                        background: 'linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent)',
-                        transform: 'rotate(45deg)',
-                        animation: 'shine 3s infinite'
-                      }} />
-                      <TrendingUp size={40} strokeWidth={3} />
-                      <span style={{ letterSpacing: '2px' }}>BULLISH</span>
-                      <span style={{ fontSize: '10px', opacity: 0.8 }}>📈 +300 XP</span>
+                      <TrendingUp size={28} strokeWidth={3} />
+                      <span>BULLISH</span>
+                      <span style={{ fontSize: '9px', opacity: 0.8 }}>📈 +300 XP</span>
                     </motion.button>
                     <motion.button
-                      whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(255, 0, 85, 0.6)' }}
+                      whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => makePrediction('down')}
                       style={{
-                        padding: '25px',
-                        background: 'linear-gradient(135deg, #ff0055 0%, #ff6b35 100%)',
-                        border: '3px solid #ff0055',
-                        borderRadius: '10px',
+                        padding: '15px',
+                        background: 'linear-gradient(135deg, #ff0055 0%, #cc0044 100%)',
+                        border: '2px solid #ff0055',
+                        borderRadius: '8px',
                         color: '#fff',
                         fontWeight: '900',
-                        fontSize: '16px',
+                        fontSize: '14px',
                         cursor: 'pointer',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        gap: '8px',
-                        boxShadow: '0 0 20px rgba(255, 0, 85, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.2)',
-                        textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
-                        position: 'relative',
-                        overflow: 'hidden'
+                        gap: '5px',
+                        boxShadow: '0 0 15px rgba(255, 0, 85, 0.4)'
                       }}
                     >
-                      <div style={{
-                        position: 'absolute',
-                        top: '-50%',
-                        left: '-50%',
-                        width: '200%',
-                        height: '200%',
-                        background: 'linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent)',
-                        transform: 'rotate(45deg)',
-                        animation: 'shine 3s infinite 1.5s'
-                      }} />
-                      <TrendingDown size={40} strokeWidth={3} />
-                      <span style={{ letterSpacing: '2px' }}>BEARISH</span>
-                      <span style={{ fontSize: '10px', opacity: 0.8 }}>📉 +300 XP</span>
+                      <TrendingDown size={28} strokeWidth={3} />
+                      <span>BEARISH</span>
+                      <span style={{ fontSize: '9px', opacity: 0.8 }}>📉 +300 XP</span>
                     </motion.button>
                   </div>
                 </div>
               ) : (
-                <div style={{ background: theme.bg, padding: '15px', borderRadius: '6px', border: `1px solid ${dailyPrediction.result === 'correct' ? '#00ff41' : (dailyPrediction.result === 'wrong' ? '#ff0055' : '#a855f7')}` }}>
-                  <p style={{ margin: 0, fontSize: '10px', color: theme.textDim, textTransform: 'uppercase' }}>Your Prediction</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '5px' }}>
-                    {dailyPrediction.prediction === 'up' ? <TrendingUp size={24} color="#00ff41" /> : <TrendingDown size={24} color="#ff0055" />}
-                    <span style={{ fontSize: '18px', fontWeight: '900', color: theme.text }}>{dailyPrediction.prediction.toUpperCase()}</span>
+                <div style={{ background: theme.bg, padding: '12px', borderRadius: '6px', border: `1px solid ${dailyPrediction.result === 'correct' ? '#00ff41' : (dailyPrediction.result === 'wrong' ? '#ff0055' : '#a855f7')}` }}>
+                  <p style={{ margin: 0, fontSize: '9px', color: theme.textDim, textTransform: 'uppercase' }}>Your Prediction</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '5px' }}>
+                    {dailyPrediction.prediction === 'up' ? <TrendingUp size={20} color="#00ff41" /> : <TrendingDown size={20} color="#ff0055" />}
+                    <span style={{ fontSize: '16px', fontWeight: '900', color: theme.text }}>{dailyPrediction.prediction.toUpperCase()}</span>
                   </div>
-                  <p style={{ margin: '10px 0 0 0', fontSize: '11px', color: theme.textDim }}>
+                  <p style={{ margin: '8px 0 0 0', fontSize: '10px', color: theme.textDim }}>
                     Target: ${dailyPrediction.targetPrice.toFixed(2)}
                   </p>
                   {dailyPrediction.result && (
                     <div style={{ marginTop: '10px', padding: '10px', background: dailyPrediction.result === 'correct' ? 'rgba(0, 255, 65, 0.1)' : 'rgba(255, 0, 85, 0.1)', borderRadius: '4px' }}>
-                      <p style={{ margin: '0 0 10px 0', fontSize: '12px', fontWeight: '900', color: dailyPrediction.result === 'correct' ? '#00ff41' : '#ff0055' }}>
+                      <p style={{ margin: '0 0 8px 0', fontSize: '11px', fontWeight: '900', color: dailyPrediction.result === 'correct' ? '#00ff41' : '#ff0055' }}>
                         {dailyPrediction.result === 'correct' ? '🎯 CORRECT! +300 XP' : '❌ WRONG +50 XP'}
                       </p>
                       <button
@@ -991,7 +973,7 @@ export default function Home() {
                           borderRadius: '4px',
                           color: '#fff',
                           fontWeight: '900',
-                          fontSize: '11px',
+                          fontSize: '10px',
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
@@ -999,7 +981,7 @@ export default function Home() {
                           gap: '5px'
                         }}
                       >
-                        <Share2 size={14} />
+                        <Share2 size={12} />
                         SHARE ON TWITTER
                       </button>
                     </div>
@@ -1016,7 +998,7 @@ export default function Home() {
                         borderRadius: '4px',
                         color: '#fff',
                         fontWeight: '900',
-                        fontSize: '12px',
+                        fontSize: '11px',
                         cursor: 'pointer'
                       }}
                     >
@@ -1027,16 +1009,16 @@ export default function Home() {
               )}
             </motion.div>
 
-            {/* Prediction History */}
+            {/* Compact Prediction History */}
             {predictionHistory.length > 0 && (
-              <div style={{ padding: '15px', background: theme.panel, border: `1px solid ${theme.border}`, borderRadius: '6px' }}>
-                <h3 style={{ margin: '0 0 15px 0', fontSize: '14px', fontWeight: '900', color: theme.accent }}>PROPHECY HISTORY</h3>
-                {predictionHistory.map((p, i) => (
-                  <div key={p.timestamp || `prediction-${i}`} style={{ padding: '10px', background: theme.bg, borderRadius: '4px', marginBottom: '8px', border: `1px solid ${p.result === 'correct' ? '#00ff41' : '#ff0055'}` }}>
+              <div style={{ padding: '12px', background: theme.panel, border: `1px solid ${theme.border}`, borderRadius: '6px' }}>
+                <h3 style={{ margin: '0 0 10px 0', fontSize: '12px', fontWeight: '900', color: theme.accent }}>HISTORY</h3>
+                {predictionHistory.slice(0, 5).map((p, i) => (
+                  <div key={p.timestamp || `prediction-${i}`} style={{ padding: '8px', background: theme.bg, borderRadius: '4px', marginBottom: '6px', border: `1px solid ${p.result === 'correct' ? '#00ff41' : '#ff0055'}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '11px', color: theme.text }}>{p.prediction.toUpperCase()}</span>
-                      <span style={{ fontSize: '11px', fontWeight: '900', color: p.result === 'correct' ? '#00ff41' : '#ff0055' }}>
-                        {p.result === 'correct' ? '✓ CORRECT' : '✗ WRONG'}
+                      <span style={{ fontSize: '10px', color: theme.text }}>{p.prediction.toUpperCase()}</span>
+                      <span style={{ fontSize: '10px', fontWeight: '900', color: p.result === 'correct' ? '#00ff41' : '#ff0055' }}>
+                        {p.result === 'correct' ? '✓' : '✗'}
                       </span>
                     </div>
                   </div>
@@ -1069,6 +1051,157 @@ export default function Home() {
           </div>
         )}
 
+        {/* VIEW 5: YIELD DASHBOARD - MOBILE OPTIMIZED */}
+        {view === 'YIELD' && (
+          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '15px 15px 100px 15px' }}>
+            {/* Compact Header */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              marginBottom: '15px',
+              padding: '15px',
+              background: 'linear-gradient(135deg, #001a33 0%, #003d52 100%)',
+              border: '2px solid #00c2ff',
+              borderRadius: '10px',
+              boxShadow: '0 0 20px rgba(0, 194, 255, 0.3)'
+            }}>
+              <div style={{ fontSize: '32px' }}>💰</div>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: '#00c2ff', letterSpacing: '1px' }}>
+                  YIELD CALCULATOR
+                </h2>
+                <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#7dd3fc' }}>
+                  {jupsolAPY.toFixed(1)}% APY • Powered by JupSOL
+                </p>
+              </div>
+            </div>
+
+            {/* Calculator Input */}
+            <div style={{ marginBottom: '15px' }}>
+              <input
+                type="number"
+                value={calculatorAmount}
+                onChange={(e) => setCalculatorAmount(e.target.value)}
+                placeholder="Enter JupSOL amount..."
+                style={{
+                  width: '100%',
+                  padding: '15px',
+                  background: 'rgba(0, 194, 255, 0.05)',
+                  border: '2px solid rgba(0, 194, 255, 0.3)',
+                  borderRadius: '8px',
+                  color: theme.text,
+                  fontSize: '18px',
+                  fontWeight: '900',
+                  textAlign: 'center',
+                  fontFamily: 'monospace'
+                }}
+              />
+              {calculatorAmount && currentSOLPrice > 0 && (
+                <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: '#7dd3fc', textAlign: 'center' }}>
+                  ≈ ${(parseFloat(calculatorAmount || 0) * currentSOLPrice).toFixed(2)} USD
+                </p>
+              )}
+            </div>
+
+            {/* Calculator Results */}
+            {calculatorAmount && parseFloat(calculatorAmount) > 0 ? (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '15px' }}
+              >
+                <div style={{ background: 'rgba(0, 194, 255, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(0, 194, 255, 0.3)' }}>
+                  <p style={{ margin: 0, fontSize: '9px', color: theme.textDim }}>Daily</p>
+                  <p style={{ margin: '3px 0 0 0', fontSize: '13px', fontWeight: '900', color: '#00c2ff' }}>
+                    {((parseFloat(calculatorAmount) * jupsolAPY / 100) / 365).toFixed(4)}
+                  </p>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '8px', color: '#7dd3fc' }}>
+                    ${((parseFloat(calculatorAmount) * jupsolAPY / 100 / 365) * currentSOLPrice).toFixed(2)}
+                  </p>
+                </div>
+                <div style={{ background: 'rgba(0, 194, 255, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(0, 194, 255, 0.3)' }}>
+                  <p style={{ margin: 0, fontSize: '9px', color: theme.textDim }}>Monthly</p>
+                  <p style={{ margin: '3px 0 0 0', fontSize: '13px', fontWeight: '900', color: '#00c2ff' }}>
+                    {((parseFloat(calculatorAmount) * jupsolAPY / 100) / 12).toFixed(4)}
+                  </p>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '8px', color: '#7dd3fc' }}>
+                    ${((parseFloat(calculatorAmount) * jupsolAPY / 100 / 12) * currentSOLPrice).toFixed(2)}
+                  </p>
+                </div>
+                <div style={{ background: 'rgba(0, 255, 136, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(0, 255, 136, 0.3)', gridColumn: '1 / -1' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '10px', color: theme.textDim }}>Yearly Earnings</span>
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#00ff88' }}>
+                        {(parseFloat(calculatorAmount) * jupsolAPY / 100).toFixed(4)} SOL
+                      </p>
+                      <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#7dd3fc' }}>
+                        ${((parseFloat(calculatorAmount) * jupsolAPY / 100) * currentSOLPrice).toFixed(2)} USD
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <div style={{
+                padding: '30px 20px',
+                textAlign: 'center',
+                background: 'rgba(0, 194, 255, 0.05)',
+                borderRadius: '8px',
+                border: '1px dashed rgba(0, 194, 255, 0.3)',
+                marginBottom: '15px'
+              }}>
+                <p style={{ margin: 0, fontSize: '12px', color: theme.textDim }}>
+                  👆 Enter an amount to calculate earnings
+                </p>
+              </div>
+            )}
+
+            {/* Current Holdings (if any) - Compact */}
+            {jupsolBalance > 0 && (
+              <div style={{ background: 'rgba(0, 255, 136, 0.1)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(0, 255, 136, 0.3)', marginBottom: '15px' }}>
+                <p style={{ margin: '0 0 8px 0', fontSize: '10px', color: '#00ff88', fontWeight: '900', letterSpacing: '1px' }}>
+                  💎 YOUR HOLDINGS
+                </p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '11px', color: theme.text }}>Balance</span>
+                  <span style={{ fontSize: '14px', fontWeight: '900', color: '#00c2ff' }}>{jupsolBalance.toFixed(4)} JupSOL</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '11px', color: theme.text }}>Yearly</span>
+                  <span style={{ fontSize: '12px', fontWeight: '900', color: '#00ff88' }}>{estimatedEarnings.yearly.toFixed(4)} SOL</span>
+                </div>
+              </div>
+            )}
+
+            {/* Call to Action */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setView('SCANNER')}
+              style={{
+                width: '100%',
+                padding: '15px',
+                background: jupsolBalance === 0
+                  ? 'linear-gradient(135deg, #00c2ff 0%, #00ff88 100%)'
+                  : 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)',
+                border: `3px solid ${jupsolBalance === 0 ? '#00c2ff' : '#a855f7'}`,
+                borderRadius: '10px',
+                color: jupsolBalance === 0 ? '#000' : '#fff',
+                fontWeight: '900',
+                fontSize: '13px',
+                cursor: 'pointer',
+                boxShadow: `0 0 20px ${jupsolBalance === 0 ? 'rgba(0, 194, 255, 0.4)' : 'rgba(168, 85, 247, 0.4)'}`,
+                letterSpacing: '1px'
+              }}
+            >
+              {jupsolBalance === 0 ? '🚀 FIND TOKENS TO CONVERT' : '🔍 SCAN FOR MORE TOKENS'}
+            </motion.button>
+          </div>
+        )}
+
       </div>
 
       {/* FOOTER NAV */}
@@ -1084,6 +1217,10 @@ export default function Home() {
         <button onClick={() => setView('PROPHECY')} style={{ background: 'none', border: 'none', color: view === 'PROPHECY' ? '#a855f7' : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
           <div style={{ fontSize: '24px' }}>🔮</div>
           <span style={{ fontSize: '9px' }}>PREDICT</span>
+        </button>
+        <button onClick={() => setView('YIELD')} style={{ background: 'none', border: 'none', color: view === 'YIELD' ? '#00c2ff' : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <div style={{ fontSize: '24px' }}>💰</div>
+          <span style={{ fontSize: '9px' }}>YIELD</span>
         </button>
         <button onClick={() => setShowMenu(true)} style={{ background: 'none', border: 'none', color: theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
           <Settings size={24} />
