@@ -102,6 +102,10 @@ export default function Home() {
   });
   const [calculatorAmount, setCalculatorAmount] = useState(''); // For custom yield calculator
 
+  // 🏆 LEADERBOARD STATE
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const [userRank, setUserRank] = useState(null);
+
   const getActiveTheme = () => {
     if (isJupiterMobile) return THEMES.jupiter;
     if (themeMode === 'system') {
@@ -142,7 +146,7 @@ export default function Home() {
         }));
 
         setTimeout(() => {
-          showModal('SUCCESS', 'DAILY REWARD', `Login Streak: ${newStreak} Day(s)\nXP Gained: +${bonus}${isJupiterMobile ? ' (🚀 3x Jupiter Mobile Bonus!)' : ''}`);
+          showModal('SUCCESS', 'DAILY REWARD', `Login Streak: ${newStreak} Day(s)\nXP Gained: +${bonus}${isJupiterMobile ? ' (3x Jupiter Mobile Bonus)' : ''}`);
           triggerConfetti();
         }, 1000);
       }
@@ -283,6 +287,60 @@ export default function Home() {
       return () => clearInterval(interval);
     }
   }, [isMounted]);
+
+  // 🏆 GENERATE LEADERBOARD DATA
+  useEffect(() => {
+    if (isMounted && stats.xp >= 0) {
+      // Generate simulated wallet addresses
+      const generateWallet = () => {
+        const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+        let wallet = '';
+        for (let i = 0; i < 44; i++) {
+          wallet += chars[Math.floor(Math.random() * chars.length)];
+        }
+        return wallet;
+      };
+
+      // Generate simulated players around user's XP
+      const players = [];
+      const userXP = stats.xp;
+
+      // Add 20 simulated players with varying XP
+      for (let i = 0; i < 20; i++) {
+        const variance = Math.random() * 2000 - 1000; // ±1000 XP variance
+        const playerXP = Math.max(0, userXP + variance + (i * 50));
+        const isMobile = Math.random() > 0.7; // 30% mobile users
+
+        players.push({
+          wallet: generateWallet(),
+          xp: Math.floor(playerXP),
+          solReclaimed: (playerXP / 100 * (0.5 + Math.random() * 0.5)).toFixed(3),
+          isMobile: isMobile
+        });
+      }
+
+      // Add user to the list
+      if (publicKey) {
+        players.push({
+          wallet: publicKey.toString(),
+          xp: stats.xp,
+          solReclaimed: stats.solReclaimed.toFixed(3),
+          isMobile: isJupiterMobile,
+          isUser: true
+        });
+      }
+
+      // Sort by XP descending
+      players.sort((a, b) => b.xp - a.xp);
+
+      // Calculate user rank
+      const userIndex = players.findIndex(p => p.isUser);
+      setUserRank(userIndex >= 0 ? userIndex + 1 : null);
+
+      // Take top 10 for display
+      setLeaderboardData(players.slice(0, 10));
+    }
+  }, [isMounted, stats.xp, stats.solReclaimed, publicKey, isJupiterMobile]);
 
   // 🛡️ HELPERS
   const playSound = (key) => { if (audioEnabled && audioRefs.current[key]) { audioRefs.current[key].currentTime = 0; audioRefs.current[key].play().catch(() => { }); } };
@@ -837,7 +895,7 @@ export default function Home() {
                     MARKET PROPHECY
                   </h2>
                   <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#c084fc' }}>
-                    Predict • Earn • Win
+                    Daily SOL Price Prediction
                   </p>
                 </div>
               </div>
@@ -863,7 +921,7 @@ export default function Home() {
                   </div>
                 )}
                 <p style={{ margin: 0, fontSize: '10px', color: '#9333ea', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '900' }}>
-                  🎰 LIVE SOL PRICE
+                  LIVE SOL PRICE
                 </p>
                 <h1 style={{
                   margin: '8px 0 0 0',
@@ -892,7 +950,7 @@ export default function Home() {
               {!dailyPrediction || dailyPrediction.date !== new Date().toDateString() ? (
                 <div>
                   <p style={{ fontSize: '12px', color: '#c084fc', marginBottom: '12px', textAlign: 'center', fontWeight: '900' }}>
-                    🎲 PLACE YOUR BET
+                    Make Your Prediction
                   </p>
                   <p style={{ fontSize: '11px', color: theme.text, marginBottom: '12px', textAlign: 'center' }}>
                     Will SOL be <strong style={{ color: '#00ff41' }}>HIGHER</strong> or <strong style={{ color: '#ff0055' }}>LOWER</strong> in 24h?
@@ -1197,8 +1255,156 @@ export default function Home() {
                 letterSpacing: '1px'
               }}
             >
-              {jupsolBalance === 0 ? '🚀 FIND TOKENS TO CONVERT' : '🔍 SCAN FOR MORE TOKENS'}
+              {jupsolBalance === 0 ? 'FIND TOKENS TO CONVERT' : 'SCAN FOR MORE TOKENS'}
             </motion.button>
+          </div>
+        )}
+
+        {/* VIEW 6: LEADERBOARD - MOBILE OPTIMIZED */}
+        {view === 'LEADERBOARD' && (
+          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '15px 15px 100px 15px' }}>
+            {/* Compact Header */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              marginBottom: '15px',
+              padding: '15px',
+              background: 'linear-gradient(135deg, #1a0033 0%, #2d0052 100%)',
+              border: '2px solid #fbbf24',
+              borderRadius: '10px',
+              boxShadow: '0 0 20px rgba(251, 191, 36, 0.3)'
+            }}>
+              <div style={{ fontSize: '32px' }}>🏆</div>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: '#fbbf24', letterSpacing: '1px' }}>
+                  LEADERBOARD
+                </h2>
+                <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#fcd34d' }}>
+                  Live Rankings
+                </p>
+              </div>
+            </div>
+
+            {/* User Rank Card */}
+            {userRank && (
+              <div style={{
+                background: 'linear-gradient(135deg, #000000 0%, #1a0033 100%)',
+                padding: '15px',
+                borderRadius: '8px',
+                marginBottom: '15px',
+                border: '2px solid #fbbf24',
+                boxShadow: '0 0 15px rgba(251, 191, 36, 0.3)'
+              }}>
+                <p style={{ margin: '0 0 8px 0', fontSize: '10px', color: '#fcd34d', fontWeight: '900', letterSpacing: '1px' }}>
+                  YOUR RANK
+                </p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <h1 style={{ margin: 0, fontSize: '32px', fontWeight: '900', color: '#fbbf24', fontFamily: 'monospace' }}>
+                      #{userRank}
+                    </h1>
+                    <p style={{ margin: '5px 0 0 0', fontSize: '11px', color: theme.text }}>
+                      {stats.xp.toLocaleString()} XP • {currentRank}
+                    </p>
+                  </div>
+                  {isJupiterMobile && (
+                    <div style={{
+                      background: 'rgba(0, 194, 255, 0.2)',
+                      padding: '6px 10px',
+                      borderRadius: '6px',
+                      border: '1px solid #00c2ff'
+                    }}>
+                      <p style={{ margin: 0, fontSize: '10px', color: '#00c2ff', fontWeight: '900' }}>📱 MOBILE</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Top 10 Leaderboard */}
+            <div style={{ background: theme.panel, padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}` }}>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '12px', fontWeight: '900', color: theme.accent }}>
+                TOP 10 HUNTERS
+              </h3>
+              {leaderboardData.map((player, index) => {
+                const isTop3 = index < 3;
+                const trophies = ['🥇', '🥈', '🥉'];
+                const truncatedWallet = player.isUser
+                  ? 'YOU'
+                  : `${player.wallet.slice(0, 4)}...${player.wallet.slice(-4)}`;
+
+                return (
+                  <div
+                    key={player.wallet}
+                    style={{
+                      padding: '10px',
+                      background: player.isUser ? 'rgba(251, 191, 36, 0.1)' : theme.bg,
+                      borderRadius: '6px',
+                      marginBottom: '8px',
+                      border: player.isUser ? '1px solid #fbbf24' : `1px solid ${theme.border}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px'
+                    }}
+                  >
+                    {/* Rank */}
+                    <div style={{
+                      minWidth: '30px',
+                      textAlign: 'center',
+                      fontSize: isTop3 ? '18px' : '12px',
+                      fontWeight: '900',
+                      color: isTop3 ? '#fbbf24' : theme.textDim
+                    }}>
+                      {isTop3 ? trophies[index] : `#${index + 1}`}
+                    </div>
+
+                    {/* Player Info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+                        <p style={{
+                          margin: 0,
+                          fontSize: '11px',
+                          fontWeight: '900',
+                          color: player.isUser ? '#fbbf24' : theme.text,
+                          fontFamily: 'monospace',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {truncatedWallet}
+                        </p>
+                        {player.isMobile && (
+                          <span style={{ fontSize: '10px' }}>📱</span>
+                        )}
+                      </div>
+                      <p style={{ margin: 0, fontSize: '9px', color: theme.textDim }}>
+                        {player.xp.toLocaleString()} XP • {player.solReclaimed} SOL
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Mobile Exclusive Section */}
+            {isJupiterMobile && (
+              <div style={{
+                marginTop: '15px',
+                background: 'rgba(0, 194, 255, 0.1)',
+                padding: '12px',
+                borderRadius: '8px',
+                border: '1px solid #00c2ff'
+              }}>
+                <p style={{ margin: '0 0 6px 0', fontSize: '10px', color: '#00c2ff', fontWeight: '900', letterSpacing: '1px' }}>
+                  📱 MOBILE EXCLUSIVE
+                </p>
+                <p style={{ margin: 0, fontSize: '11px', color: theme.text }}>
+                  Earning <strong style={{ color: '#00c2ff' }}>3x XP</strong> on Jupiter Mobile
+                </p>
+              </div>
+            )}
           </div>
         )}
 
@@ -1221,6 +1427,10 @@ export default function Home() {
         <button onClick={() => setView('YIELD')} style={{ background: 'none', border: 'none', color: view === 'YIELD' ? '#00c2ff' : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
           <div style={{ fontSize: '24px' }}>💰</div>
           <span style={{ fontSize: '9px' }}>YIELD</span>
+        </button>
+        <button onClick={() => setView('LEADERBOARD')} style={{ background: 'none', border: 'none', color: view === 'LEADERBOARD' ? '#fbbf24' : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <div style={{ fontSize: '24px' }}>🏆</div>
+          <span style={{ fontSize: '9px' }}>RANKS</span>
         </button>
         <button onClick={() => setShowMenu(true)} style={{ background: 'none', border: 'none', color: theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
           <Settings size={24} />
