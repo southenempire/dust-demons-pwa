@@ -10,6 +10,8 @@ import { createBurnInstruction, createCloseAccountInstruction, getAssociatedToke
 import confetti from 'canvas-confetti';
 import { getTokenPrices } from '@/utils/jupiter-price';
 import { fetchJupSOLAPY } from '@/utils/jupsol-apy';
+import { verifyJupiterSwap, verifyTokenBurns } from '@/utils/on-chain-verification';
+import { sendJupiterNotification, setupDeepLinking, parseDeepLink } from '@/utils/jupiter-mobile';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 // ⚡ RPC CONFIGURATION (DAS API endpoint for asset fetching)
@@ -188,6 +190,7 @@ export default function Home() {
 
         setTimeout(() => {
           showModal('SUCCESS', 'DAILY REWARD', `Login Streak: ${newStreak} Day(s)\nXP Gained: +${bonus}${isJupiterMobile ? ' (3x Jupiter Mobile Bonus)' : ''}`);
+          triggerHaptic('success');
           triggerConfetti();
         }, 1000);
       }
@@ -215,8 +218,10 @@ export default function Home() {
               onRequestConnectWallet: () => { document.querySelector('.wallet-adapter-button')?.click(); },
               onSuccess: ({ txid }) => {
                 playSound('success');
+                triggerHaptic('success');
                 triggerConfetti();
                 updateMission('swap', 1);
+                sendJupiterNotification('🪐 Swap Complete!', 'Successfully converted dust → JupSOL');
                 setSessionHistory(prev => [{
                   id: Date.now(),
                   action: `Swapped ${swapTarget.name}`,
@@ -293,6 +298,20 @@ export default function Home() {
     };
     const sfx = { scan: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3', burn: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3', select: 'https://assets.mixkit.co/active_storage/sfx/2577/2577-preview.mp3', error: 'https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3', success: 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3', alert: 'https://assets.mixkit.co/active_storage/sfx/2865/2865-preview.mp3' };
     Object.entries(sfx).forEach(([k, v]) => loadAudio(k, v));
+
+    // Setup deep linking for Jupiter Mobile
+    setupDeepLinking((url) => {
+      const { section, action } = parseDeepLink(url);
+
+      if (section === 'mission') {
+        if (action === 'burn') setView('INVENTORY');
+        else if (action === 'swap') setView('SWAP_STATION');
+        else if (action === 'predict') setView('PROPHECY');
+        else if (action === 'yield') setView('YIELD');
+      } else if (section === 'view') {
+        setView(action.toUpperCase());
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -309,7 +328,7 @@ export default function Home() {
     if (newRank !== currentRank) {
       setCurrentRank(newRank);
       setRankColor(newColor);
-      if (hasHydrated.current) { triggerConfetti(); if (audioEnabled) playSound('success'); }
+      if (hasHydrated.current) { triggerHaptic('levelUp'); triggerConfetti(); if (audioEnabled) playSound('success'); }
     }
     if (isMounted) localStorage.setItem('demon_stats', JSON.stringify(stats));
   }, [stats.xp, audioEnabled, isMounted]);
@@ -326,6 +345,7 @@ export default function Home() {
   useEffect(() => {
     if (publicKey && connection && currentSOLPrice > 0) {
       fetchJupSOLBalance();
+      fetchRealAPY();
     }
   }, [publicKey, connection, currentSOLPrice]);
 
@@ -403,6 +423,22 @@ export default function Home() {
       setLeaderboardData(players.slice(0, 10));
     }
   }, [isMounted, stats.xp, stats.solReclaimed, publicKey, isJupiterMobile]);
+
+  // ⚡ LIVE EARNINGS COUNTER (ticks every second)
+  useEffect(() => {
+    if (jupsolBalance === 0) {
+      setRealtimeEarnings(0);
+      return;
+    }
+
+    const perSecond = (jupsolBalance * jupsolAPY / 100) / (365 * 24 * 60 * 60);
+
+    const interval = setInterval(() => {
+      setRealtimeEarnings(prev => prev + perSecond);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [jupsolBalance, jupsolAPY]);
 
   // 🛡️ HELPERS
   const playSound = (key) => { if (audioEnabled && audioRefs.current[key]) { audioRefs.current[key].currentTime = 0; audioRefs.current[key].play().catch(() => { }); } };
@@ -552,6 +588,12 @@ export default function Home() {
     }
   };
 
+  // Fetch real JupSOL APY
+  const fetchRealAPY = async () => {
+    const apy = await fetchJupSOLAPY();
+    setJupsolAPY(apy);
+  };
+
   // 🛡️ HELIUS DAS API
   async function fetchAssets(owner) {
     try {
@@ -698,6 +740,7 @@ export default function Home() {
       updateMission('burn', burned);
 
       const rent = (burned * 0.002).toFixed(3);
+      sendJupiterNotification('🔥 Burn Complete!', `+${rent} SOL reclaimed`);
       setStats(p => ({ ...p, totalBurned: p.totalBurned + burned, solReclaimed: p.solReclaimed + parseFloat(rent), xp: p.xp + (burned * 10) }));
       setLootDrops(p => [...p, { id: Date.now(), text: `+${rent} SOL` }]);
       setResult(p => ({ ...p, targets: p.targets.filter(t => !selectedIds.includes(t.id)) }));
