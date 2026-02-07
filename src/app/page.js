@@ -84,8 +84,11 @@ export default function Home() {
 
   // 🎲 PREDICTION MARKETS STATE
   const [currentSOLPrice, setCurrentSOLPrice] = useState(0);
+  const [previousSOLPrice, setPreviousSOLPrice] = useState(0);
+  const [priceDirection, setPriceDirection] = useState(null); // 'up' or 'down'
   const [dailyPrediction, setDailyPrediction] = useState(null); // { date, prediction: 'up'/'down', targetPrice, result: null/'correct'/'wrong' }
   const [predictionHistory, setPredictionHistory] = useState([]);
+  const [timeUntilNextPrediction, setTimeUntilNextPrediction] = useState(null);
 
   const getActiveTheme = () => {
     if (isJupiterMobile) return THEMES.jupiter;
@@ -304,6 +307,16 @@ export default function Home() {
       const SOL_MINT = 'So11111111111111111111111111111111111111112';
       const prices = await getTokenPrices([SOL_MINT]);
       const price = prices[SOL_MINT]?.price || 0;
+
+      // Track price direction for animation
+      if (currentSOLPrice > 0 && price !== currentSOLPrice) {
+        setPreviousSOLPrice(currentSOLPrice);
+        setPriceDirection(price > currentSOLPrice ? 'up' : 'down');
+
+        // Reset direction after animation
+        setTimeout(() => setPriceDirection(null), 1000);
+      }
+
       setCurrentSOLPrice(price);
       return price;
     } catch (error) {
@@ -571,22 +584,6 @@ export default function Home() {
               <p style={{ margin: 0, fontSize: '8px', color: rankColor, fontWeight: 'bold', letterSpacing: '1px' }}>RANK</p>
               <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px', color: theme.text }}>{currentRank}</h2>
             </div>
-            <button
-              onClick={() => handleShare('rank')}
-              style={{
-                background: 'rgba(29, 161, 242, 0.1)',
-                border: '1px solid #1DA1F2',
-                borderRadius: '4px',
-                padding: '6px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-              title="Share rank on Twitter"
-            >
-              <Share2 size={14} color="#1DA1F2" />
-            </button>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
             <div style={{ background: theme.panel, border: `1px solid ${theme.border}`, padding: '4px 10px', borderRadius: '2px', display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -756,71 +753,217 @@ export default function Home() {
           </div>
         )}
 
-        {/* VIEW 3: PROPHECY (PREDICTION MARKETS) */}
+        {/* VIEW 3: PROPHECY (PREDICTION MARKETS) - CASINO STYLE */}
         {view === 'PROPHECY' && (
-          <div style={{ maxWidth: '600px', margin: '0 auto', paddingTop: '20px' }}>
-            <div style={{ padding: '20px', background: theme.panel, border: `2px solid #a855f7`, borderRadius: '8px', marginBottom: '20px', boxShadow: '0 0 30px rgba(168, 85, 247, 0.3)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
-                <div style={{ fontSize: '32px' }}>🔮</div>
-                <div>
-                  <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '900', color: '#a855f7', letterSpacing: '1px' }}>MARKET PROPHECY</h2>
-                  <p style={{ margin: 0, fontSize: '11px', color: theme.textDim }}>Predict SOL price movement</p>
+          <div style={{ maxWidth: '600px', margin: '0 auto', paddingTop: '20px', paddingBottom: '100px' }}>
+            {/* Casino-Style Header */}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              style={{
+                padding: '25px',
+                background: 'linear-gradient(135deg, #1a0033 0%, #2d0052 100%)',
+                border: `3px solid #a855f7`,
+                borderRadius: '12px',
+                marginBottom: '20px',
+                boxShadow: '0 0 40px rgba(168, 85, 247, 0.5), inset 0 0 20px rgba(168, 85, 247, 0.1)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}
+            >
+              {/* Animated Background Pattern */}
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(168, 85, 247, 0.05) 10px, rgba(168, 85, 247, 0.05) 20px)',
+                pointerEvents: 'none'
+              }} />
+
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', marginBottom: '20px', position: 'relative' }}>
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  style={{ fontSize: '48px', filter: 'drop-shadow(0 0 10px rgba(168, 85, 247, 0.8))' }}
+                >
+                  🔮
+                </motion.div>
+                <div style={{ textAlign: 'center' }}>
+                  <h2 style={{
+                    margin: 0,
+                    fontSize: '28px',
+                    fontWeight: '900',
+                    background: 'linear-gradient(90deg, #a855f7, #ec4899, #a855f7)',
+                    backgroundSize: '200% 100%',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    letterSpacing: '2px',
+                    textShadow: '0 0 20px rgba(168, 85, 247, 0.5)'
+                  }}>
+                    MARKET PROPHECY
+                  </h2>
+                  <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#c084fc', letterSpacing: '1px' }}>
+                    ⚡ PREDICT • EARN • DOMINATE ⚡
+                  </p>
                 </div>
               </div>
 
-              {/* Current SOL Price */}
-              <div style={{ background: theme.bg, padding: '15px', borderRadius: '6px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
-                <p style={{ margin: 0, fontSize: '10px', color: theme.textDim, textTransform: 'uppercase', letterSpacing: '1px' }}>Current SOL Price</p>
-                <h1 style={{ margin: '5px 0 0 0', fontSize: '32px', fontWeight: '900', color: theme.accent }}>${currentSOLPrice.toFixed(2)}</h1>
-              </div>
+              {/* Animated Price Ticker */}
+              <motion.div
+                animate={{
+                  boxShadow: [
+                    '0 0 20px rgba(168, 85, 247, 0.3)',
+                    '0 0 40px rgba(168, 85, 247, 0.6)',
+                    '0 0 20px rgba(168, 85, 247, 0.3)'
+                  ]
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+                style={{
+                  background: 'linear-gradient(135deg, #000000 0%, #1a0033 100%)',
+                  padding: '20px',
+                  borderRadius: '10px',
+                  marginBottom: '20px',
+                  border: `2px solid ${priceDirection === 'up' ? '#00ff41' : priceDirection === 'down' ? '#ff0055' : '#a855f7'}`,
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {/* Price Direction Indicator */}
+                {priceDirection && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: [0, 1, 0], y: priceDirection === 'up' ? -40 : 40 }}
+                    transition={{ duration: 1 }}
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      right: '20px',
+                      fontSize: '32px',
+                      color: priceDirection === 'up' ? '#00ff41' : '#ff0055'
+                    }}
+                  >
+                    {priceDirection === 'up' ? '📈' : '📉'}
+                  </motion.div>
+                )}
+
+                <p style={{ margin: 0, fontSize: '11px', color: '#9333ea', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: '900' }}>
+                  🎰 LIVE SOL PRICE
+                </p>
+                <motion.h1
+                  key={currentSOLPrice}
+                  initial={{ scale: 1.2, color: priceDirection === 'up' ? '#00ff41' : priceDirection === 'down' ? '#ff0055' : '#a855f7' }}
+                  animate={{ scale: 1, color: '#a855f7' }}
+                  transition={{ duration: 0.5 }}
+                  style={{
+                    margin: '10px 0 0 0',
+                    fontSize: '48px',
+                    fontWeight: '900',
+                    fontFamily: 'monospace',
+                    textShadow: '0 0 20px rgba(168, 85, 247, 0.8)',
+                    letterSpacing: '2px'
+                  }}
+                >
+                  ${currentSOLPrice.toFixed(2)}
+                </motion.h1>
+                {previousSOLPrice > 0 && currentSOLPrice !== previousSOLPrice && (
+                  <p style={{
+                    margin: '5px 0 0 0',
+                    fontSize: '11px',
+                    color: currentSOLPrice > previousSOLPrice ? '#00ff41' : '#ff0055',
+                    fontWeight: '900'
+                  }}>
+                    {currentSOLPrice > previousSOLPrice ? '▲' : '▼'} ${Math.abs(currentSOLPrice - previousSOLPrice).toFixed(2)}
+                  </p>
+                )}
+              </motion.div>
 
               {/* Prediction Buttons or Status */}
               {!dailyPrediction || dailyPrediction.date !== new Date().toDateString() ? (
                 <div>
-                  <p style={{ fontSize: '12px', color: theme.text, marginBottom: '15px', textAlign: 'center' }}>
-                    Will SOL be <strong>higher</strong> or <strong>lower</strong> in 24 hours?
+                  <p style={{ fontSize: '14px', color: '#c084fc', marginBottom: '20px', textAlign: 'center', fontWeight: '900', letterSpacing: '1px' }}>
+                    🎲 PLACE YOUR BET 🎲
                   </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                    <button
+                  <p style={{ fontSize: '12px', color: theme.text, marginBottom: '15px', textAlign: 'center' }}>
+                    Will SOL be <strong style={{ color: '#00ff41' }}>HIGHER</strong> or <strong style={{ color: '#ff0055' }}>LOWER</strong> in 24 hours?
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                    <motion.button
+                      whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(0, 255, 65, 0.6)' }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => makePrediction('up')}
                       style={{
-                        padding: '20px',
+                        padding: '25px',
                         background: 'linear-gradient(135deg, #00ff41 0%, #00c2ff 100%)',
-                        border: 'none',
-                        borderRadius: '6px',
+                        border: '3px solid #00ff41',
+                        borderRadius: '10px',
                         color: '#000',
                         fontWeight: '900',
-                        fontSize: '14px',
+                        fontSize: '16px',
                         cursor: 'pointer',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        gap: '5px'
+                        gap: '8px',
+                        boxShadow: '0 0 20px rgba(0, 255, 65, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.2)',
+                        textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+                        position: 'relative',
+                        overflow: 'hidden'
                       }}
                     >
-                      <TrendingUp size={32} />
-                      BULLISH
-                    </button>
-                    <button
+                      <div style={{
+                        position: 'absolute',
+                        top: '-50%',
+                        left: '-50%',
+                        width: '200%',
+                        height: '200%',
+                        background: 'linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent)',
+                        transform: 'rotate(45deg)',
+                        animation: 'shine 3s infinite'
+                      }} />
+                      <TrendingUp size={40} strokeWidth={3} />
+                      <span style={{ letterSpacing: '2px' }}>BULLISH</span>
+                      <span style={{ fontSize: '10px', opacity: 0.8 }}>📈 +300 XP</span>
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(255, 0, 85, 0.6)' }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => makePrediction('down')}
                       style={{
-                        padding: '20px',
+                        padding: '25px',
                         background: 'linear-gradient(135deg, #ff0055 0%, #ff6b35 100%)',
-                        border: 'none',
-                        borderRadius: '6px',
+                        border: '3px solid #ff0055',
+                        borderRadius: '10px',
                         color: '#fff',
                         fontWeight: '900',
-                        fontSize: '14px',
+                        fontSize: '16px',
                         cursor: 'pointer',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        gap: '5px'
+                        gap: '8px',
+                        boxShadow: '0 0 20px rgba(255, 0, 85, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.2)',
+                        textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+                        position: 'relative',
+                        overflow: 'hidden'
                       }}
                     >
-                      <TrendingDown size={32} />
-                      BEARISH
-                    </button>
+                      <div style={{
+                        position: 'absolute',
+                        top: '-50%',
+                        left: '-50%',
+                        width: '200%',
+                        height: '200%',
+                        background: 'linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent)',
+                        transform: 'rotate(45deg)',
+                        animation: 'shine 3s infinite 1.5s'
+                      }} />
+                      <TrendingDown size={40} strokeWidth={3} />
+                      <span style={{ letterSpacing: '2px' }}>BEARISH</span>
+                      <span style={{ fontSize: '10px', opacity: 0.8 }}>📉 +300 XP</span>
+                    </motion.button>
                   </div>
                 </div>
               ) : (
@@ -882,7 +1025,7 @@ export default function Home() {
                   )}
                 </div>
               )}
-            </div>
+            </motion.div>
 
             {/* Prediction History */}
             {predictionHistory.length > 0 && (
@@ -956,7 +1099,7 @@ export default function Home() {
           </motion.div>
         ))}
       </AnimatePresence>
-    </main>
+    </main >
   );
 }
 
