@@ -1,44 +1,27 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Skull, Ghost, Crosshair, Zap, Menu, Activity, Shield, CheckCircle2, Circle, AlertTriangle, ExternalLink, WifiOff, Coins, Volume2, VolumeX, Vibrate, FileText, X, EyeOff, Trash2, Target, ArrowRightLeft, AlertOctagon, Sun, Moon, Monitor, ChevronRight, Wallet, Radar, Flame, Scan, Terminal, Settings, Info, Trophy, Star, TrendingUp } from 'lucide-react';
+import { Skull, Ghost, Crosshair, Zap, Activity, Scan, Wallet, Terminal, Settings, Volume2, VolumeX, X, Target, ArrowRightLeft, ArrowLeft, HelpCircle, Loader2, Moon, Sun, Monitor, Share2, Users, Trophy, Crown, Image as ImageIcon, Smartphone, Calendar, CheckCircle, TrendingUp, TrendingDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { PublicKey, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { createBurnInstruction, createCloseAccountInstruction, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { fetchMyBounties } from '@/utils/nftFetcher';
+import { createBurnInstruction, createCloseAccountInstruction, getAssociatedTokenAddress } from '@solana/spl-token';
 import confetti from 'canvas-confetti';
+import { getTokenPrices } from '@/utils/jupiter-price';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
-// 🛡️ HOT LIST
-const FALLBACK_METADATA = {
-  'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN': { name: 'Jupiter', logoURI: 'https://static.jup.ag/jup/icon.png' },
-  'HzwqbKZw8RnJC2DVFrMp21571a81X1e56z6V7V2c62d': { name: 'Bonk', logoURI: 'https://arweave.net/hQiPZOsRZXGXBJd_82PhVdlM_hACsT_q6wqwf5cSY7I' },
-  'WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk': { name: 'WEN', logoURI: 'https://shdw-drive.genesysgo.net/6tcnBSybPG7piEDShBcrVtYJDjnJeHG4D398enUDk8Wf/wen_logo.png' },
-  'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm': { name: 'WIF', logoURI: 'https://bafkreiql2yl26a27376k4y322td346433367545636322363226322.ipfs.nftstorage.link/' },
-  'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB': { name: 'USDT', logoURI: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB/logo.svg' },
-  'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v': { name: 'USDC', logoURI: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png' },
-  'So11111111111111111111111111111111111111112': { name: 'Solana', logoURI: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png' },
-};
+// ⚡ RPC CONFIGURATION (DAS API endpoint for asset fetching)
+const HELIUS_DAS_URL = 'https://mainnet.helius-rpc.com/?api-key=691928df-d5b6-40c4-aa85-f00f6723d838';
 
-const SAFE_MINTS = Object.keys(FALLBACK_METADATA);
-const JUPITER_API_KEY = 'a338f239-2d73-4caa-a9a5-a691d51a54f2'; 
+// 🎯 JUPITER CONFIG
+const JUP_SOL_MINT = 'jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjx93v';
 
-// 🎨 THEME CONFIGURATION
+// 🎨 THEME
 const THEMES = {
-  dark: {
-    bg: '#030303', panel: '#0a0a0a', border: '#222', text: '#e0e0e0', textDim: '#666',
-    accent: '#00ff41', grid: 'rgba(0, 255, 65, 0.03)', vignette: 'radial-gradient(circle at center, transparent 0%, #000 90%)', modal: '#111'
-  },
-  light: {
-    bg: '#eef2f5', panel: '#ffffff', border: '#cbd5e1', text: '#0f172a', textDim: '#64748b',
-    accent: '#00ff41', grid: 'rgba(0, 0, 0, 0.05)', vignette: 'radial-gradient(circle at center, transparent 50%, rgba(0,0,0,0.05) 100%)', modal: '#fff'
-  },
-  jupiter: {
-    bg: '#000000', panel: '#131c21', border: '#1f2937', text: '#ffffff', textDim: '#9ca3af',
-    accent: '#00c2ff', grid: 'rgba(0, 194, 255, 0.05)', vignette: 'radial-gradient(circle at center, transparent 0%, #000 80%)', modal: '#111'
-  }
+  dark: { bg: '#050505', panel: '#0a0a0a', border: '#222', text: '#e0e0e0', textDim: '#666', accent: '#00ff41', grid: 'rgba(0, 255, 65, 0.03)', vignette: 'radial-gradient(circle at center, transparent 0%, #000 90%)', modal: '#111' },
+  light: { bg: '#eef2f5', panel: '#ffffff', border: '#cbd5e1', text: '#0f172a', textDim: '#64748b', accent: '#00ff41', grid: 'rgba(0, 0, 0, 0.05)', vignette: 'radial-gradient(circle at center, transparent 50%, rgba(0,0,0,0.05) 100%)', modal: '#fff' },
+  jupiter: { bg: '#000000', panel: '#131c21', border: '#1f2937', text: '#ffffff', textDim: '#9ca3af', accent: '#00c2ff', grid: 'rgba(0, 194, 255, 0.05)', vignette: 'radial-gradient(circle at center, transparent 0%, #000 80%)', modal: '#111' }
 };
 
 // 🎥 ANIMATIONS
@@ -47,143 +30,179 @@ const hudVariants = {
   scanning: { scale: 1.1, rotate: 360, transition: { duration: 3, repeat: Infinity, ease: "linear" } },
   lock: { scale: 0.9, rotate: 0, transition: { duration: 0.1 } }
 };
-
 const radarVariants = {
   ping: { scale: [1, 2], opacity: [0.5, 0], transition: { duration: 1.5, repeat: Infinity } }
 };
+const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } };
+const itemVariants = { hidden: { opacity: 0, scale: 0.9, y: 20 }, show: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } } };
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.05 } }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, scale: 0.8, y: 50 },
-  show: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+// 🛡️ CONFETTI
+const triggerConfetti = () => {
+  confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#00ff41', '#fbbf24', '#00c2ff'] });
 };
 
 export default function Home() {
-  const { publicKey, signAllTransactions } = useWallet();
+  const { publicKey, signAllTransactions, connected, wallet, signTransaction } = useWallet();
   const { connection } = useConnection();
-  
   const [isMounted, setIsMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [view, setView] = useState('SCANNER');
   const [burningId, setBurningId] = useState(null);
-  const [selectedIds, setSelectedIds] = useState([]); 
+  const [selectedIds, setSelectedIds] = useState([]);
   const [lootDrops, setLootDrops] = useState([]);
   const [shake, setShake] = useState(false);
-  const [lastTx, setLastTx] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
-  const [walletBalance, setWalletBalance] = useState(0); 
-  
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [swapTarget, setSwapTarget] = useState(null);
+  const [swapOutput, setSwapOutput] = useState('So11111111111111111111111111111111111111112'); // Default SOL
+
+  // Real Data: Session History
+  const [sessionHistory, setSessionHistory] = useState([]);
+
+  // Settings
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
-  const [themeMode, setThemeMode] = useState('dark'); 
+  const [themeMode, setThemeMode] = useState('dark');
+
   const [isJupiterMobile, setIsJupiterMobile] = useState(false);
-  
-  const [tokenMap, setTokenMap] = useState(FALLBACK_METADATA); 
-  const [priceMap, setPriceMap] = useState({}); 
-  
-  const [stats, setStats] = useState({ totalBurned: 0, solReclaimed: 0.0, xp: 0, level: 1 });
-  const [dailyMissions, setDailyMissions] = useState([
-      { id: 1, text: "Incinerate 3 Targets", target: 3, current: 0, completed: false, xp: 100 },
-      { id: 2, text: "Reclaim 0.01 SOL", target: 0.01, current: 0, completed: false, xp: 200 }
+  const [jupiterInitialized, setJupiterInitialized] = useState(false);
+
+  // Stats
+  const [stats, setStats] = useState({ totalBurned: 0, solReclaimed: 0.0, xp: 0, level: 1, streak: 0, lastLogin: '' });
+  const [missions, setMissions] = useState([
+    { id: 'login', label: 'Daily Uplink', target: 1, progress: 0, xp: 100, completed: false },
+    { id: 'burn', label: 'Incinerate 5 Threats', target: 5, progress: 0, xp: 300, completed: false },
+    { id: 'swap', label: 'Yield Farm (Swap to JupSOL)', target: 1, progress: 0, xp: 500, completed: false },
+    { id: 'predict', label: '🔮 Market Prophet (Make Daily Prediction)', target: 1, progress: 0, xp: 200, completed: false },
+    { id: 'mobile', label: '📱 Mobile Master (Jupiter Mobile Only)', target: 1, progress: 0, xp: 250, completed: false, mobileOnly: true }
   ]);
-  
+
   const [currentRank, setCurrentRank] = useState('VOID STALKER');
   const [rankColor, setRankColor] = useState('#00ff41');
+  const [modal, setModal] = useState({ isOpen: false, type: 'INFO', title: '', message: '', actionLabel: '', onConfirm: null });
 
-  const [modal, setModal] = useState({ 
-    isOpen: false, type: 'INFO', title: '', message: '', actionLabel: '', onConfirm: null 
-  });
+  // 🎲 PREDICTION MARKETS STATE
+  const [currentSOLPrice, setCurrentSOLPrice] = useState(0);
+  const [dailyPrediction, setDailyPrediction] = useState(null); // { date, prediction: 'up'/'down', targetPrice, result: null/'correct'/'wrong' }
+  const [predictionHistory, setPredictionHistory] = useState([]);
 
   const getActiveTheme = () => {
-      if (isJupiterMobile) return THEMES.jupiter;
-      if (themeMode === 'system') {
-          if (typeof window !== 'undefined' && window.matchMedia) {
-              return window.matchMedia('(prefers-color-scheme: dark)').matches ? THEMES.dark : THEMES.light;
-          }
-          return THEMES.dark;
-      }
-      return THEMES[themeMode] || THEMES.dark;
+    if (isJupiterMobile) return THEMES.jupiter;
+    if (themeMode === 'system') {
+      if (typeof window !== 'undefined' && window.matchMedia) return window.matchMedia('(prefers-color-scheme: dark)').matches ? THEMES.dark : THEMES.light;
+      return THEMES.dark;
+    }
+    return THEMES[themeMode] || THEMES.dark;
   };
-  
   const theme = getActiveTheme();
   const audioRefs = useRef({});
-  // 🛡️ REFS for Load State
-  const isFirstLoad = useRef(true);
+  const hasHydrated = useRef(false);
 
-  // 🛡️ RANK UPDATE LOGIC (SILENT ON LOAD FIX)
+  // 🛡️ LOAD JUPITER PLUGIN
   useEffect(() => {
-      const levels = ['VOID STALKER', 'DUST HUNTER', 'ENTROPY KILLER', 'SOLANA REAPER', 'JUPITER VANGUARD', 'GOD OF VOID'];
-      const newRank = levels[Math.min(Math.floor(stats.xp / 500), levels.length - 1)];
-      
-      if (newRank !== currentRank) {
-          setCurrentRank(newRank);
-          // ONLY trigger if the time-lock has expired
-          if (!isFirstLoad.current) {
-              triggerConfetti();
-              if (audioEnabled) playSound('success');
-          }
-          
-          if (newRank === 'JUPITER VANGUARD') setRankColor('#00c2ff');
-          else if (newRank === 'GOD OF VOID') setRankColor('#fbbf24');
+    if (typeof window !== 'undefined' && !document.getElementById('jupiter-plugin-script')) {
+      const script = document.createElement('script');
+      script.id = 'jupiter-plugin-script';
+      script.src = "https://plugin.jup.ag/plugin-v1.js";
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+  }, []);
+
+  // 🛡️ DAILY QUEST & LOGIN LOGIC
+  useEffect(() => {
+    if (isMounted) {
+      const today = new Date().toDateString();
+      if (stats.lastLogin !== today) {
+        const newStreak = stats.lastLogin === new Date(Date.now() - 86400000).toDateString() ? stats.streak + 1 : 1;
+        const bonus = isJupiterMobile ? 300 : 100; // 3x for mobile!
+
+        setStats(p => ({ ...p, streak: newStreak, lastLogin: today, xp: p.xp + bonus }));
+        setMissions(prev => prev.map(m => {
+          if (m.id === 'login') return { ...m, progress: 1, completed: true };
+          if (m.id === 'mobile' && isJupiterMobile) return { ...m, progress: 1, completed: true };
+          return { ...m, progress: 0, completed: false };
+        }));
+
+        setTimeout(() => {
+          showModal('SUCCESS', 'DAILY REWARD', `Login Streak: ${newStreak} Day(s)\nXP Gained: +${bonus}${isJupiterMobile ? ' (🚀 3x Jupiter Mobile Bonus!)' : ''}`);
+          triggerConfetti();
+        }, 1000);
       }
-  }, [stats.xp]);
+    }
+  }, [isMounted, isJupiterMobile]);
 
-  const triggerConfetti = () => {
-    const duration = 3000;
-    const end = Date.now() + duration;
-    (function frame() {
-      confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: [theme.accent, '#fbbf24'] });
-      confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: [theme.accent, '#fbbf24'] });
-      if (Date.now() < end) requestAnimationFrame(frame);
-    }());
-  };
+  // 🛡️ INIT JUPITER PLUGIN
+  useEffect(() => {
+    if (view === 'SWAP_STATION' && swapTarget && typeof window !== 'undefined') {
+      let intervalId;
+      const initJupiter = () => {
+        if (window.Jupiter) {
+          clearInterval(intervalId);
+          try {
+            if (jupiterInitialized) window.Jupiter.close();
+            window.Jupiter.init({
+              displayMode: 'integrated',
+              integratedTargetId: 'integrated-terminal',
+              enableWalletPassthrough: true,
+              formProps: {
+                initialInputMint: swapTarget.id,
+                initialOutputMint: JUP_SOL_MINT,
+              },
+              containerStyles: { minHeight: '500px', height: '100%', width: '100%' },
+              onRequestConnectWallet: () => { document.querySelector('.wallet-adapter-button')?.click(); },
+              onSuccess: ({ txid }) => {
+                playSound('success');
+                triggerConfetti();
+                updateMission('swap', 1);
+                setSessionHistory(prev => [{
+                  id: Date.now(),
+                  action: `Swapped ${swapTarget.name}`,
+                  value: '+500 XP',
+                  time: new Date().toLocaleTimeString()
+                }, ...prev]);
+                setTimeout(() => {
+                  showModal('SUCCESS', 'YIELD SECURED', 'Target converted to JupSOL. Earning APY now.', 'SHARE', () => {
+                    handleShare('swap');
+                    closeModal();
+                  });
+                }, 1500);
+              },
+            });
+            setJupiterInitialized(true);
+          } catch (e) { console.error("Jupiter Init Error:", e); }
+        }
+      };
+      intervalId = setInterval(initJupiter, 100);
+      setTimeout(() => clearInterval(intervalId), 10000);
+    }
+    return () => {
+      if (view !== 'SWAP_STATION' && jupiterInitialized && window.Jupiter) {
+        try { window.Jupiter.close(); setJupiterInitialized(false); } catch (e) { }
+      }
+    };
+  }, [view, swapTarget]);
 
+  // 🛡️ SYNC WALLET
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.Jupiter && jupiterInitialized) {
+      window.Jupiter.syncProps({ passthroughWalletContextState: { publicKey, connected, wallet, signTransaction, signAllTransactions } });
+    }
+  }, [publicKey, connected, wallet, signTransaction, signAllTransactions, jupiterInitialized]);
+
+  // 🛡️ APP INIT
   useEffect(() => {
     setIsMounted(true);
     const savedStats = localStorage.getItem('demon_stats');
     if (savedStats) setStats(JSON.parse(savedStats));
-
-    // 🛡️ SILENT LOAD TIMER: Disable animations after 1 second
-    setTimeout(() => {
-        isFirstLoad.current = false;
-    }, 1000);
+    setTimeout(() => { hasHydrated.current = true; }, 500);
 
     if (typeof navigator !== 'undefined') {
-        const ua = navigator.userAgent || '';
-        if (ua.includes('Jupiter') || window?.solana?.isJupiter) {
-            setIsJupiterMobile(true);
-        }
+      const ua = navigator.userAgent || '';
+      if (ua.includes('Jupiter') || window?.solana?.isJupiter) setIsJupiterMobile(true);
     }
-
-    const fetchTokens = async () => {
-        let baseMap = { ...FALLBACK_METADATA };
-        try {
-            const res = await fetch('https://raw.githubusercontent.com/solana-labs/token-list/main/src/tokens/solana.tokenlist.json');
-            const data = await res.json();
-            const list = data.tokens || data;
-            const gitMap = list.reduce((acc, t) => ({ ...acc, [t.address]: t }), {});
-            baseMap = { ...baseMap, ...gitMap };
-            setTokenMap(baseMap); 
-        } catch (e) {}
-
-        try {
-            const res = await fetch('https://api.jup.ag/tokens/v2/tag?query=verified', {
-                headers: { 'x-api-key': JUPITER_API_KEY }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                const list = Array.isArray(data) ? data : (data.tokens || []);
-                const apiMap = list.reduce((acc, t) => ({ ...acc, [t.address]: t }), {});
-                setTokenMap(prev => ({ ...prev, ...apiMap }));
-            }
-        } catch (e) {}
-    };
-    fetchTokens();
 
     const loadAudio = (key, url) => {
       if (typeof window === 'undefined') return;
@@ -191,509 +210,749 @@ export default function Home() {
       audio.volume = 0.5;
       audioRefs.current[key] = audio;
     };
-
-    const sfx = {
-      scan: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3',
-      burn: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3',
-      select: 'https://assets.mixkit.co/active_storage/sfx/2577/2577-preview.mp3',
-      error: 'https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3',
-      success: 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3',
-      alert: 'https://assets.mixkit.co/active_storage/sfx/2865/2865-preview.mp3'
-    };
+    const sfx = { scan: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3', burn: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3', select: 'https://assets.mixkit.co/active_storage/sfx/2577/2577-preview.mp3', error: 'https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3', success: 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3', alert: 'https://assets.mixkit.co/active_storage/sfx/2865/2865-preview.mp3' };
     Object.entries(sfx).forEach(([k, v]) => loadAudio(k, v));
   }, []);
 
   useEffect(() => {
-      localStorage.setItem('demon_stats', JSON.stringify(stats));
-  }, [stats]);
+    const levels = ['VOID STALKER', 'DUST HUNTER', 'ENTROPY KILLER', 'SOLANA REAPER', 'JUPITER VANGUARD', 'MOBILE LEGEND', 'GOD OF VOID'];
+    const colors = ['#00ff41', '#00ff41', '#00ff41', '#00ff41', '#00c2ff', '#ff6b35', '#fbbf24'];
+
+    // Mobile-exclusive rank at high XP
+    let rankIndex = Math.min(Math.floor(stats.xp / 500), levels.length - 1);
+    if (isJupiterMobile && stats.xp >= 2500 && stats.xp < 3000) rankIndex = 5; // MOBILE LEGEND
+
+    const newRank = levels[rankIndex];
+    const newColor = colors[rankIndex];
+
+    if (newRank !== currentRank) {
+      setCurrentRank(newRank);
+      setRankColor(newColor);
+      if (hasHydrated.current) { triggerConfetti(); if (audioEnabled) playSound('success'); }
+    }
+    if (isMounted) localStorage.setItem('demon_stats', JSON.stringify(stats));
+  }, [stats.xp, audioEnabled, isMounted]);
 
   useEffect(() => {
-      if (publicKey && connection) {
-          connection.getBalance(publicKey).then(bal => setWalletBalance(bal / LAMPORTS_PER_SOL));
+    if (publicKey) {
+      connection.getBalance(publicKey)
+        .then(bal => setWalletBalance(bal / LAMPORTS_PER_SOL))
+        .catch(e => console.warn("Balance check failed:", e));
+    }
+  }, [publicKey]);
+
+  // 🎲 LOAD PREDICTION DATA & FETCH SOL PRICE
+  useEffect(() => {
+    if (isMounted) {
+      // Load saved prediction
+      const saved = localStorage.getItem('dust_demons_prediction');
+      if (saved) {
+        try {
+          const prediction = JSON.parse(saved);
+          setDailyPrediction(prediction);
+        } catch (e) { }
       }
-  }, [publicKey, connection]);
 
-  const playSound = (key) => {
-    if (!audioEnabled) return;
-    const audio = audioRefs.current[key];
-    if (audio) { audio.currentTime = 0; audio.play().catch(() => {}); }
-  };
+      // Fetch current SOL price
+      fetchSOLPrice();
 
-  const showModal = (type, title, message, actionLabel = 'OK', onConfirm = null) => {
-    if (type !== 'SWAP_PROMPT') playSound('alert');
-    setModal({ isOpen: true, type, title, message, actionLabel, onConfirm });
-  };
+      // Refresh price every 60 seconds
+      const interval = setInterval(fetchSOLPrice, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [isMounted]);
 
+  // 🛡️ HELPERS
+  const playSound = (key) => { if (audioEnabled && audioRefs.current[key]) { audioRefs.current[key].currentTime = 0; audioRefs.current[key].play().catch(() => { }); } };
+  const showModal = (type, title, message, actionLabel = 'OK', onConfirm = null) => { if (type !== 'SWAP_PROMPT') playSound('alert'); setModal({ isOpen: true, type, title, message, actionLabel, onConfirm }); };
   const closeModal = () => setModal(prev => ({ ...prev, isOpen: false }));
+  const triggerHaptic = (pattern = 50) => { if (hapticsEnabled && window.navigator?.vibrate) window.navigator.vibrate(pattern); };
 
-  useEffect(() => {
-    if (isMounted && publicKey) {
-      setResult(null); setView('SCANNER'); setSelectedIds([]); setLastTx(null);
+  const handleShare = (action = 'general', data = null) => {
+    let text = "I'm cleaning up my Solana wallet with Dust Demons! 🧹💀";
+    if (action === 'burn') text = `I just incinerated ${stats.totalBurned} dust tokens and reclaimed ${stats.solReclaimed.toFixed(3)} SOL on Dust Demons! 🔥`;
+    if (action === 'swap') text = `I just turned my dust into Yield-Bearing JupSOL on Dust Demons! 🪐`;
+    if (action === 'prediction' && data) {
+      const result = data.result === 'correct' ? '🎯 CORRECT' : '❌ MISSED';
+      text = `${result}! I predicted SOL would go ${data.prediction.toUpperCase()} on Dust Demons! 🔮\n\nCurrent Rank: ${currentRank}\nTotal XP: ${stats.xp}`;
     }
-  }, [publicKey, isMounted]);
+    if (action === 'rank') text = `I just reached ${currentRank} rank on Dust Demons! 💀\n\nTotal XP: ${stats.xp}\nSOL Reclaimed: ${stats.solReclaimed.toFixed(3)}`;
 
-  const triggerHaptic = (pattern = 50) => {
-    if (hapticsEnabled && typeof window !== 'undefined' && window.navigator?.vibrate) {
-      window.navigator.vibrate(pattern);
+    const refLink = publicKey ? `https://dust-demons.vercel.app/?ref=${publicKey.toString()}` : 'https://dust-demons.vercel.app/';
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(refLink)}&hashtags=JupiterMobile,Solana,JupSOL,DustDemons`;
+    window.open(url, '_blank');
+  };
+
+  const updateMission = (id, amount) => {
+    setMissions(prev => prev.map(m => {
+      if (m.id === id && !m.completed) {
+        const newProgress = m.progress + amount;
+        if (newProgress >= m.target) {
+          setStats(s => ({ ...s, xp: s.xp + m.xp }));
+          setLootDrops(l => [...l, { id: Date.now(), text: `QUEST COMPLETE: +${m.xp} XP` }]);
+          return { ...m, progress: m.target, completed: true };
+        }
+        return { ...m, progress: newProgress };
+      }
+      return m;
+    }));
+  };
+
+  // 🎲 PREDICTION MARKETS LOGIC
+  const fetchSOLPrice = async () => {
+    try {
+      const SOL_MINT = 'So11111111111111111111111111111111111111112';
+      const prices = await getTokenPrices([SOL_MINT]);
+      const price = prices[SOL_MINT]?.price || 0;
+      setCurrentSOLPrice(price);
+      return price;
+    } catch (error) {
+      console.error('Failed to fetch SOL price:', error);
+      return currentSOLPrice;
     }
   };
 
-  async function fetchPrices(mints) {
-    if (!mints.length) return {};
+  const makePrediction = (direction) => {
+    const today = new Date().toDateString();
+    const prediction = {
+      date: today,
+      prediction: direction,
+      startPrice: currentSOLPrice,
+      targetPrice: direction === 'up' ? currentSOLPrice * 1.01 : currentSOLPrice * 0.99,
+      result: null,
+      timestamp: Date.now()
+    };
+
+    setDailyPrediction(prediction);
+    localStorage.setItem('dust_demons_prediction', JSON.stringify(prediction));
+    updateMission('predict', 1);
+    playSound('success');
+    triggerConfetti();
+
+    showModal('SUCCESS', 'PREDICTION LOCKED', `You predicted SOL will go ${direction.toUpperCase()}!\\nCurrent: $${currentSOLPrice.toFixed(2)}\\nTarget: $${prediction.targetPrice.toFixed(2)}\\n\\nCheck back in 24h for results!`);
+  };
+
+  const checkPredictionResult = async () => {
+    if (!dailyPrediction || dailyPrediction.result) return;
+
+    const currentPrice = await fetchSOLPrice();
+    const isCorrect = dailyPrediction.prediction === 'up'
+      ? currentPrice >= dailyPrediction.targetPrice
+      : currentPrice <= dailyPrediction.targetPrice;
+
+    const result = isCorrect ? 'correct' : 'wrong';
+    const bonusXP = isCorrect ? 300 : 50; // Big reward for correct predictions!
+
+    const updatedPrediction = { ...dailyPrediction, result, endPrice: currentPrice };
+    setDailyPrediction(updatedPrediction);
+    setPredictionHistory(prev => [updatedPrediction, ...prev.slice(0, 9)]); // Keep last 10
+    localStorage.setItem('dust_demons_prediction', JSON.stringify(updatedPrediction));
+
+    if (isCorrect) {
+      setStats(s => ({ ...s, xp: s.xp + bonusXP }));
+      triggerConfetti();
+      playSound('success');
+      showModal('SUCCESS', '🎯 PROPHECY FULFILLED!', `Your prediction was CORRECT!\\n+${bonusXP} XP Bonus!`);
+    } else {
+      playSound('alert');
+      showModal('INFO', 'PREDICTION MISSED', `Your prediction was incorrect.\\n+${bonusXP} XP for trying!`);
+      setStats(s => ({ ...s, xp: s.xp + bonusXP }));
+    }
+  };
+
+  // 🛡️ HELIUS DAS API
+  async function fetchAssets(owner) {
     try {
-      const chunks = [];
-      for (let i = 0; i < mints.length; i += 50) chunks.push(mints.slice(i, i + 50));
-      let prices = {};
-      for (const chunk of chunks) {
-        const res = await fetch(`https://api.jup.ag/price/v3?ids=${chunk.join(',')}`, {
-            headers: { 'x-api-key': JUPITER_API_KEY }
-        });
-        if (!res.ok) continue; 
-        const data = await res.json();
-        if (data) prices = { ...prices, ...data };
-      }
-      return prices;
-    } catch { return {}; }
+      const response = await fetch(HELIUS_DAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 'my-id',
+          method: 'getAssetsByOwner',
+          params: {
+            ownerAddress: owner.toString(),
+            page: 1,
+            limit: 100,
+            displayOptions: { showFungible: true, showNativeBalance: true }
+          }
+        })
+      });
+      const { result } = await response.json();
+      return result.items || [];
+    } catch (e) {
+      console.error("DAS API Error:", e);
+      throw new Error("Failed to scan on-chain assets.");
+    }
   }
 
+  // 🛡️ SCAN LOGIC (PRECISION FILTERING)
   async function handleScan() {
     if (!publicKey) return;
     setLoading(true); setView('INVENTORY'); triggerHaptic(100); playSound('scan');
-    
+
     try {
-      let nftAssets = [];
-      try {
-        const bounties = await fetchMyBounties(publicKey);
-        if (Array.isArray(bounties)) nftAssets = bounties;
-      } catch {}
+      const assets = await fetchAssets(publicKey);
 
-      const accounts = await connection.getParsedTokenAccountsByOwner(publicKey, { programId: TOKEN_PROGRAM_ID });
-      const rawTokens = [], mintsToCheck = [];
-      const seenMints = new Set(); 
+      const targets = assets.map((item, i) => {
+        // 🛑 FILTER: HIDE COMPRESSED NFTS (Cannot burn safely via SPL)
+        if (item.compression?.compressed) return null;
 
-      for (const item of accounts.value) {
-        const info = item.account.data.parsed.info;
-        const mint = info.mint;
-        
-        if (seenMints.has(mint)) continue;
-        seenMints.add(mint);
+        const isFungible = item.interface === 'FungibleToken' || item.interface === 'FungibleAsset';
+        const isNFT = !isFungible;
+        const balance = item.token_info?.balance || 0;
+        const decimals = item.token_info?.decimals || 0;
+        const uiBalance = balance / Math.pow(10, decimals);
+        const price = item.token_info?.price_info?.price_per_token || 0;
+        const value = uiBalance * price;
 
-        const meta = tokenMap[mint] || {};
-        mintsToCheck.push(mint);
-        
-        rawTokens.push({
-          mint, tokenAccount: item.pubkey.toString(),
-          name: meta.name || `Token ${mint.slice(0, 4)}...`,
-          image: meta.logoURI || null, 
-          balance: info.tokenAmount.amount, uiBalance: info.tokenAmount.uiAmount
-        });
-      }
-
-      const prices = await fetchPrices(mintsToCheck);
-      setPriceMap(prices);
-
-      const targets = [...nftAssets, ...rawTokens].map((a, i) => {
-        let val = 0;
-        if (prices[a.mint]) {
-            val = (prices[a.mint].usdPrice || 0) * (a.uiBalance || 0);
-        }
-
-        const nameLower = (a.name || '').toLowerCase();
+        const nameLower = (item.content?.metadata?.name || 'Unknown').toLowerCase();
         const isScam = nameLower.includes('visit') || nameLower.includes('.com') || nameLower.includes('reward');
-        const isEmpty = parseFloat(a.balance || '0') === 0;
-        const isKnownSafe = SAFE_MINTS.includes(a.mint);
-        
-        const isHighValue = val > 10.0; // 🚀 $10 THRESHOLD
-        
-        const isRentClaimable = isKnownSafe && isEmpty;
-        const isSafe = (isKnownSafe || isHighValue) && !isRentClaimable; 
-        
-        const isTradeable = val > 0.01 && !isSafe; 
-        const isDust = !isScam && !isEmpty && !isSafe && !isTradeable;
-        const isPhantom = !a.mint;
+        const isEmpty = uiBalance === 0;
 
-        if (isKnownSafe && !isHighValue && !isRentClaimable) return null;
+        // 🚀 LOGIC: 
+        // 1. Swap = Value > $0.10 (Show Blue - No upper limit!)
+        // 2. Dust = Value < $0.10 (Show Yellow)
+
+        const isTradeable = value >= 0.10; // Anything worth > 10 cents is tradeable
+        const isDust = value < 0.10 && !isScam && !isEmpty && !isTradeable;
+        const isRentClaimable = isEmpty;
 
         return {
-          id: a.mint || `unknown-${i}`,
-          tokenAccount: a.tokenAccount || a.pubkey || null, 
-          name: a.name || 'UNKNOWN',
-          type: isEmpty ? 'EMPTY' : (isScam ? 'SCAM' : (isSafe ? 'SAFE' : 'DUST')),
-          image: a.image, displayVal: a.uiBalance !== undefined ? a.uiBalance : (a.val || '0'), 
-          usdValue: val, isScam, isDust, isTradeable, isEmpty, isPhantom, isSafe, isRentClaimable, isHighValue
+          id: item.id,
+          name: item.content?.metadata?.name || item.content?.metadata?.symbol || 'Unknown',
+          image: item.content?.links?.image || item.content?.files?.[0]?.uri,
+          uiBalance: isNFT ? 1 : uiBalance,
+          value: value,
+          isNFT: isNFT,
+          isScam: isScam,
+          isDust: isDust,
+          isTradeable: isTradeable,
+          isRentClaimable: isRentClaimable,
+          decimals: decimals // Important for burn calc
         };
       }).filter(Boolean);
 
-      targets.sort((a, b) => {
-          if (a.isRentClaimable && !b.isRentClaimable) return -1;
-          if (!a.isRentClaimable && b.isRentClaimable) return 1;
-          if (a.isScam && !b.isScam) return -1;
-          return 0;
-      });
-      
+      targets.sort((a, b) => a.value - b.value);
+
       setResult({ targets });
     } catch (error) {
-      showModal('DANGER', 'SYSTEM FAILURE', `Error: ${error.message || 'Connection Failed'}`);
+      showModal('DANGER', 'SYSTEM FAILURE', error.message);
       setView('SCANNER');
     }
     setLoading(false);
   }
 
- const handleSwap = (target) => {
-      playSound('success');
-      
-      if (window.Jupiter) {
-          window.Jupiter.init({
-              displayMode: 'modal',
-              endpoint: 'https://api.mainnet-beta.solana.com', 
-              strictTokenList: false,
-              formProps: {
-                  initialInputMint: target.id,
-                  initialOutputMint: 'So11111111111111111111111111111111111111112', 
-                  fixedOutputMint: true,
-              },
-          });
-          setStats(p => ({ ...p, xp: p.xp + 50 })); 
-      } else {
-          console.warn("Jupiter Script not loaded yet, redirecting...");
-          window.location.href = `https://jup.ag/swap/${target.id}-SOL`;
-      }
+  const handleSwap = (target) => {
+    setSwapTarget(target);
+    setView('SWAP_STATION');
+    playSound('success');
   };
 
   const toggleSelect = (target) => {
-    if (target.isPhantom) {
-      playSound('error'); triggerHaptic([50, 50, 50]);
-      return;
-    }
-    if (target.isRentClaimable || target.isDust || target.isScam || target.isEmpty) {
-        playSound('select'); triggerHaptic(30);
-        setSelectedIds(prev => prev.includes(target.id) ? prev.filter(i => i !== target.id) : [...prev, target.id]);
-    } else {
-        handleSwap(target);
+    if (target.isTradeable) { handleSwap(target); }
+    else {
+      setSelectedIds(prev => prev.includes(target.id) ? prev.filter(i => i !== target.id) : [...prev, target.id]);
     }
   };
 
   const handleToggleSelectAll = () => {
     if (!result?.targets) return;
-    const burnable = result.targets.map(t => t.id);
+    const burnable = result.targets.filter(t => !t.isTradeable).map(t => t.id); // Select only burnable
     const allSelected = burnable.every(id => selectedIds.includes(id));
-    if (allSelected) { setSelectedIds([]); playSound('select'); } 
-    else { setSelectedIds(burnable); playSound('select'); triggerHaptic([50, 50]); }
+    if (allSelected) setSelectedIds([]);
+    else setSelectedIds(burnable);
   };
 
   async function executeExorcism() {
     closeModal(); setBurningId('MASS_BURN'); triggerHaptic([50, 50, 50]);
     try {
-      const txs = []; let burned = 0;
       const { blockhash } = await connection.getLatestBlockhash('finalized');
+      const txs = []; let burned = 0;
 
-      for (let i = 0; i < selectedIds.length; i += 10) {
-        const chunk = selectedIds.slice(i, i + 10);
+      for (let i = 0; i < selectedIds.length; i += 5) {
+        const chunk = selectedIds.slice(i, i + 5);
         const tx = new Transaction();
         tx.feePayer = publicKey; tx.recentBlockhash = blockhash;
-        let hasIx = false;
 
         for (const id of chunk) {
           const t = result.targets.find(x => x.id === id);
           if (!t) continue;
           try {
-              const mint = new PublicKey(t.id);
-              const tokenAcc = t.tokenAccount ? new PublicKey(t.tokenAccount) : await getAssociatedTokenAddress(mint, publicKey);
-              const info = await connection.getAccountInfo(tokenAcc);
-              if (info) {
-                  if (!t.isRentClaimable) {
-                      const bal = await connection.getTokenAccountBalance(tokenAcc);
-                      if (BigInt(bal.value.amount) > BigInt(0)) {
-                          tx.add(createBurnInstruction(tokenAcc, mint, publicKey, BigInt(bal.value.amount)));
-                      }
-                  }
-                  tx.add(createCloseAccountInstruction(tokenAcc, publicKey, publicKey));
-                  hasIx = true; burned++;
-              }
-          } catch {}
+            const mint = new PublicKey(t.id);
+            const tokenAcc = await getAssociatedTokenAddress(mint, publicKey);
+
+            if (!t.isNFT && t.uiBalance > 0) {
+              tx.add(createBurnInstruction(tokenAcc, mint, publicKey, BigInt(Math.floor(t.uiBalance * Math.pow(10, t.decimals)))));
+            }
+            tx.add(createCloseAccountInstruction(tokenAcc, publicKey, publicKey));
+            burned++;
+          } catch { }
         }
-        if (hasIx) txs.push(tx);
+        txs.push(tx);
       }
 
       if (!txs.length) { showModal('INFO', 'INVALID', 'No valid targets.'); setBurningId(null); return; }
-
       const signed = await signAllTransactions(txs);
       setLoading(true);
-      const sigs = await Promise.all(signed.map(t => connection.sendRawTransaction(t.serialize())));
-      await connection.confirmTransaction(sigs[sigs.length - 1], 'confirmed');
-      
-      setLastTx(sigs[sigs.length - 1]); setShake(true); triggerHaptic([100, 50, 100]); 
-      playSound('burn'); 
-      triggerConfetti(); 
-      setTimeout(() => playSound('success'), 500);
+
+      for (const tx of signed) {
+        const sig = await connection.sendRawTransaction(tx.serialize());
+        await connection.confirmTransaction(sig, 'confirmed');
+      }
+
+      setShake(true); triggerHaptic([100, 50, 100]);
+      playSound('burn'); triggerConfetti();
+      updateMission('burn', burned);
 
       const rent = (burned * 0.002).toFixed(3);
-      setStats(p => {
-          const newTotal = p.totalBurned + burned;
-          const newSol = p.solReclaimed + parseFloat(rent);
-          
-          const newMissions = dailyMissions.map(m => {
-              if (m.id === 1) return { ...m, current: newTotal, completed: newTotal >= m.target };
-              if (m.id === 2) return { ...m, current: newSol, completed: newSol >= m.target };
-              return m;
-          });
-          
-          const xpGain = burned * 10;
-          return { ...p, totalBurned: newTotal, solReclaimed: newSol, xp: p.xp + xpGain };
-      });
-
+      setStats(p => ({ ...p, totalBurned: p.totalBurned + burned, solReclaimed: p.solReclaimed + parseFloat(rent), xp: p.xp + (burned * 10) }));
       setLootDrops(p => [...p, { id: Date.now(), text: `+${rent} SOL` }]);
       setResult(p => ({ ...p, targets: p.targets.filter(t => !selectedIds.includes(t.id)) }));
       setSelectedIds([]);
-    } catch (err) {
-      showModal('DANGER', 'FAILED', err.message);
-    } finally {
-      setBurningId(null); setLoading(false);
-      setTimeout(() => setShake(false), 500);
-      setTimeout(() => setLootDrops(p => p.filter(l => l.id !== Date.now())), 3000);
-    }
+
+      // Update Session Log
+      setSessionHistory(prev => [{
+        id: Date.now(),
+        action: `Incinerated ${burned} Assets`,
+        value: `+${rent} SOL`,
+        time: new Date().toLocaleTimeString()
+      }, ...prev]);
+
+      setTimeout(() => {
+        showModal('SUCCESS', 'EXORCISM COMPLETE', `You recovered ${rent} SOL. Share to recruit more Hunters?`, 'SHARE ON X', () => {
+          handleShare('burn');
+          closeModal();
+        });
+      }, 2000);
+
+    } catch (err) { showModal('DANGER', 'FAILED', err.message); }
+    finally { setBurningId(null); setLoading(false); setTimeout(() => setShake(false), 500); setTimeout(() => setLootDrops(p => p.filter(l => l.id !== Date.now())), 3000); }
   }
 
-  const confirmExorcism = () => {
-    if (!selectedIds.length || !publicKey) return;
-    showModal('DANGER', 'CONFIRM PROTOCOL', `Incinerate ${selectedIds.length} targets?`, 'EXECUTE', executeExorcism);
-  };
-
-  const handleShare = () => {
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`I just reclaimed ${stats.solReclaimed.toFixed(3)} SOL using Dust Demons 😈🧹\nhttps://dust-demons.sol`)}`, '_blank');
-  };
+  const confirmExorcism = () => { if (selectedIds.length && publicKey) showModal('DANGER', 'CONFIRM PROTOCOL', `Incinerate ${selectedIds.length} targets?`, 'EXECUTE', executeExorcism); };
 
   if (!isMounted) return <div style={{ background: theme.bg, height: '100dvh', width: '100vw' }} />;
 
   return (
-    <main style={{ 
-      height: '100dvh', width: '100vw', 
-      backgroundColor: theme.bg, 
-      color: theme.text, 
-      position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: 'monospace' 
-    }}>
-      
-      <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-          backgroundImage: `linear-gradient(${theme.grid} 1px, transparent 1px), linear-gradient(90deg, ${theme.grid} 1px, transparent 1px)`,
-          backgroundSize: '30px 30px',
-      }} />
+    <main style={{ height: '100dvh', width: '100vw', backgroundColor: theme.bg, color: theme.text, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: 'monospace' }}>
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: `linear-gradient(${theme.grid} 1px, transparent 1px), linear-gradient(90deg, ${theme.grid} 1px, transparent 1px)`, backgroundSize: '30px 30px' }} />
       <div style={{ position: 'absolute', inset: 0, background: theme.vignette, zIndex: 1 }} />
-
-      <div className="scanner-line" style={{
-          position: 'absolute', top: 0, left: 0, right: 0, height: '4px',
-          background: `linear-gradient(90deg, transparent, ${theme.accent}, transparent)`,
-          boxShadow: `0 0 15px ${theme.accent}`,
-          zIndex: 5, animation: 'scan 2.5s linear infinite', pointerEvents: 'none'
-      }} />
+      <div className="scanner-line" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: `linear-gradient(90deg, transparent, ${theme.accent}, transparent)`, boxShadow: `0 0 15px ${theme.accent}`, zIndex: 5, animation: 'scan 2.5s linear infinite', pointerEvents: 'none' }} />
       <style jsx>{`@keyframes scan { 0% { top: -10%; opacity: 0; } 20% { opacity: 1; } 100% { top: 110%; opacity: 0; } }`}</style>
+      <style jsx global>{`
+        .wallet-adapter-button { height: 36px !important; padding: 0 12px !important; font-size: 12px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; max-width: 140px !important; }
+        .wallet-adapter-button-trigger { background-color: ${theme.panel} !important; border: 1px solid ${theme.border} !important; color: ${theme.text} !important; }
+        @media (max-width: 400px) { .wallet-adapter-button { max-width: 100px !important; } }
+      `}</style>
 
+      {/* MODAL */}
       <AnimatePresence>
         {modal.isOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
-          >
-             <div style={{ background: theme.modal, border: `1px solid ${modal.type === 'DANGER' ? '#ff0055' : theme.accent}`, padding: '24px', borderRadius: '8px', maxWidth: '300px', width: '100%', textAlign: 'center', boxShadow: '0 0 30px rgba(0,0,0,0.5)' }}>
-                <h3 style={{ color: modal.type === 'DANGER' ? '#ff0055' : theme.accent, margin: '0 0 10px 0', fontSize: '18px', fontWeight: '900' }}>{modal.title}</h3>
-                <p style={{ color: theme.textDim, fontSize: '12px', marginBottom: '20px' }}>{modal.message}</p>
-                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                   <button onClick={closeModal} style={{ padding: '10px 20px', background: 'transparent', border: `1px solid ${theme.border}`, color: theme.textDim, borderRadius: '4px', fontWeight: 'bold' }}>CANCEL</button>
-                   {modal.onConfirm && (
-                     <button onClick={modal.onConfirm} style={{ padding: '10px 20px', background: modal.type === 'DANGER' ? '#ff0055' : theme.accent, border: 'none', color: '#fff', borderRadius: '4px', fontWeight: 'bold' }}>{modal.actionLabel}</button>
-                   )}
-                </div>
-             </div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+            <div style={{ background: theme.modal, border: `1px solid ${modal.type === 'DANGER' ? '#ff0055' : (modal.type === 'SUCCESS' ? '#00ff41' : theme.accent)}`, padding: '24px', borderRadius: '8px', maxWidth: '300px', width: '100%', textAlign: 'center', boxShadow: '0 0 30px rgba(0,0,0,0.5)' }}>
+              <h3 style={{ color: modal.type === 'DANGER' ? '#ff0055' : (modal.type === 'SUCCESS' ? '#00ff41' : theme.accent), margin: '0 0 10px 0', fontSize: '18px', fontWeight: '900' }}>{modal.title}</h3>
+              <p style={{ color: theme.textDim, fontSize: '12px', marginBottom: '20px' }}>{modal.message}</p>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                <button onClick={closeModal} style={{ padding: '10px 20px', background: 'transparent', border: `1px solid ${theme.border}`, color: theme.textDim, borderRadius: '4px', fontWeight: 'bold' }}>CANCEL</button>
+                {modal.onConfirm && <button onClick={modal.onConfirm} style={{ padding: '10px 20px', background: modal.type === 'DANGER' ? '#ff0055' : (modal.type === 'SUCCESS' ? '#00ff41' : theme.accent), border: 'none', color: '#fff', borderRadius: '4px', fontWeight: 'bold' }}>{modal.actionLabel}</button>}
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* HEADER */}
       <header style={{ zIndex: 100, padding: '16px', display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid ${theme.border}`, background: 'rgba(5,5,5,0.2)', backdropFilter: 'blur(10px)' }}>
         <div style={{ display: 'flex', gap: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-             <img src="/demon-logo.jpg" style={{ width: '36px', height: '36px', borderRadius: '4px', border: `1px solid ${theme.border}`, objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
-             <div style={{ background: theme.panel, border: `1px solid ${rankColor}`, padding: '4px 10px', borderRadius: '2px' }}>
-               <p style={{ margin: 0, fontSize: '8px', color: rankColor, fontWeight: 'bold', letterSpacing: '1px' }}>RANK</p>
-               <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px', color: theme.text }}>{currentRank}</h2>
-             </div>
+            <img src="/demon-logo.jpg" style={{ width: '36px', height: '36px', borderRadius: '4px', border: `1px solid ${theme.border}`, objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
+            <div style={{ background: theme.panel, border: `1px solid ${rankColor}`, padding: '4px 10px', borderRadius: '2px' }}>
+              <p style={{ margin: 0, fontSize: '8px', color: rankColor, fontWeight: 'bold', letterSpacing: '1px' }}>RANK</p>
+              <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px', color: theme.text }}>{currentRank}</h2>
+            </div>
+            <button
+              onClick={() => handleShare('rank')}
+              style={{
+                background: 'rgba(29, 161, 242, 0.1)',
+                border: '1px solid #1DA1F2',
+                borderRadius: '4px',
+                padding: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              title="Share rank on Twitter"
+            >
+              <Share2 size={14} color="#1DA1F2" />
+            </button>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
-             <div style={{ background: theme.panel, border: `1px solid ${theme.border}`, padding: '4px 10px', borderRadius: '2px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <Wallet size={12} color={theme.accent} />
-                <div>
-                    <p style={{ margin: 0, fontSize: '8px', color: theme.textDim }}>BALANCE</p>
-                    <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text }}>{walletBalance.toFixed(3)} SOL</h2>
-                </div>
-             </div>
-             <div style={{ background: theme.panel, border: `1px solid ${theme.border}`, padding: '4px 10px', borderRadius: '2px' }}>
-                <p style={{ margin: 0, fontSize: '8px', color: '#fbbf24', letterSpacing: '1px' }}>LOOT</p>
-                <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text }}>{stats.solReclaimed.toFixed(3)}</h2>
-             </div>
+            <div style={{ background: theme.panel, border: `1px solid ${theme.border}`, padding: '4px 10px', borderRadius: '2px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <Wallet size={12} color={theme.accent} />
+              <div>
+                <p style={{ margin: 0, fontSize: '8px', color: theme.textDim }}>BALANCE</p>
+                <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text }}>{walletBalance.toFixed(3)} SOL</h2>
+              </div>
+            </div>
+            <div style={{ background: theme.panel, border: `1px solid ${theme.border}`, padding: '4px 10px', borderRadius: '2px' }}>
+              <p style={{ margin: 0, fontSize: '8px', color: '#fbbf24', letterSpacing: '1px' }}>LOOT</p>
+              <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text }}>{stats.solReclaimed.toFixed(3)}</h2>
+            </div>
           </div>
         </div>
         <div style={{ transform: 'scale(0.85)' }}><WalletMultiButton /></div>
       </header>
 
-      {isJupiterMobile && <div style={{ background: '#00ff41', color: '#000', textAlign: 'center', fontSize: '9px', fontWeight: '900', padding: '3px', letterSpacing: '2px', textTransform: 'uppercase' }}>[ JUP_LINK: ACTIVE ]</div>}
-
+      {/* MENU */}
       <AnimatePresence>
         {showMenu && (
-          <motion.div 
-            initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 30, stiffness: 300 }} 
-            style={{ 
-              position: 'fixed', inset: 0, zIndex: 9999, 
-              backgroundColor: theme.bg, 
-              padding: '20px', display: 'flex', flexDirection: 'column' 
-            }}
-          >
-             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: `1px solid ${theme.border}`, paddingBottom: '15px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                   <Terminal size={24} color={theme.accent} />
-                   <h2 style={{ margin: 0, fontSize: '18px', color: theme.accent, fontFamily: 'monospace' }}>SYSTEM CONFIG</h2>
-                </div>
-                <button onClick={() => setShowMenu(false)} style={{ background: 'none', border: 'none', color: theme.text }}><X size={24} /></button>
-             </div>
-             
-             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div style={{ background: theme.panel, padding: '15px', borderRadius: '4px', border: `1px solid ${theme.border}` }}>
-                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                        <span style={{ fontSize: '12px', color: theme.textDim }}>TOTAL BURNED</span>
-                        <span style={{ fontSize: '12px', color: theme.text, fontWeight: 'bold' }}>{stats.totalBurned}</span>
-                     </div>
-                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ fontSize: '12px', color: theme.textDim }}>TOTAL RECLAIMED</span>
-                        <span style={{ fontSize: '12px', color: '#fbbf24', fontWeight: 'bold' }}>{stats.solReclaimed.toFixed(4)} SOL</span>
-                     </div>
-                </div>
+          <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 30, stiffness: 300 }} style={{ position: 'fixed', inset: 0, zIndex: 9999, backgroundColor: theme.bg, padding: '20px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: `1px solid ${theme.border}`, paddingBottom: '15px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Terminal size={24} color={theme.accent} />
+                <h2 style={{ margin: 0, fontSize: '18px', color: theme.accent, fontFamily: 'monospace' }}>SYSTEM CONFIG</h2>
+              </div>
+              <button onClick={() => setShowMenu(false)} style={{ background: 'none', border: 'none', color: theme.text }}><X size={24} /></button>
+            </div>
 
-                <div style={{ background: theme.panel, padding: '15px', borderRadius: '4px', border: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 'bold', color: theme.text }}>
-                            {audioEnabled ? <Volume2 size={16} color={theme.accent} /> : <VolumeX size={16} color={theme.textDim} />} AUDIO
-                        </span>
-                        <button onClick={() => setAudioEnabled(!audioEnabled)} style={{ background: audioEnabled ? `${theme.accent}20` : theme.bg, border: `1px solid ${audioEnabled ? theme.accent : theme.border}`, color: audioEnabled ? theme.accent : theme.textDim, padding: '4px 12px', fontSize: '10px', fontWeight: 'bold', borderRadius: '2px' }}>
-                            {audioEnabled ? 'ONLINE' : 'MUTED'}
-                        </button>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 'bold', color: theme.text }}>
-                            <Vibrate size={16} color={hapticsEnabled ? "#fbbf24" : theme.textDim} /> HAPTICS
-                        </span>
-                        <button onClick={() => setHapticsEnabled(!hapticsEnabled)} style={{ background: hapticsEnabled ? 'rgba(251,191,36,0.2)' : theme.bg, border: `1px solid ${hapticsEnabled ? '#fbbf24' : theme.border}`, color: hapticsEnabled ? '#fbbf24' : theme.textDim, padding: '4px 12px', fontSize: '10px', fontWeight: 'bold', borderRadius: '2px' }}>
-                            {hapticsEnabled ? 'ACTIVE' : 'DISABLED'}
-                        </button>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 'bold', color: theme.text }}>
-                            {themeMode === 'light' ? <Sun size={16} color={theme.accent} /> : (themeMode === 'system' ? <Monitor size={16} color={theme.accent} /> : <Moon size={16} color={theme.accent} />)} THEME
-                        </span>
-                        <div style={{ display: 'flex', gap: '5px' }}>
-                            <button onClick={() => setThemeMode('dark')} style={{ padding: '6px', background: themeMode === 'dark' ? theme.accent : theme.bg, color: themeMode === 'dark' ? '#000' : theme.textDim, border: `1px solid ${theme.border}`, borderRadius: '2px' }}><Moon size={14}/></button>
-                            <button onClick={() => setThemeMode('light')} style={{ padding: '6px', background: themeMode === 'light' ? theme.accent : theme.bg, color: themeMode === 'light' ? '#000' : theme.textDim, border: `1px solid ${theme.border}`, borderRadius: '2px' }}><Sun size={14}/></button>
-                            <button onClick={() => setThemeMode('system')} style={{ padding: '6px', background: themeMode === 'system' ? theme.accent : theme.bg, color: themeMode === 'system' ? '#000' : theme.textDim, border: `1px solid ${theme.border}`, borderRadius: '2px' }}><Monitor size={14}/></button>
-                        </div>
-                    </div>
-                </div>
+            {/* 🛡️ TACTICAL GUIDE (HOW TO PLAY) */}
+            <div style={{ marginBottom: '20px', padding: '15px', background: theme.panel, border: `1px solid ${theme.accent}`, borderRadius: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                <HelpCircle size={18} color={theme.accent} />
+                <h4 style={{ margin: 0, fontSize: '14px', color: theme.accent, fontWeight: '900', letterSpacing: '1px' }}>TACTICAL GUIDE</h4>
+              </div>
+              <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12px', color: theme.textDim, lineHeight: '1.8' }}>
+                <li><strong>SCAN:</strong> Find dust & spam in your wallet.</li>
+                <li><strong><span style={{ color: '#00ff41' }}>GREEN</span> (RENT):</strong> Empty accounts. Burn to reclaim SOL.</li>
+                <li><strong><span style={{ color: '#00c2ff' }}>BLUE</span> (YIELD):</strong> Swap tokens for <strong style={{ color: '#00c2ff' }}>JupSOL</strong>.</li>
+                <li><strong><span style={{ color: '#fbbf24' }}>YELLOW</span> (DUST):</strong> Worthless tokens. Burn them.</li>
+              </ul>
+            </div>
 
-                <div style={{ marginTop: '5px', padding: '15px', background: theme.panel, border: `1px solid ${theme.border}`, borderRadius: '4px', position: 'relative', overflow: 'hidden' }}>
-                    <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '4px', background: '#00ff41' }} />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                        <Info size={16} color="#00ff41" />
-                        <h4 style={{ margin: 0, fontSize: '14px', color: '#00ff41', fontWeight: '900', letterSpacing: '1px' }}>MISSION BRIEF</h4>
+            {/* 🛡️ DAILY QUESTS (NEW) */}
+            <div style={{ marginBottom: '20px', padding: '15px', background: theme.panel, border: `1px solid #fbbf24`, borderRadius: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                <Calendar size={18} color="#fbbf24" />
+                <h4 style={{ margin: 0, fontSize: '14px', color: '#fbbf24', fontWeight: '900', letterSpacing: '1px' }}>DAILY QUESTS</h4>
+              </div>
+              {missions.map(m => {
+                const isDisabled = m.mobileOnly && !isJupiterMobile;
+                return (
+                  <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px dashed #333', opacity: isDisabled ? 0.5 : 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {m.completed ? <CheckCircle size={14} color="#00ff41" /> : <div style={{ width: '14px', height: '14px', borderRadius: '50%', border: '1px solid #666' }} />}
+                      <span style={{ fontSize: '12px', color: m.completed ? '#00ff41' : theme.text }}>
+                        {m.label}
+                        {isDisabled && <span style={{ fontSize: '10px', color: '#666', marginLeft: '5px' }}>(Locked)</span>}
+                      </span>
                     </div>
-                    <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12px', color: theme.textDim, lineHeight: '1.8' }}>
-                        <li><strong>SCAN:</strong> Identify targets (Dust, Scams, Empty Accounts).</li>
-                        <li><strong>ENGAGE:</strong> <span style={{color:'#00ff41'}}>Green</span> = Free Rent. <span style={{color:'#fbbf24'}}>Yellow</span> = Dust.</li>
-                        <li><strong>EXECUTE:</strong> Select targets and burn to reclaim SOL.</li>
-                    </ul>
-                </div>
+                    <span style={{ fontSize: '10px', color: theme.textDim }}>{m.progress}/{m.target}</span>
+                  </div>
+                );
+              })}
+              <p style={{ fontSize: '10px', color: theme.textDim, marginTop: '8px', textAlign: 'center' }}>Streak: {stats.streak} Days 🔥</p>
+            </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', opacity: 0.6, marginTop: 'auto', paddingTop: '20px' }}>
-                    <img src="https://static.jup.ag/jup/icon.png" width="20" style={{ borderRadius: '50%' }} />
-                    <span style={{ fontSize: '10px', color: theme.textDim }}>POWERED BY JUPITER API</span>
+            {/* 🛡️ MISSION LOG (REAL DATA) */}
+            <div style={{ marginBottom: '20px', padding: '15px', background: theme.panel, border: `1px solid ${theme.accent}`, borderRadius: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                <Activity size={18} color={theme.accent} />
+                <h4 style={{ margin: 0, fontSize: '14px', color: theme.accent, fontWeight: '900', letterSpacing: '1px' }}>MISSION LOG</h4>
+              </div>
+              {sessionHistory.length === 0 ? (
+                <p style={{ color: theme.textDim, fontSize: '11px', textAlign: 'center' }}>No actions recorded this session.</p>
+              ) : (
+                sessionHistory.map((item, i) => (
+                  <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px dashed #333' }}>
+                    <span style={{ color: theme.text, fontSize: '11px' }}>{item.action}</span>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <span style={{ color: '#00ff41', fontSize: '11px' }}>{item.value}</span>
+                      <span style={{ color: theme.textDim, fontSize: '11px' }}>{item.time}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* 🛡️ SETTINGS */}
+            <div style={{ background: theme.panel, padding: '15px', borderRadius: '4px', border: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 'bold', color: theme.text }}>{audioEnabled ? <Volume2 size={16} color={theme.accent} /> : <VolumeX size={16} color={theme.textDim} />} AUDIO</span>
+                <button onClick={() => setAudioEnabled(!audioEnabled)} style={{ background: audioEnabled ? `${theme.accent}20` : theme.bg, border: `1px solid ${audioEnabled ? theme.accent : theme.border}`, color: audioEnabled ? theme.accent : theme.textDim, padding: '4px 12px', fontSize: '10px', fontWeight: 'bold', borderRadius: '2px' }}>{audioEnabled ? 'ONLINE' : 'MUTED'}</button>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 'bold', color: theme.text }}>{hapticsEnabled ? <Smartphone size={16} color={theme.accent} /> : <Smartphone size={16} color={theme.textDim} />} HAPTICS</span>
+                <button onClick={() => setHapticsEnabled(!hapticsEnabled)} style={{ background: hapticsEnabled ? `${theme.accent}20` : theme.bg, border: `1px solid ${hapticsEnabled ? theme.accent : theme.border}`, color: hapticsEnabled ? theme.accent : theme.textDim, padding: '4px 12px', fontSize: '10px', fontWeight: 'bold', borderRadius: '2px' }}>{hapticsEnabled ? 'ON' : 'OFF'}</button>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 'bold', color: theme.text }}>{themeMode === 'light' ? <Sun size={16} color={theme.accent} /> : (themeMode === 'system' ? <Monitor size={16} color={theme.accent} /> : <Moon size={16} color={theme.accent} />)} THEME</span>
+                <div style={{ display: 'flex', gap: '5px' }}>
+                  <button onClick={() => setThemeMode('dark')} style={{ padding: '6px', background: themeMode === 'dark' ? theme.accent : theme.bg, color: themeMode === 'dark' ? '#000' : theme.textDim, border: `1px solid ${theme.border}`, borderRadius: '2px' }}><Moon size={14} /></button>
+                  <button onClick={() => setThemeMode('light')} style={{ padding: '6px', background: themeMode === 'light' ? theme.accent : theme.bg, color: themeMode === 'light' ? '#000' : theme.textDim, border: `1px solid ${theme.border}`, borderRadius: '2px' }}><Sun size={14} /></button>
                 </div>
-             </div>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* MAIN CONTENT AREA */}
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', paddingBottom: '100px', zIndex: 10 }}>
+
+        {/* VIEW 1: SCANNER */}
         {view === 'SCANNER' && !loading && (
           <div style={{ display: 'flex', flexDirection: 'column', height: '60vh', alignItems: 'center', justifyContent: 'center' }}>
-            <motion.button 
-                whileHover="scanning"
-                whileTap="lock"
-                variants={hudVariants}
-                onClick={handleScan} 
-                style={{ background: 'none', border: 'none', cursor: 'pointer', position: 'relative' }}
-            >
-               <motion.div variants={radarVariants} animate="ping" style={{ position: 'absolute', inset: -25, border: `1px solid ${theme.accent}`, borderRadius: '50%', opacity: 0.5 }} />
-               <motion.div variants={radarVariants} animate="ping" style={{ position: 'absolute', inset: -50, border: `1px solid ${theme.accent}`, borderRadius: '50%', opacity: 0.2, animationDelay: '0.5s' }} />
-
-               <div style={{ width: '160px', height: '160px', borderRadius: '50%', border: `2px solid ${theme.accent}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: theme.panel, boxShadow: `0 0 40px ${theme.accent}40`, position: 'relative' }}>
-                  <div style={{ position: 'absolute', width: '100%', height: '2px', background: theme.accent, top: '50%', opacity: 0.3 }} />
-                  <div style={{ position: 'absolute', height: '100%', width: '2px', background: theme.accent, left: '50%', opacity: 0.3 }} />
-                  <Crosshair size={70} color={theme.accent} strokeWidth={1} />
-                  <p style={{ color: theme.accent, fontWeight: '900', marginTop: '12px', letterSpacing: '4px', fontSize: '12px' }}>INITIATE</p>
-               </div>
+            <motion.button whileHover="scanning" whileTap="lock" variants={hudVariants} onClick={handleScan} style={{ background: 'none', border: 'none', cursor: 'pointer', position: 'relative' }}>
+              <motion.div variants={radarVariants} animate="ping" style={{ position: 'absolute', inset: -25, border: `1px solid ${theme.accent}`, borderRadius: '50%', opacity: 0.5 }} />
+              <motion.div variants={radarVariants} animate="ping" style={{ position: 'absolute', inset: -50, border: `1px solid ${theme.accent}`, borderRadius: '50%', opacity: 0.2, animationDelay: '0.5s' }} />
+              <div style={{ width: '160px', height: '160px', borderRadius: '50%', border: `2px solid ${theme.accent}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: theme.panel, boxShadow: `0 0 40px ${theme.accent}40`, position: 'relative' }}>
+                <Crosshair size={70} color={theme.accent} strokeWidth={1} />
+                <p style={{ color: theme.accent, fontWeight: '900', marginTop: '12px', letterSpacing: '4px', fontSize: '12px' }}>INITIATE</p>
+              </div>
             </motion.button>
             {!publicKey && <p style={{ color: theme.textDim, fontSize: '10px', marginTop: '40px', letterSpacing: '2px', fontWeight: 'bold' }}>[ AWAITING UPLINK ]</p>}
           </div>
         )}
 
-        {loading && <div style={{ textAlign: 'center', color: theme.accent, marginTop: '150px', letterSpacing: '3px', fontWeight: '900', fontSize: '12px', animation: 'pulse 1s infinite' }}>SCANNING SECTOR...</div>}
+        {/* 🛡️ GHOST LOADING (SKELETON UI) */}
+        {loading && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px', maxWidth: '600px', margin: '0 auto', marginTop: '50px' }}>
+            {[...Array(6)].map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0.3 }}
+                animate={{ opacity: [0.3, 0.7, 0.3] }}
+                transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.1 }}
+                style={{ height: '160px', background: theme.panel, borderRadius: '4px', border: `1px solid ${theme.border}` }}
+              />
+            ))}
+          </div>
+        )}
 
+        {/* VIEW 2: INVENTORY */}
         {view === 'INVENTORY' && !loading && result && (
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-            {/* 🚀 FIXED UI OVERLAP: Added padding and flex-col/gap */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px', padding: '16px', background: theme.panel, border: `1px solid ${selectedIds.length > 0 ? rankColor : theme.border}`, position: 'sticky', top: 0, zIndex: 20, borderRadius: '4px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h3 style={{ margin: 0, color: rankColor, fontSize: '12px', fontWeight: '900', letterSpacing: '1px' }}>TARGETS: {selectedIds.length}</h3>
-                  <button onClick={handleToggleSelectAll} style={{ background: theme.bg, border: '1px solid #fbbf24', color: '#fbbf24', padding: '6px 12px', borderRadius: '2px', fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px' }}>
-                      {selectedIds.length === result.targets.length ? 'DESELECT ALL' : 'SELECT ALL'}
-                  </button>
+                <h3 style={{ margin: 0, color: rankColor, fontSize: '12px', fontWeight: '900', letterSpacing: '1px' }}>TARGETS: {selectedIds.length}</h3>
+                <button onClick={handleToggleSelectAll} style={{ background: theme.bg, border: '1px solid #fbbf24', color: '#fbbf24', padding: '6px 12px', borderRadius: '2px', fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px' }}>{selectedIds.length === result.targets.length ? 'DESELECT ALL' : 'SELECT ALL'}</button>
               </div>
               <button onClick={confirmExorcism} disabled={!selectedIds.length || burningId} style={{ width: '100%', padding: '14px', background: selectedIds.length ? '#ff0055' : theme.bg, color: selectedIds.length ? '#fff' : theme.textDim, border: 'none', borderRadius: '2px', fontWeight: '900', letterSpacing: '2px', transition: 'all 0.2s' }}>
                 {burningId ? <Activity className="animate-spin" size={16} /> : `EXECUTE BURN`}
               </button>
             </div>
 
-            <motion.div 
-                variants={containerVariants}
-                initial="hidden"
-                animate="show"
-                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px', paddingBottom: '40px' }}
-            >
+            <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px', paddingBottom: '40px' }}>
               <AnimatePresence>
                 {result.targets.map((t, i) => (
                   <motion.div key={t.id} variants={itemVariants} layout>
-                    <BountyPoster 
-                      data={t} 
-                      theme={theme}
-                      selected={selectedIds.includes(t.id)} 
-                      onSelect={() => toggleSelect(t)} 
-                      onSwap={() => handleSwap(t)} 
-                    />
+                    <BountyPoster data={t} theme={theme} selected={selectedIds.includes(t.id)} onSelect={() => toggleSelect(t)} onSwap={() => handleSwap(t)} />
                   </motion.div>
                 ))}
               </AnimatePresence>
             </motion.div>
           </div>
         )}
+
+        {/* VIEW 3: PROPHECY (PREDICTION MARKETS) */}
+        {view === 'PROPHECY' && (
+          <div style={{ maxWidth: '600px', margin: '0 auto', paddingTop: '20px' }}>
+            <div style={{ padding: '20px', background: theme.panel, border: `2px solid #a855f7`, borderRadius: '8px', marginBottom: '20px', boxShadow: '0 0 30px rgba(168, 85, 247, 0.3)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+                <div style={{ fontSize: '32px' }}>🔮</div>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '900', color: '#a855f7', letterSpacing: '1px' }}>MARKET PROPHECY</h2>
+                  <p style={{ margin: 0, fontSize: '11px', color: theme.textDim }}>Predict SOL price movement</p>
+                </div>
+              </div>
+
+              {/* Current SOL Price */}
+              <div style={{ background: theme.bg, padding: '15px', borderRadius: '6px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
+                <p style={{ margin: 0, fontSize: '10px', color: theme.textDim, textTransform: 'uppercase', letterSpacing: '1px' }}>Current SOL Price</p>
+                <h1 style={{ margin: '5px 0 0 0', fontSize: '32px', fontWeight: '900', color: theme.accent }}>${currentSOLPrice.toFixed(2)}</h1>
+              </div>
+
+              {/* Prediction Buttons or Status */}
+              {!dailyPrediction || dailyPrediction.date !== new Date().toDateString() ? (
+                <div>
+                  <p style={{ fontSize: '12px', color: theme.text, marginBottom: '15px', textAlign: 'center' }}>
+                    Will SOL be <strong>higher</strong> or <strong>lower</strong> in 24 hours?
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <button
+                      onClick={() => makePrediction('up')}
+                      style={{
+                        padding: '20px',
+                        background: 'linear-gradient(135deg, #00ff41 0%, #00c2ff 100%)',
+                        border: 'none',
+                        borderRadius: '6px',
+                        color: '#000',
+                        fontWeight: '900',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <TrendingUp size={32} />
+                      BULLISH
+                    </button>
+                    <button
+                      onClick={() => makePrediction('down')}
+                      style={{
+                        padding: '20px',
+                        background: 'linear-gradient(135deg, #ff0055 0%, #ff6b35 100%)',
+                        border: 'none',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontWeight: '900',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <TrendingDown size={32} />
+                      BEARISH
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ background: theme.bg, padding: '15px', borderRadius: '6px', border: `1px solid ${dailyPrediction.result === 'correct' ? '#00ff41' : (dailyPrediction.result === 'wrong' ? '#ff0055' : '#a855f7')}` }}>
+                  <p style={{ margin: 0, fontSize: '10px', color: theme.textDim, textTransform: 'uppercase' }}>Your Prediction</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '5px' }}>
+                    {dailyPrediction.prediction === 'up' ? <TrendingUp size={24} color="#00ff41" /> : <TrendingDown size={24} color="#ff0055" />}
+                    <span style={{ fontSize: '18px', fontWeight: '900', color: theme.text }}>{dailyPrediction.prediction.toUpperCase()}</span>
+                  </div>
+                  <p style={{ margin: '10px 0 0 0', fontSize: '11px', color: theme.textDim }}>
+                    Target: ${dailyPrediction.targetPrice.toFixed(2)}
+                  </p>
+                  {dailyPrediction.result && (
+                    <div style={{ marginTop: '10px', padding: '10px', background: dailyPrediction.result === 'correct' ? 'rgba(0, 255, 65, 0.1)' : 'rgba(255, 0, 85, 0.1)', borderRadius: '4px' }}>
+                      <p style={{ margin: '0 0 10px 0', fontSize: '12px', fontWeight: '900', color: dailyPrediction.result === 'correct' ? '#00ff41' : '#ff0055' }}>
+                        {dailyPrediction.result === 'correct' ? '🎯 CORRECT! +300 XP' : '❌ WRONG +50 XP'}
+                      </p>
+                      <button
+                        onClick={() => handleShare('prediction', dailyPrediction)}
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          background: '#1DA1F2',
+                          border: 'none',
+                          borderRadius: '4px',
+                          color: '#fff',
+                          fontWeight: '900',
+                          fontSize: '11px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '5px'
+                        }}
+                      >
+                        <Share2 size={14} />
+                        SHARE ON TWITTER
+                      </button>
+                    </div>
+                  )}
+                  {!dailyPrediction.result && (
+                    <button
+                      onClick={checkPredictionResult}
+                      style={{
+                        marginTop: '10px',
+                        width: '100%',
+                        padding: '10px',
+                        background: '#a855f7',
+                        border: 'none',
+                        borderRadius: '4px',
+                        color: '#fff',
+                        fontWeight: '900',
+                        fontSize: '12px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      CHECK RESULT
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Prediction History */}
+            {predictionHistory.length > 0 && (
+              <div style={{ padding: '15px', background: theme.panel, border: `1px solid ${theme.border}`, borderRadius: '6px' }}>
+                <h3 style={{ margin: '0 0 15px 0', fontSize: '14px', fontWeight: '900', color: theme.accent }}>PROPHECY HISTORY</h3>
+                {predictionHistory.map((p, i) => (
+                  <div key={p.timestamp || `prediction-${i}`} style={{ padding: '10px', background: theme.bg, borderRadius: '4px', marginBottom: '8px', border: `1px solid ${p.result === 'correct' ? '#00ff41' : '#ff0055'}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '11px', color: theme.text }}>{p.prediction.toUpperCase()}</span>
+                      <span style={{ fontSize: '11px', fontWeight: '900', color: p.result === 'correct' ? '#00ff41' : '#ff0055' }}>
+                        {p.result === 'correct' ? '✓ CORRECT' : '✗ WRONG'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* VIEW 4: SWAP STATION (JUPITER PLUGIN) */}
+        {view === 'SWAP_STATION' && (
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 9999, background: theme.bg,
+            display: 'flex', flexDirection: 'column'
+          }}>
+            <div style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: `1px solid ${theme.border}` }}>
+              <button onClick={() => { setView('INVENTORY'); if (window.Jupiter) window.Jupiter.close(); setJupiterInitialized(false); }} style={{ background: theme.panel, border: `1px solid ${theme.border}`, color: theme.text, padding: '8px', borderRadius: '4px' }}>
+                <ArrowLeft size={20} />
+              </button>
+              <h2 style={{ fontSize: '16px', fontWeight: '900', color: '#00c2ff' }}>YIELD GENERATOR (JupSOL)</h2>
+            </div>
+            {/* JUPITER PLUGIN CONTAINER */}
+            <div id="integrated-terminal" style={{ flex: 1, width: '100%', height: '100%', position: 'relative' }}>
+              {!jupiterInitialized && (
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: theme.textDim }}>
+                  <Loader2 className="animate-spin" size={24} /> INITIALIZING...
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
       </div>
 
+      {/* FOOTER NAV */}
       <nav style={{ position: 'fixed', bottom: 0, width: '100%', height: '70px', background: theme.bg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', alignItems: 'center', zIndex: 1000, paddingBottom: '10px' }}>
-        <button onClick={() => setView('SCANNER')} style={{ background: 'none', border: 'none', color: view === 'SCANNER' ? theme.accent : theme.textDim, transition: '0.2s' }}><Crosshair size={28} /></button>
-        <button onClick={() => setView('INVENTORY')} style={{ background: 'none', border: 'none', color: view === 'INVENTORY' ? '#ff0055' : theme.textDim, transition: '0.2s' }}><Ghost size={28} /></button>
-        <button onClick={() => setShowMenu(true)} style={{ background: 'none', border: 'none', color: theme.textDim, transition: '0.2s' }}><Settings size={28} /></button>
+        <button onClick={() => setView('SCANNER')} style={{ background: 'none', border: 'none', color: view === 'SCANNER' ? theme.accent : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <Crosshair size={24} />
+          <span style={{ fontSize: '9px' }}>SCAN</span>
+        </button>
+        <button onClick={() => setView('INVENTORY')} style={{ background: 'none', border: 'none', color: view === 'INVENTORY' ? '#ff0055' : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <Ghost size={24} />
+          <span style={{ fontSize: '9px' }}>BURN</span>
+        </button>
+        <button onClick={() => setView('PROPHECY')} style={{ background: 'none', border: 'none', color: view === 'PROPHECY' ? '#a855f7' : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <div style={{ fontSize: '24px' }}>🔮</div>
+          <span style={{ fontSize: '9px' }}>PREDICT</span>
+        </button>
+        <button onClick={() => setShowMenu(true)} style={{ background: 'none', border: 'none', color: theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <Settings size={24} />
+          <span style={{ fontSize: '9px' }}>MENU</span>
+        </button>
       </nav>
 
       {shake && <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(255,0,0,0.2)', zIndex: 2000, pointerEvents: 'none' }} />}
-      
       <AnimatePresence>
         {lootDrops.map(l => (
           <motion.div key={l.id} initial={{ opacity: 0, y: 0, scale: 0.5 }} animate={{ opacity: [0, 1, 0], y: -100, scale: 1.5 }} className="fixed top-1/2 left-1/2 transform -translate-x-1/2 z-[3000] pointer-events-none">
-             <div style={{ color: '#fbbf24', fontWeight: '900', fontSize: '24px', textShadow: '0 0 10px #fbbf24' }}><Zap fill="currentColor" /> {l.text}</div>
+            <div style={{ color: '#fbbf24', fontWeight: '900', fontSize: '24px', textShadow: '0 0 10px #fbbf24' }}><Zap fill="currentColor" /> {l.text}</div>
           </motion.div>
         ))}
       </AnimatePresence>
@@ -701,64 +960,61 @@ export default function Home() {
   );
 }
 
+// 🛡️ GAMIFIED POSTER COMPONENT
 function BountyPoster({ data, selected, onSelect, onSwap, theme }) {
-  const { isScam, isRentClaimable, isEmpty, isSafe, isHighValue } = data;
-  
-  // 🚀 FIXED: RENT = Green, SCAM = Red, SWAP (High Value) = Blue, DUST = Yellow
-  const mainColor = isRentClaimable ? '#00ff41' : (isScam ? '#ff0055' : (isHighValue ? '#3b82f6' : '#fbbf24'));
-  const bgStyle = selected ? `rgba(${isRentClaimable ? '0,255,65' : '255,191,36'}, 0.1)` : theme.panel;
+  const { isScam, isRentClaimable, isEmpty, isSafe, isHighValue, isNFT, isTradeable } = data;
+
+  // 🛡️ GAMIFIED COLOR LOGIC
+  const mainColor = isTradeable ? '#00c2ff' : (isScam ? '#ff0055' : (isNFT ? '#a855f7' : '#fbbf24'));
+  const glow = selected ? `0 0 15px ${mainColor}` : 'none';
+  const bgStyle = selected ? `rgba(0,194,255,0.1)` : theme.panel;
   const [imgError, setImgError] = useState(false);
 
   return (
-    <motion.div 
-      onClick={isHighValue ? onSwap : onSelect} // Swap if High Value, Select if Dust
-      whileHover={{ scale: 1.02, boxShadow: `0 0 20px ${mainColor}30` }} 
-      whileTap={{ scale: 0.95 }} 
-      style={{ 
-        background: bgStyle, border: `1px solid ${mainColor}40`, borderRadius: '4px', 
-        overflow: 'hidden', cursor: 'pointer', position: 'relative', 
-        display: 'flex', flexDirection: 'column', height: '160px',
-        boxShadow: `0 4px 10px rgba(0,0,0,0.1)`
+    <motion.div
+      onClick={isTradeable ? onSwap : onSelect}
+      whileHover={{ scale: 1.05, boxShadow: `0 0 25px ${mainColor}40` }}
+      whileTap={{ scale: 0.95 }}
+      style={{
+        background: bgStyle,
+        border: `1px solid ${mainColor}60`,
+        borderRadius: '6px',
+        overflow: 'hidden',
+        cursor: 'pointer',
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '170px',
+        boxShadow: selected ? glow : `0 4px 10px rgba(0,0,0,0.2)`,
+        transition: 'all 0.2s ease'
       }}
     >
-      {selected && (
-        <div style={{ position: 'absolute', inset: 0, border: '2px solid #00ff41', zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)' }}>
-            <Scan size={40} color="#00ff41" strokeWidth={1} />
-        </div>
-      )}
+      {/* 🛡️ RARE HOLO EFFECT */}
+      <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, transparent 40%, ${mainColor}20 50%, transparent 60%)`, opacity: 0.3, pointerEvents: 'none' }} />
 
-      {isRentClaimable && !selected && (
-         <div style={{ position: 'absolute', inset: 0, border: '2px solid #00ff41', opacity: 0.5, animation: 'pulse 2s infinite' }} />
-      )}
+      {selected && <div style={{ position: 'absolute', inset: 0, border: `2px solid ${mainColor}`, zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)' }}><Scan size={40} color={mainColor} strokeWidth={2} /></div>}
+
+      {isRentClaimable && !selected && <div style={{ position: 'absolute', inset: 0, border: '2px solid #00ff41', opacity: 0.5, animation: 'pulse 2s infinite' }} />}
 
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(180deg, ${mainColor}15 0%, transparent 100%)`, position: 'relative' }}>
-         <div style={{ position: 'absolute', top: 6, right: 6 }}>
-            {isRentClaimable ? <Wallet size={14} color="#00ff41" /> : (isScam ? <Skull size={14} color="#ff0055" /> : (isHighValue ? <ArrowRightLeft size={14} color="#3b82f6" /> : <Target size={14} color="#fbbf24" />))}
-         </div>
-         
-         <div style={{ width: '60px', height: '60px', borderRadius: '50%', border: `2px solid ${mainColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', boxShadow: `0 0 15px ${mainColor}20` }}>
-            {data.image && !imgError ? (
-               <img src={data.image} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} onError={() => setImgError(true)} />
-            ) : (
-               <Ghost size={24} color={mainColor} />
-            )}
-         </div>
+        <div style={{ position: 'absolute', top: 8, right: 8 }}>{isTradeable ? <ArrowRightLeft size={16} color="#00c2ff" /> : (isScam ? <Skull size={16} color="#ff0055" /> : (isNFT ? <ImageIcon size={16} color="#a855f7" /> : <Target size={16} color="#fbbf24" />))}</div>
+        <div style={{ width: '64px', height: '64px', borderRadius: '50%', border: `2px solid ${mainColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', boxShadow: `0 0 20px ${mainColor}30` }}>
+          {data.image && !imgError ? <img src={data.image} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} onError={() => setImgError(true)} /> : <Ghost size={28} color={mainColor} />}
+        </div>
       </div>
 
-      <div style={{ padding: '10px', borderTop: `1px solid ${mainColor}20`, background: theme.panel }}>
-         <h4 style={{ margin: 0, fontSize: '11px', fontWeight: '900', color: theme.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'center', letterSpacing: '0.5px' }}>
-            {data.name}
-         </h4>
-         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '6px' }}>
-            <span style={{ 
-               fontSize: '8px', padding: '2px 8px', borderRadius: '2px', 
-               background: isRentClaimable ? 'rgba(0,255,65,0.15)' : 'rgba(100,100,100,0.1)', 
-               color: mainColor, fontWeight: '900', border: `1px solid ${mainColor}40`, textTransform: 'uppercase'
-            }}>
-                {isRentClaimable ? 'CLAIM RENT' : (isScam ? 'THREAT' : (isHighValue ? 'SWAP' : 'TARGET'))}
-            </span>
-         </div>
-         {!isEmpty && !isRentClaimable && <p style={{ margin: '4px 0 0 0', fontSize: '9px', color: theme.textDim, textAlign: 'center', fontFamily: 'monospace' }}>{data.displayVal}</p>}
+      <div style={{ padding: '12px', borderTop: `1px solid ${mainColor}20`, background: theme.panel }}>
+        <h4 style={{ margin: 0, fontSize: '11px', fontWeight: '900', color: theme.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'center', letterSpacing: '0.5px', textTransform: 'uppercase' }}>{data.name}</h4>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '8px' }}>
+          <span style={{
+            fontSize: '9px', padding: '3px 8px', borderRadius: '2px',
+            background: isTradeable ? 'rgba(0,194,255,0.15)' : 'rgba(251,191,36,0.1)',
+            color: mainColor, fontWeight: '900', border: `1px solid ${mainColor}40`, textTransform: 'uppercase', letterSpacing: '1px'
+          }}>
+            {isTradeable ? 'YIELD FARM' : (isScam ? 'THREAT' : (isNFT ? 'NFT DUST' : 'TARGET'))}
+          </span>
+        </div>
+        <p style={{ margin: '6px 0 0 0', fontSize: '10px', color: theme.textDim, textAlign: 'center', fontFamily: 'monospace' }}>${data.value.toFixed(2)}</p>
       </div>
     </motion.div>
   );
