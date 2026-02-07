@@ -9,6 +9,7 @@ import { PublicKey, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { createBurnInstruction, createCloseAccountInstruction, getAssociatedTokenAddress } from '@solana/spl-token';
 import confetti from 'canvas-confetti';
 import { getTokenPrices } from '@/utils/jupiter-price';
+import { fetchJupSOLAPY } from '@/utils/jupsol-apy';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 // ⚡ RPC CONFIGURATION (DAS API endpoint for asset fetching)
@@ -39,6 +40,43 @@ const itemVariants = { hidden: { opacity: 0, scale: 0.9, y: 20 }, show: { opacit
 // 🛡️ CONFETTI
 const triggerConfetti = () => {
   confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#00ff41', '#fbbf24', '#00c2ff'] });
+};
+
+// 📱 HAPTIC FEEDBACK PATTERNS
+const HAPTICS = {
+  success: [50, 100, 50],
+  error: [100, 50, 100, 50, 100],
+  scan: [30, 30, 30],
+  levelUp: [100, 50, 100, 50, 200],
+  click: [10]
+};
+
+const triggerHaptic = (type) => {
+  // Jupiter Mobile vibration API
+  if (window?.solana?.vibrate) {
+    window.solana.vibrate(HAPTICS[type] || HAPTICS.click);
+  }
+  // Standard vibration API fallback
+  else if (navigator.vibrate) {
+    navigator.vibrate(HAPTICS[type] || HAPTICS.click);
+  }
+};
+
+// 📱 MOBILE SHARE UTILITY
+const mobileShare = async (text, url) => {
+  if (navigator.share) {
+    try {
+      await navigator.share({ text, url });
+      return true;
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('Share failed:', err);
+      }
+    }
+  }
+  // Fallback to Twitter
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}${url ? `&url=${encodeURIComponent(url)}` : ''}`, '_blank');
+  return false;
 };
 
 export default function Home() {
@@ -105,6 +143,9 @@ export default function Home() {
   // 🏆 LEADERBOARD STATE
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [userRank, setUserRank] = useState(null);
+
+  // JupSOL Yield
+  const [realtimeEarnings, setRealtimeEarnings] = useState(0);
 
   const getActiveTheme = () => {
     if (isJupiterMobile) return THEMES.jupiter;
@@ -220,7 +261,28 @@ export default function Home() {
 
     if (typeof navigator !== 'undefined') {
       const ua = navigator.userAgent || '';
-      if (ua.includes('Jupiter') || window?.solana?.isJupiter) setIsJupiterMobile(true);
+      // Enhanced Jupiter Mobile Detection with multiple checks
+      const detectJupiterMobile = () => {
+        // Primary check: Jupiter-specific wallet properties
+        if (window?.solana?.isJupiter === true && window?.solana?.isPhantom === false) {
+          return true;
+        }
+
+        // Secondary check: Jupiter object presence
+        if (window?.Jupiter) {
+          return true;
+        }
+
+        // Tertiary check: User agent
+        const ua = navigator.userAgent || '';
+        if (ua.includes('Jupiter')) {
+          return true;
+        }
+
+        return false;
+      };
+
+      setIsJupiterMobile(detectJupiterMobile());
     }
 
     const loadAudio = (key, url) => {
