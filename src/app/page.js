@@ -584,6 +584,17 @@ export default function Home() {
   const checkPredictionResult = async () => {
     if (!dailyPrediction || dailyPrediction.result) return;
 
+    // Check if 24 hours have passed since prediction was made
+    const predictionTime = new Date(dailyPrediction.timestamp).getTime();
+    const now = Date.now();
+    const hoursElapsed = (now - predictionTime) / (1000 * 60 * 60);
+
+    if (hoursElapsed < 24) {
+      const hoursRemaining = Math.ceil(24 - hoursElapsed);
+      showModal('INFO', 'Too Early!', `You can check your prediction result in ${hoursRemaining} hour(s).\n\nPredictions are revealed after 24 hours.`);
+      return;
+    }
+
     const currentPrice = await fetchSOLPrice();
     const isCorrect = dailyPrediction.prediction === 'up'
       ? currentPrice >= dailyPrediction.targetPrice
@@ -601,10 +612,10 @@ export default function Home() {
       setStats(s => ({ ...s, xp: s.xp + bonusXP }));
       triggerConfetti();
       playSound('success');
-      showModal('SUCCESS', '🎯 PROPHECY FULFILLED!', `Your prediction was CORRECT!\\n+${bonusXP} XP Bonus!`);
+      showModal('SUCCESS', '🎯 PROPHECY FULFILLED!', `Your prediction was CORRECT!\n+${bonusXP} XP Bonus!`);
     } else {
       playSound('alert');
-      showModal('INFO', 'PREDICTION MISSED', `Your prediction was incorrect.\\n+${bonusXP} XP for trying!`);
+      showModal('INFO', 'PREDICTION MISSED', `Your prediction was incorrect.\n+${bonusXP} XP for trying!`);
       setStats(s => ({ ...s, xp: s.xp + bonusXP }));
     }
   };
@@ -888,8 +899,8 @@ export default function Home() {
       {/* MENU */}
       <AnimatePresence>
         {showMenu && (
-          <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 30, stiffness: 300 }} style={{ position: 'fixed', inset: 0, zIndex: 9999, backgroundColor: theme.bg, padding: '20px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: `1px solid ${theme.border}`, paddingBottom: '15px' }}>
+          <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 30, stiffness: 300 }} style={{ position: 'fixed', inset: 0, zIndex: 9999, backgroundColor: theme.bg, padding: '20px', display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'hidden' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: `1px solid ${theme.border}`, paddingBottom: '15px', position: 'sticky', top: 0, background: theme.bg, zIndex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <Terminal size={24} color={theme.accent} />
                 <h2 style={{ margin: 0, fontSize: '18px', color: theme.accent, fontFamily: 'monospace' }}>SYSTEM CONFIG</h2>
