@@ -12,6 +12,9 @@ import { getTokenPrices } from '@/utils/jupiter-price';
 import { fetchJupSOLAPY } from '@/utils/jupsol-apy';
 import { verifyJupiterSwap, verifyTokenBurns } from '@/utils/on-chain-verification';
 import { sendJupiterNotification, setupDeepLinking, parseDeepLink } from '@/utils/jupiter-mobile';
+import { TokenSkeleton, BalanceSkeleton, StatsSkeleton } from '@/components/LoadingSkeleton';
+import { trackEvent, AnalyticsEvents, PerformanceMonitor, TransactionMonitor } from '@/utils/analytics';
+import { canBurn, canSwap, canScan, canPredict } from '@/utils/rate-limiter';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 // ⚡ RPC CONFIGURATION (DAS API endpoint for asset fetching)
@@ -148,6 +151,9 @@ export default function Home() {
 
   // JupSOL Yield
   const [realtimeEarnings, setRealtimeEarnings] = useState(0);
+
+  // Transaction states
+  const [pendingTx, setPendingTx] = useState(null); // { type: 'burn' | 'swap' | 'prediction', message: string }
 
   const getActiveTheme = () => {
     if (isJupiterMobile) return THEMES.jupiter;
@@ -287,7 +293,11 @@ export default function Home() {
         return false;
       };
 
-      setIsJupiterMobile(detectJupiterMobile());
+      const isJupMobile = detectJupiterMobile();
+      setIsJupiterMobile(isJupMobile);
+      if (isJupMobile) {
+        trackEvent(AnalyticsEvents.JUPITER_MOBILE_DETECTED);
+      }
     }
 
     const loadAudio = (key, url) => {
@@ -302,6 +312,7 @@ export default function Home() {
     // Setup deep linking for Jupiter Mobile
     setupDeepLinking((url) => {
       const { section, action } = parseDeepLink(url);
+      trackEvent(AnalyticsEvents.DEEP_LINK_OPENED, { url, section, action });
 
       if (section === 'mission') {
         if (action === 'burn') setView('INVENTORY');
@@ -328,6 +339,7 @@ export default function Home() {
     if (newRank !== currentRank) {
       setCurrentRank(newRank);
       setRankColor(newColor);
+      trackEvent(AnalyticsEvents.RANK_UP, { rank: newRank, xp: stats.xp });
       if (hasHydrated.current) { triggerHaptic('levelUp'); triggerConfetti(); if (audioEnabled) playSound('success'); }
     }
     if (isMounted) localStorage.setItem('demon_stats', JSON.stringify(stats));
@@ -468,12 +480,61 @@ export default function Home() {
         if (newProgress >= m.target) {
           setStats(s => ({ ...s, xp: s.xp + m.xp }));
           setLootDrops(l => [...l, { id: Date.now(), text: `QUEST COMPLETE: +${m.xp} XP` }]);
+          trackEvent(AnalyticsEvents.MISSION_COMPLETED, { mission: id, xp: m.xp });
           return { ...m, progress: m.target, completed: true };
         }
         return { ...m, progress: newProgress };
       }
       return m;
     }));
+  };
+
+  // 🔗 ON-CHAIN VERIFICATION
+  const verifyMissionsOnChain = async () => {
+    if (!publicKey || !connection) {
+      showModal('ERROR', 'Wallet Not Connected', 'Please connect your wallet to verify missions.');
+      return;
+    }
+
+    setPendingTx({ type: 'verification', message: 'Verifying on-chain activity...' });
+
+    try {
+      // Verify Jupiter swaps
+      const swapResult = await verifyJupiterSwap(connection, publicKey, 20);
+      if (swapResult.verified) {
+        setMissions(prev => prev.map(m =>
+          m.id === 'swap' ? { ...m, progress: m.target, completed: true } : m
+        ));
+        if (!missions.find(m => m.id === 'swap')?.completed) {
+          setStats(s => ({ ...s, xp: s.xp + 500 }));
+          trackEvent(AnalyticsEvents.SWAP_COMPLETED, { verified: true });
+        }
+      }
+
+      // Verify token burns
+      const burnResult = await verifyTokenBurns(connection, publicKey, 20);
+      if (burnResult.verified && burnResult.count > 0) {
+        const burnMission = missions.find(m => m.id === 'burn');
+        if (burnMission && !burnMission.completed) {
+          const progress = Math.min(burnResult.count, burnMission.target);
+          setMissions(prev => prev.map(m =>
+            m.id === 'burn' ? { ...m, progress, completed: progress >= m.target } : m
+          ));
+          if (progress >= burnMission.target) {
+            setStats(s => ({ ...s, xp: s.xp + 300 }));
+            trackEvent(AnalyticsEvents.BURN_COMPLETED, { verified: true, count: burnResult.count });
+          }
+        }
+      }
+
+      setPendingTx(null);
+      showModal('SUCCESS', 'Verification Complete', `Verified:\n${swapResult.verified ? '✅ Jupiter Swaps' : '❌ No Swaps'}\n${burnResult.verified ? `✅ ${burnResult.count} Burns` : '❌ No Burns'}`);
+    } catch (error) {
+      console.error('Verification error:', error);
+      setPendingTx(null);
+      showModal('ERROR', 'Verification Failed', 'Could not verify on-chain activity. Please try again.');
+      trackEvent(AnalyticsEvents.ERROR_OCCURRED, { type: 'verification', error: error.message });
+    }
   };
 
   // 🎲 PREDICTION MARKETS LOGIC
@@ -857,20 +918,52 @@ export default function Home() {
                 <h4 style={{ margin: 0, fontSize: '14px', color: '#fbbf24', fontWeight: '900', letterSpacing: '1px' }}>DAILY QUESTS</h4>
               </div>
               {missions.map(m => {
-                const isDisabled = m.mobileOnly && !isJupiterMobile;
+                if (m.mobileOnly && !isJupiterMobile) return null;
+                const progress = Math.min(m.progress, m.target);
+                const percentage = (progress / m.target) * 100;
                 return (
-                  <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px dashed #333', opacity: isDisabled ? 0.5 : 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      {m.completed ? <CheckCircle size={14} color="#00ff41" /> : <div style={{ width: '14px', height: '14px', borderRadius: '50%', border: '1px solid #666' }} />}
-                      <span style={{ fontSize: '12px', color: m.completed ? '#00ff41' : theme.text }}>
-                        {m.label}
-                        {isDisabled && <span style={{ fontSize: '10px', color: '#666', marginLeft: '5px' }}>(Locked)</span>}
+                  <div key={m.id} style={{ marginBottom: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                      <span style={{ fontSize: '11px', color: m.completed ? '#00ff41' : theme.textDim, fontWeight: '700' }}>
+                        {m.completed ? '✅' : '⏳'} {m.label}
                       </span>
+                      <span style={{ fontSize: '10px', color: '#fbbf24', fontWeight: 'bold' }}>+{m.xp} XP</span>
                     </div>
-                    <span style={{ fontSize: '10px', color: theme.textDim }}>{m.progress}/{m.target}</span>
+                    <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{ width: `${percentage}%`, height: '100%', background: m.completed ? '#00ff41' : '#fbbf24', transition: 'width 0.3s' }}></div>
+                    </div>
+                    <div style={{ fontSize: '9px', color: theme.textDim, marginTop: '2px' }}>{progress} / {m.target}</div>
                   </div>
                 );
               })}
+
+              {/* VERIFY ON-CHAIN BUTTON */}
+              {publicKey && (
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    verifyMissionsOnChain();
+                  }}
+                  disabled={pendingTx?.type === 'verification'}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginTop: '12px',
+                    background: pendingTx?.type === 'verification' ? theme.panel : 'linear-gradient(135deg, #00ff41, #00c2ff)',
+                    border: 'none',
+                    borderRadius: '4px',
+                    color: '#000',
+                    fontSize: '12px',
+                    fontWeight: '900',
+                    letterSpacing: '1px',
+                    cursor: pendingTx?.type === 'verification' ? 'not-allowed' : 'pointer',
+                    opacity: pendingTx?.type === 'verification' ? 0.5 : 1,
+                    transition: '0.2s'
+                  }}
+                >
+                  {pendingTx?.type === 'verification' ? '⏳ VERIFYING...' : '🔗 VERIFY ON-CHAIN'}
+                </button>
+              )}
               <p style={{ fontSize: '10px', color: theme.textDim, marginTop: '8px', textAlign: 'center' }}>Streak: {stats.streak} Days 🔥</p>
             </div>
 
