@@ -1,7 +1,7 @@
 // src/app/api/leaderboard/submit/route.js
-// Submit player stats to leaderboard
+// Submit player stats to Supabase leaderboard
 
-import { kv } from '@vercel/kv';
+import { supabase } from '@/lib/supabase';
 import { NextResponse } from 'next/server';
 
 // Rate limiting map (in-memory for simplicity)
@@ -41,31 +41,38 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
         }
 
-        // Update player data in hash
-        const playerKey = `player:${wallet}`;
-        await kv.hset(playerKey, {
-            wallet,
-            xp: xp || 0,
-            totalBurned: totalBurned || 0,
-            solReclaimed: solReclaimed || 0,
-            level: level || 1,
-            rank: rank || 'VOID STALKER',
-            isMobile: isMobile || false,
-            lastUpdated: Date.now()
-        });
+        // Upsert player data
+        const { error: upsertError } = await supabase
+            .from('players')
+            .upsert({
+                wallet,
+                xp: xp || 0,
+                total_burned: totalBurned || 0,
+                sol_reclaimed: solReclaimed || 0,
+                level: level || 1,
+                rank: rank || 'VOID STALKER',
+                is_mobile: isMobile || false,
+                last_updated: new Date().toISOString()
+            }, {
+                onConflict: 'wallet'
+            });
 
-        // Update sorted sets for rankings
-        await kv.zadd('leaderboard:xp', { score: xp || 0, member: wallet });
-        await kv.zadd('leaderboard:burns', { score: totalBurned || 0, member: wallet });
-        await kv.zadd('leaderboard:sol', { score: solReclaimed || 0, member: wallet });
+        if (upsertError) {
+            console.error('Supabase upsert error:', upsertError);
+            return NextResponse.json({ error: 'Database error' }, { status: 500 });
+        }
 
         // Get player's rank
-        const playerRank = await kv.zrevrank('leaderboard:xp', wallet);
-        const actualRank = playerRank !== null ? playerRank + 1 : null;
+        const { count } = await supabase
+            .from('players')
+            .select('*', { count: 'exact', head: true })
+            .gt('xp', xp || 0);
+
+        const playerRank = (count || 0) + 1;
 
         return NextResponse.json({
             success: true,
-            rank: actualRank,
+            rank: playerRank,
             xp: xp || 0,
             message: 'Stats updated successfully'
         });

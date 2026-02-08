@@ -2,11 +2,11 @@
 // Get contest information and prizes
 
 import { NextResponse } from 'next/server';
-import { kv } from '@vercel/kv';
+import { supabase } from '@/lib/supabase';
 
 export async function GET() {
     try {
-        // Contest configuration (can be stored in KV or Edge Config later)
+        // Contest configuration
         const contestEndDate = new Date('2026-02-15T23:59:59Z'); // Example: Feb 15
         const now = new Date();
         const endsIn = contestEndDate.getTime() - now.getTime();
@@ -20,15 +20,17 @@ export async function GET() {
             { rank: '11-50', prize: '50 USDC', description: '⭐ Top 50' }
         ];
 
-        // Get total players
-        const totalPlayers = await kv.zcard('leaderboard:xp') || 0;
+        // Get total players from Supabase
+        const { count: totalPlayers } = await supabase
+            .from('players')
+            .select('*', { count: 'exact', head: true });
 
         return NextResponse.json({
             status: isActive ? 'active' : 'ended',
             endsIn: isActive ? endsIn : 0,
             endDate: contestEndDate.toISOString(),
             prizes,
-            totalPlayers,
+            totalPlayers: totalPlayers || 0,
             prizePool: '2500 USDC',
             description: 'Jupiter Hackathon Trading Contest'
         });
