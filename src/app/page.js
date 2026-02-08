@@ -382,59 +382,61 @@ export default function Home() {
     }
   }, [isMounted]);
 
-  // 🏆 GENERATE LEADERBOARD DATA
+  // 🏆 FETCH REAL LEADERBOARD DATA FROM BACKEND
   useEffect(() => {
-    if (isMounted && stats.xp >= 0) {
-      // Generate simulated wallet addresses
-      const generateWallet = () => {
-        const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-        let wallet = '';
-        for (let i = 0; i < 44; i++) {
-          wallet += chars[Math.floor(Math.random() * chars.length)];
+    const fetchLeaderboard = async () => {
+      try {
+        const wallet = publicKey?.toString();
+        const url = wallet
+          ? `/api/leaderboard/rankings?wallet=${wallet}&limit=100`
+          : `/api/leaderboard/rankings?limit=100`;
+
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch leaderboard');
+
+        const data = await response.json();
+
+        setLeaderboardData(data.topPlayers || []);
+        if (data.userRank) {
+          setUserRank(data.userRank.rank);
         }
-        return wallet;
-      };
-
-      // Generate simulated players around user's XP
-      const players = [];
-      const userXP = stats.xp;
-
-      // Add 20 simulated players with varying XP
-      for (let i = 0; i < 20; i++) {
-        const variance = Math.random() * 2000 - 1000; // ±1000 XP variance
-        const playerXP = Math.max(0, userXP + variance + (i * 50));
-        const isMobile = Math.random() > 0.7; // 30% mobile users
-
-        players.push({
-          wallet: generateWallet(),
-          xp: Math.floor(playerXP),
-          solReclaimed: (playerXP / 100 * (0.5 + Math.random() * 0.5)).toFixed(3),
-          isMobile: isMobile
-        });
+      } catch (error) {
+        console.error('Leaderboard fetch error:', error);
+        // Fallback to empty if API fails
+        setLeaderboardData([]);
       }
+    };
 
-      // Add user to the list
-      if (publicKey) {
-        players.push({
+    if (isMounted) {
+      fetchLeaderboard();
+      // Poll every 30 seconds for live updates
+      const interval = setInterval(fetchLeaderboard, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isMounted, publicKey]);
+
+  // 📊 SUBMIT STATS TO LEADERBOARD AFTER ACTIONS
+  const submitToLeaderboard = async () => {
+    if (!publicKey) return;
+
+    try {
+      await fetch('/api/leaderboard/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           wallet: publicKey.toString(),
           xp: stats.xp,
-          solReclaimed: stats.solReclaimed.toFixed(3),
-          isMobile: isJupiterMobile,
-          isUser: true
-        });
-      }
-
-      // Sort by XP descending
-      players.sort((a, b) => b.xp - a.xp);
-
-      // Calculate user rank
-      const userIndex = players.findIndex(p => p.isUser);
-      setUserRank(userIndex >= 0 ? userIndex + 1 : null);
-
-      // Take top 10 for display
-      setLeaderboardData(players.slice(0, 10));
+          totalBurned: stats.totalBurned,
+          solReclaimed: stats.solReclaimed,
+          level: stats.level,
+          rank: currentRank,
+          isMobile: isJupiterMobile
+        })
+      });
+    } catch (error) {
+      console.error('Failed to submit to leaderboard:', error);
     }
-  }, [isMounted, stats.xp, stats.solReclaimed, publicKey, isJupiterMobile]);
+  };
 
   // ⚡ LIVE EARNINGS COUNTER (ticks every second)
   useEffect(() => {
@@ -817,6 +819,9 @@ export default function Home() {
       setLootDrops(p => [...p, { id: Date.now(), text: `+${rent} SOL` }]);
       setResult(p => ({ ...p, targets: p.targets.filter(t => !selectedIds.includes(t.id)) }));
       setSelectedIds([]);
+
+      // Submit to leaderboard
+      setTimeout(submitToLeaderboard, 500);
 
       // Update Session Log
       setSessionHistory(prev => [{
