@@ -7,10 +7,6 @@
     "regions": [
         "iad1"
     ],
-    "env": {
-        "NEXT_PUBLIC_HELIUS_API_KEY": "@helius-api-key",
-        "NEXT_PUBLIC_APP_URL": "https://dustdemons.app"
-    },
     "headers": [
         {
             "source": "/(.*)",
@@ -32,12 +28,6 @@
                     "value": "origin-when-cross-origin"
                 }
             ]
-        }
-    ],
-    "rewrites": [
-        {
-            "source": "/api/:path*",
-            "destination": "/api/:path*"
         }
     ]
 }

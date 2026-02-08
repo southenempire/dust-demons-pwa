@@ -11,12 +11,12 @@ export const metadata = {
   keywords: ['Solana', 'Jupiter', 'JupSOL', 'DeFi', 'Wallet Cleanup', 'Yield', 'Gaming', 'Mobile'],
   authors: [{ name: 'Dust Demons Team' }],
   manifest: '/manifest.json',
-  metadataBase: new URL('https://dustdemons.app'),
+  metadataBase: new URL('https://dust-demons.vercel.app'),
 
   openGraph: {
     title: 'Dust Demons | Turn Wallet Dust into JupSOL Yield',
     description: 'Gamified Solana wallet cleanup with Jupiter integration. Burn dust, earn yield, predict markets.',
-    url: 'https://dustdemons.app',
+    url: 'https://dust-demons.vercel.app',
     siteName: 'Dust Demons',
     images: [
       {

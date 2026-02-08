@@ -6,7 +6,7 @@ A production-ready, mobile-first DeFi application with deep Jupiter ecosystem in
 
 [![Jupiter Mobile](https://img.shields.io/badge/Jupiter-Mobile%20Optimized-00c2ff?style=for-the-badge)](https://jup.ag)
 [![Solana](https://img.shields.io/badge/Solana-Mainnet-14F195?style=for-the-badge&logo=solana)](https://solana.com)
-[![Live Demo](https://img.shields.io/badge/Demo-Live-success?style=for-the-badge)](https://dustdemons.app)
+[![Live Demo](https://img.shields.io/badge/Demo-Live-success?style=for-the-badge)](https://dust-demons.vercel.app)
 
 ## 🎯 Competition Track Alignment
 

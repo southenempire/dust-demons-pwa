@@ -50,7 +50,7 @@ export function setupDeepLinking(handler) {
 export function parseDeepLink(url) {
     try {
         // Handle both jupiter:// and https:// formats
-        const urlStr = url.replace('jupiter://dustdemons/', '').replace('https://dustdemons.app/', '');
+        const urlStr = url.replace('jupiter://dustdemons/', '').replace('https://dust-demons.vercel.app/', '');
         const parts = urlStr.split('/');
 
         return {
