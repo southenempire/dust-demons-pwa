@@ -156,7 +156,6 @@ export default function Home() {
   const [pendingTx, setPendingTx] = useState(null); // { type: 'burn' | 'swap' | 'prediction', message: string }
 
   const getActiveTheme = () => {
-    if (isJupiterMobile) return THEMES.jupiter;
     if (themeMode === 'system') {
       if (typeof window !== 'undefined' && window.matchMedia) return window.matchMedia('(prefers-color-scheme: dark)').matches ? THEMES.dark : THEMES.light;
       return THEMES.dark;
