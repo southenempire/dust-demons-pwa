@@ -1362,7 +1362,9 @@ export default function Home() {
                   fontSize: '18px',
                   fontWeight: '900',
                   textAlign: 'center',
-                  fontFamily: 'monospace'
+                  fontFamily: 'monospace',
+                  boxSizing: 'border-box',
+                  outline: 'none'
                 }}
               />
               {calculatorAmount && currentSOLPrice > 0 && (
