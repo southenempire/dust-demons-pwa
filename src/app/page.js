@@ -409,8 +409,8 @@ export default function Home() {
 
     if (isMounted) {
       fetchLeaderboard();
-      // Poll every 30 seconds for live updates
-      const interval = setInterval(fetchLeaderboard, 30000);
+      // Poll every 2 minutes for live updates (respects free tier limits)
+      const interval = setInterval(fetchLeaderboard, 120000);
       return () => clearInterval(interval);
     }
   }, [isMounted, publicKey]);
