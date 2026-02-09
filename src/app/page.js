@@ -1267,6 +1267,66 @@ export default function Home() {
               <button onClick={() => setShowMenu(false)} style={{ background: 'none', border: 'none', color: theme.text, cursor: 'pointer', transition: 'opacity 0.2s' }} onMouseEnter={(e) => e.target.style.opacity = '0.7'} onMouseLeave={(e) => e.target.style.opacity = '1'}><X size={24} /></button>
             </div>
 
+            {/* 🎯 BADGES */}
+            <button
+              onClick={() => { setView('ACHIEVEMENTS'); setShowMenu(false); }}
+              style={{
+                background: theme.panel,
+                border: `2px solid ${theme.accent}`,
+                borderRadius: '8px',
+                padding: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                cursor: 'pointer',
+                transition: '0.2s',
+                width: '100%',
+                marginBottom: '15px'
+              }}
+            >
+              <div style={{ fontSize: '28px' }}>🎯</div>
+              <div style={{ flex: 1, textAlign: 'left' }}>
+                <div style={{ fontSize: '13px', fontWeight: '900', color: theme.text }}>Achievement Badges</div>
+                <div style={{ fontSize: '10px', color: theme.textDim }}>View your NFT achievements</div>
+              </div>
+              {earnedAchievements.length > 0 && (
+                <span style={{
+                  background: theme.accent,
+                  color: '#000',
+                  borderRadius: '10px',
+                  padding: '3px 7px',
+                  fontSize: '10px',
+                  fontWeight: '900'
+                }}>
+                  {earnedAchievements.length}
+                </span>
+              )}
+            </button>
+
+            {/* 🎁 REFERRALS */}
+            <button
+              onClick={() => { setView('REFERRALS'); setShowMenu(false); }}
+              style={{
+                background: theme.panel,
+                border: `2px solid #10B981`,
+                borderRadius: '8px',
+                padding: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                cursor: 'pointer',
+                transition: '0.2s',
+                width: '100%',
+                marginBottom: '20px'
+              }}
+            >
+              <div style={{ fontSize: '28px' }}>🎁</div>
+              <div style={{ flex: 1, textAlign: 'left' }}>
+                <div style={{ fontSize: '13px', fontWeight: '900', color: theme.text }}>Invite Friends</div>
+                <div style={{ fontSize: '10px', color: theme.textDim }}>Earn +50 XP per referral</div>
+              </div>
+            </button>
+
             {/* 🛡️ TACTICAL GUIDE (HOW TO PLAY) */}
             <div style={{ marginBottom: '20px', padding: '15px', background: theme.panel, border: `1px solid ${theme.accent}`, borderRadius: '4px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
