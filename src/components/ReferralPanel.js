@@ -4,6 +4,7 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Copy, Share2, Twitter } from 'lucide-react';
+import ReferralLeaderboard from './ReferralLeaderboard';
 
 export default function ReferralPanel({ wallet, theme, onCopy, onShare }) {
     const [referralCode, setReferralCode] = useState(null);
@@ -339,6 +340,9 @@ export default function ReferralPanel({ wallet, theme, onCopy, onShare }) {
                     )}
                 </div>
             )}
+
+            {/* Leaderboard */}
+            <ReferralLeaderboard wallet={wallet} theme={theme} />
         </motion.div>
     );
 }
