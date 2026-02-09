@@ -707,7 +707,9 @@ export default function Home() {
         '2. Connect your Solana wallet\n' +
         '3. Scan for dust tokens\n' +
         '4. Burn & earn XP!\n\n' +
-        '💡 Use Jupiter Mobile for 3x XP!'
+        '💡 Use Jupiter Mobile for 3x XP!',
+        () => { closeModal(); setShowMenu(true); },
+        'VIEW GUIDE'
       );
       return;
     }
