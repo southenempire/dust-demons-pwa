@@ -475,6 +475,9 @@ export default function Home() {
   };
 
   const updateMission = (id, amount) => {
+    // Only award XP and complete missions if wallet is connected
+    if (!publicKey) return;
+
     setMissions(prev => prev.map(m => {
       if (m.id === id && !m.completed) {
         const newProgress = m.progress + amount;
@@ -695,7 +698,20 @@ export default function Home() {
 
   // 🛡️ SCAN LOGIC (PRECISION FILTERING)
   async function handleScan() {
-    if (!publicKey) return;
+    // Require wallet connection
+    if (!publicKey) {
+      showModal('INFO', '🔗 WALLET REQUIRED',
+        'Connect your wallet to start playing!\n\n' +
+        '📱 HOW TO PLAY:\n' +
+        '1. Click wallet button (top right)\n' +
+        '2. Connect your Solana wallet\n' +
+        '3. Scan for dust tokens\n' +
+        '4. Burn & earn XP!\n\n' +
+        '💡 Use Jupiter Mobile for 3x XP!'
+      );
+      return;
+    }
+
     setLoading(true); setView('INVENTORY'); triggerHaptic(100); playSound('scan');
 
     try {
