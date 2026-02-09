@@ -15,6 +15,7 @@ import { sendJupiterNotification, setupDeepLinking, parseDeepLink } from '@/util
 import { TokenSkeleton, BalanceSkeleton, StatsSkeleton } from '@/components/LoadingSkeleton';
 import { trackEvent, AnalyticsEvents, PerformanceMonitor, TransactionMonitor } from '@/utils/analytics';
 import { canBurn, canSwap, canScan, canPredict } from '@/utils/rate-limiter';
+import OnboardingTour from '@/components/OnboardingTour';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 // ⚡ RPC CONFIGURATION (DAS API endpoint for asset fetching)
@@ -96,6 +97,8 @@ export default function Home() {
   const [lootDrops, setLootDrops] = useState([]);
   const [shake, setShake] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showTour, setShowTour] = useState(false);
+  const [tourStep, setTourStep] = useState(0);
   const [walletBalance, setWalletBalance] = useState(0);
   const [swapTarget, setSwapTarget] = useState(null);
   const [swapOutput, setSwapOutput] = useState('So11111111111111111111111111111111111111112'); // Default SOL
@@ -322,6 +325,12 @@ export default function Home() {
         setView(action.toUpperCase());
       }
     });
+
+    // First-time user onboarding tour
+    const tourCompleted = localStorage.getItem('dust_demons_tour_completed');
+    if (!tourCompleted) {
+      setTimeout(() => setShowTour(true), 1500);
+    }
   }, []);
 
   useEffect(() => {
@@ -472,6 +481,23 @@ export default function Home() {
     const refLink = publicKey ? `https://dust-demons.vercel.app/?ref=${publicKey.toString()}` : 'https://dust-demons.vercel.app/';
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(refLink)}&hashtags=JupiterMobile,Solana,JupSOL,DustDemons`;
     window.open(url, '_blank');
+  };
+
+  // 🎯 TOUR HANDLERS
+  const handleTourNext = () => {
+    if (tourStep < 3) {
+      setTourStep(tourStep + 1);
+    } else {
+      setShowTour(false);
+      localStorage.setItem('dust_demons_tour_completed', 'true');
+      trackEvent(AnalyticsEvents.TOUR_COMPLETED);
+    }
+  };
+
+  const handleTourSkip = () => {
+    setShowTour(false);
+    localStorage.setItem('dust_demons_tour_completed', 'true');
+    trackEvent(AnalyticsEvents.TOUR_SKIPPED);
   };
 
   const updateMission = (id, amount) => {
@@ -873,9 +899,29 @@ export default function Home() {
         .wallet-adapter-button { height: 36px !important; padding: 0 12px !important; font-size: 12px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; max-width: 140px !important; cursor: pointer !important; }
         .wallet-adapter-button-trigger { background-color: ${theme.panel} !important; border: 1px solid ${theme.border} !important; color: ${theme.text} !important; }
         @media (max-width: 400px) { .wallet-adapter-button { max-width: 100px !important; } }
+        
+        /* Glassmorphism Buttons */
+        .glass-button {
+          background: rgba(255, 255, 255, 0.05) !important;
+          backdrop-filter: blur(10px) !important;
+          border: 1px solid rgba(255, 255, 255, 0.15) !important;
+          box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+          transition: all 0.3s ease !important;
+          cursor: pointer !important;
+        }
+        .glass-button:hover:not(:disabled) {
+          background: rgba(255, 255, 255, 0.1) !important;
+          border: 1px solid rgba(255, 255, 255, 0.25) !important;
+          transform: translateY(-2px) !important;
+          box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5) !important;
+        }
+        .glass-button:disabled {
+          opacity: 0.5 !important;
+          cursor: not-allowed !important;
+        }
+        
         button { cursor: pointer !important; }
         button:disabled { cursor: not-allowed !important; }
-        button:hover:not(:disabled) { opacity: 0.9; }
       `}</style>
 
       {/* MODAL */}
@@ -1095,9 +1141,9 @@ export default function Home() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px', padding: '16px', background: theme.panel, border: `1px solid ${selectedIds.length > 0 ? rankColor : theme.border}`, position: 'sticky', top: 0, zIndex: 20, borderRadius: '4px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ margin: 0, color: rankColor, fontSize: '12px', fontWeight: '900', letterSpacing: '1px' }}>TARGETS: {selectedIds.length}</h3>
-                <button onClick={handleToggleSelectAll} style={{ background: theme.bg, border: '2px solid #fbbf24', color: '#fbbf24', padding: '6px 12px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(251, 191, 36, 0.3)' }} onMouseEnter={(e) => { e.target.style.background = '#fbbf24'; e.target.style.color = '#000'; }} onMouseLeave={(e) => { e.target.style.background = theme.bg; e.target.style.color = '#fbbf24'; }}>{selectedIds.length === result.targets.length ? 'DESELECT ALL' : 'SELECT ALL'}</button>
+                <button onClick={handleToggleSelectAll} className="glass-button" style={{ padding: '6px 12px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px', color: '#fbbf24' }}>{selectedIds.length === result.targets.length ? 'DESELECT ALL' : 'SELECT ALL'}</button>
               </div>
-              <button onClick={confirmExorcism} disabled={!selectedIds.length || burningId} style={{ width: '100%', padding: '14px', background: selectedIds.length ? '#ff0055' : theme.bg, color: selectedIds.length ? '#fff' : theme.textDim, border: selectedIds.length ? '2px solid #ff0055' : `1px solid ${theme.border}`, borderRadius: '4px', fontWeight: '900', letterSpacing: '2px', transition: 'all 0.2s', cursor: selectedIds.length ? 'pointer' : 'not-allowed', boxShadow: selectedIds.length ? '0 4px 12px rgba(255, 0, 85, 0.4)' : 'none' }}>
+              <button onClick={confirmExorcism} disabled={!selectedIds.length || burningId} className="glass-button" style={{ width: '100%', padding: '14px', background: selectedIds.length ? '#ff0055' : 'rgba(255, 255, 255, 0.05)', color: selectedIds.length ? '#fff' : theme.textDim, borderRadius: '4px', fontWeight: '900', letterSpacing: '2px' }}>
                 {burningId ? <Activity className="animate-spin" size={16} /> : `EXECUTE BURN`}
               </button>
             </div>
