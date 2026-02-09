@@ -1971,6 +1971,23 @@ export default function Home() {
           </div>
         )}
 
+        {/* VIEW 7: ACHIEVEMENTS */}
+        {view === 'ACHIEVEMENTS' && (
+          <div style={{ minHeight: '100vh', paddingBottom: '90px' }}>
+            <AchievementGallery
+              earnedAchievements={earnedAchievements}
+              stats={stats}
+              context={{
+                jupsolBalance,
+                predictions: predictionHistory,
+                isJupiterMobile,
+                userRank,
+              }}
+              theme={theme}
+            />
+          </div>
+        )}
+
       </div>
 
       {/* FOOTER NAV */}
