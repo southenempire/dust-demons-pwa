@@ -435,7 +435,16 @@ export default function Home() {
     if (!publicKey) return;
 
     try {
-      await fetch('/api/leaderboard/submit', {
+      console.log('📊 Submitting to leaderboard:', {
+        wallet: publicKey.toString(),
+        xp: stats.xp,
+        totalBurned: stats.totalBurned,
+        solReclaimed: stats.solReclaimed,
+        level: stats.level,
+        rank: currentRank
+      });
+
+      const response = await fetch('/api/leaderboard/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -448,6 +457,9 @@ export default function Home() {
           isMobile: isJupiterMobile
         })
       });
+
+      const result = await response.json();
+      console.log('📊 Leaderboard submit result:', result);
     } catch (error) {
       console.error('Failed to submit to leaderboard:', error);
     }
