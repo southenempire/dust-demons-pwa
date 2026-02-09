@@ -1055,6 +1055,24 @@ export default function Home() {
       triggerScreenShake();
       triggerHaptic('strong');
 
+      // 🎁 Track referral completion (first burn)
+      const isFirstBurn = stats.totalBurned === 0;
+      if (isFirstBurn && wallet?.publicKey) {
+        setTimeout(async () => {
+          try {
+            const referralResult = await trackReferralCompletion(wallet.publicKey.toString());
+            if (referralResult?.success) {
+              setTimeout(() => {
+                showModal('SUCCESS', '🎁 REFERRAL BONUS!', `Welcome! You earned +${referralResult.refereeBonus} XP\\n\\nYour referrer earned +${referralResult.referrerXP} XP${referralResult.bonusXP > 0 ? `\\n\\n🎉 Milestone bonus: +${referralResult.bonusXP} XP!` : ''}`);
+                triggerConfetti('success');
+              }, 3000);
+            }
+          } catch (error) {
+            console.error('Referral tracking error:', error);
+          }
+        }, 1000);
+      }
+
       setTimeout(() => {
         showModal('SUCCESS', 'EXORCISM COMPLETE', `You recovered ${rent} SOL. Share to recruit more Hunters?`, () => {
           handleShare('burn');
