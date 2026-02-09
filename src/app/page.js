@@ -20,6 +20,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import AchievementModal from '@/components/AchievementModal';
 import AchievementGallery from '@/components/AchievementGallery';
 import ReferralPanel from '@/components/ReferralPanel';
+import PredictionChart from '@/components/PredictionChart';
 import { checkAchievements, getAllAchievements } from '@/lib/nft/achievementTracker';
 import { detectReferralCode, trackReferralCompletion } from '@/lib/referrals';
 import '@solana/wallet-adapter-react-ui/styles.css';
