@@ -69,3 +69,24 @@ BEGIN
   RETURN stats;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Function to get referral leaderboard
+CREATE OR REPLACE FUNCTION get_referral_leaderboard(limit_count INTEGER DEFAULT 10)
+RETURNS TABLE (
+  referrer_wallet TEXT,
+  total_referrals BIGINT,
+  total_xp BIGINT
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    r.referrer_wallet,
+    COUNT(*) FILTER (WHERE status = 'completed') as total_referrals,
+    COALESCE(SUM(xp_awarded), 0) as total_xp
+  FROM referrals r
+  GROUP BY r.referrer_wallet
+  HAVING COUNT(*) FILTER (WHERE status = 'completed') > 0
+  ORDER BY total_referrals DESC, total_xp DESC
+  LIMIT limit_count;
+END;
+$$ LANGUAGE plpgsql;
