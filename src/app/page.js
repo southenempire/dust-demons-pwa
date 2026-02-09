@@ -479,8 +479,25 @@ export default function Home() {
     if (action === 'rank') text = `I just reached ${currentRank} rank on Dust Demons! 💀\n\nTotal XP: ${stats.xp}\nSOL Reclaimed: ${stats.solReclaimed.toFixed(3)}`;
 
     const refLink = publicKey ? `https://dust-demons.vercel.app/?ref=${publicKey.toString()}` : 'https://dust-demons.vercel.app/';
-    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(refLink)}&hashtags=JupiterMobile,Solana,JupSOL,DustDemons`;
-    window.open(url, '_blank');
+    const tweetText = encodeURIComponent(text);
+    const tweetUrl = encodeURIComponent(refLink);
+    const hashtags = 'JupiterMobile,Solana,JupSOL,DustDemons';
+
+    // Try to open X app first on mobile (deep linking)
+    const xAppUrl = `twitter://post?message=${tweetText}%20${tweetUrl}%20%23${hashtags.replace(/,/g, '%20%23')}`;
+    const webUrl = `https://twitter.com/intent/tweet?text=${tweetText}&url=${tweetUrl}&hashtags=${hashtags}`;
+
+    if (isMobile) {
+      // Try app deep link first
+      window.location.href = xAppUrl;
+      // Fallback to web if app doesn't open (1 second timeout)
+      setTimeout(() => {
+        window.open(webUrl, '_blank');
+      }, 1000);
+    } else {
+      // Desktop: just open web
+      window.open(webUrl, '_blank');
+    }
   };
 
   // 🎯 TOUR HANDLERS
