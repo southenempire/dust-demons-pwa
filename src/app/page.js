@@ -902,7 +902,11 @@ export default function Home() {
     finally { setBurningId(null); setLoading(false); setTimeout(() => setShake(false), 500); setTimeout(() => setLootDrops(p => p.filter(l => l.id !== Date.now())), 3000); }
   }
 
-  const confirmExorcism = () => { if (selectedIds.length && publicKey) showModal('DANGER', 'CONFIRM PROTOCOL', `Incinerate ${selectedIds.length} targets?`, 'EXECUTE', executeExorcism); };
+  const confirmExorcism = () => {
+    if (selectedIds.length && publicKey) {
+      showModal('DANGER', 'CONFIRM PROTOCOL', `Incinerate ${selectedIds.length} targets?`, executeExorcism, 'EXECUTE');
+    }
+  };
 
   if (!isMounted) return <div style={{ background: theme.bg, height: '100dvh', width: '100vw' }} />;
 
