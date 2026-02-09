@@ -846,8 +846,10 @@ export default function Home() {
     if (!dailyPrediction || dailyPrediction.result) return;
 
     const updateTimer = () => {
+      // 🛡️ CORRUPTION CHECK
       if (!dailyPrediction.endTime || isNaN(dailyPrediction.endTime)) {
-        setTimeLeft('Error');
+        setDailyPrediction(null); // Reset invalid state
+        setTimeLeft('');
         return;
       }
 
