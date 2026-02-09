@@ -1738,6 +1738,15 @@ export default function Home() {
           </motion.div>
         ))}
       </AnimatePresence>
+
+      {/* ONBOARDING TOUR */}
+      <OnboardingTour
+        show={showTour}
+        currentStep={tourStep}
+        onNext={handleTourNext}
+        onSkip={handleTourSkip}
+        theme={theme}
+      />
     </main >
   );
 }
@@ -1802,11 +1811,3 @@ function BountyPoster({ data, selected, onSelect, onSwap, theme }) {
   );
 }
 
-{/* ONBOARDING TOUR */ }
-<OnboardingTour
-  show={showTour}
-  currentStep={tourStep}
-  onNext={handleTourNext}
-  onSkip={handleTourSkip}
-  theme={theme}
-/>
