@@ -755,7 +755,14 @@ export default function Home() {
     setDailyPrediction(prediction);
     localStorage.setItem('dust_demons_prediction', JSON.stringify(prediction));
     updateMission('predict', 1);
-    playSound('success');
+
+    // Distinct sounds for Up/Down
+    if (direction === 'up') {
+      playSound('success'); // High pitch/happy
+    } else {
+      playSound('clack'); // Mechanical/heavy
+    }
+
     triggerConfetti();
 
     showModal('SUCCESS', 'PREDICTION LOCKED', `You predicted SOL will go ${direction.toUpperCase()}!\\nEntry: $${currentSOLPrice.toFixed(2)}\\nTime: 5 Minutes`);
@@ -2139,7 +2146,19 @@ export default function Home() {
       </div>
 
       {/* FOOTER NAV - Streamlined to 6 core actions */}
-      <nav style={{ position: 'fixed', bottom: 0, width: '100%', height: '70px', background: theme.bg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', alignItems: 'center', zIndex: 1000, paddingBottom: '10px' }}>
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        width: '100%',
+        height: 'calc(70px + env(safe-area-inset-bottom))',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        background: theme.bg,
+        borderTop: `1px solid ${theme.border}`,
+        display: 'flex',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        zIndex: 1000
+      }}>
         <button onClick={() => setView('SCANNER')} style={{ background: 'none', border: 'none', color: view === 'SCANNER' ? theme.accent : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
           <Crosshair size={24} />
           <span style={{ fontSize: '9px' }}>SCAN</span>
