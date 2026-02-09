@@ -2033,7 +2033,7 @@ export default function Home() {
 
       </div>
 
-      {/* FOOTER NAV */}
+      {/* FOOTER NAV - Streamlined to 6 core actions */}
       <nav style={{ position: 'fixed', bottom: 0, width: '100%', height: '70px', background: theme.bg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', alignItems: 'center', zIndex: 1000, paddingBottom: '10px' }}>
         <button onClick={() => setView('SCANNER')} style={{ background: 'none', border: 'none', color: view === 'SCANNER' ? theme.accent : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
           <Crosshair size={24} />
@@ -2055,20 +2055,20 @@ export default function Home() {
           <div style={{ fontSize: '24px' }}>🏆</div>
           <span style={{ fontSize: '9px' }}>RANKS</span>
         </button>
-        <button onClick={() => setView('ACHIEVEMENTS')} style={{ background: 'none', border: 'none', color: view === 'ACHIEVEMENTS' ? theme.accent : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', position: 'relative' }}>
-          <div style={{ fontSize: '24px' }}>🎯</div>
-          <span style={{ fontSize: '9px' }}>BADGES</span>
+        <button onClick={() => setShowMenu(true)} style={{ background: 'none', border: 'none', color: theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', position: 'relative' }}>
+          <Settings size={24} />
+          <span style={{ fontSize: '9px' }}>MORE</span>
           {earnedAchievements.length > 0 && (
             <span style={{
               position: 'absolute',
               top: '-2px',
-              right: '2px',
+              right: '-2px',
               background: theme.accent,
               color: '#000',
               borderRadius: '50%',
-              width: '16px',
-              height: '16px',
-              fontSize: '9px',
+              width: '14px',
+              height: '14px',
+              fontSize: '8px',
               fontWeight: '900',
               display: 'flex',
               alignItems: 'center',
@@ -2077,14 +2077,6 @@ export default function Home() {
               {earnedAchievements.length}
             </span>
           )}
-        </button>
-        <button onClick={() => setView('REFERRALS')} style={{ background: 'none', border: 'none', color: view === 'REFERRALS' ? '#10B981' : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <div style={{ fontSize: '24px' }}>🎁</div>
-          <span style={{ fontSize: '9px' }}>REFER</span>
-        </button>
-        <button onClick={() => setShowMenu(true)} style={{ background: 'none', border: 'none', color: theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <Settings size={24} />
-          <span style={{ fontSize: '9px' }}>MENU</span>
         </button>
       </nav>
 
