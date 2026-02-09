@@ -5,44 +5,44 @@ import { X, ChevronRight } from 'lucide-react';
 
 const tourSteps = [
     {
-        title: '🔗 Connect Your Wallet',
+        title: 'Connect Wallet',
+        emoji: '🔗',
         items: [
-            'Click wallet button (top right)',
-            'Select your Solana wallet',
-            'Approve the connection',
-            'Jupiter Mobile gets 3x XP!'
-        ],
-        highlight: '.wallet-adapter-button'
+            'Tap wallet button above',
+            'Choose your Solana wallet',
+            'Approve connection',
+            '3x XP with Jupiter Mobile!'
+        ]
     },
     {
-        title: '🎯 Scan for Dust',
+        title: 'Scan for Dust',
+        emoji: '🎯',
         items: [
-            'Find worthless tokens in wallet',
+            'Find worthless tokens',
             'Auto-categorize by value',
-            'Identify rent-claimable accounts',
-            'See total reclaimable SOL'
-        ],
-        highlight: '.scan-button'
+            'See reclaimable SOL',
+            'Identify rent accounts'
+        ]
     },
     {
-        title: '⚔️ Complete Missions',
+        title: 'Complete Missions',
+        emoji: '⚔️',
         items: [
             'Daily login streaks',
             'Burn dust tokens',
             'Swap to JupSOL',
-            'Make price predictions'
-        ],
-        highlight: '.missions-section'
+            'Make predictions'
+        ]
     },
     {
-        title: '🏆 Climb the Leaderboard',
+        title: 'Climb Leaderboard',
+        emoji: '🏆',
         items: [
-            'Compete globally for ranks',
-            'Track your percentile',
-            'Win contest prizes',
-            'Earn exclusive badges'
-        ],
-        highlight: '.leaderboard-section'
+            'Compete globally',
+            'Track percentile',
+            'Win prizes',
+            'Earn badges'
+        ]
     }
 ];
 
@@ -64,50 +64,85 @@ export default function OnboardingTour({ show, currentStep, onNext, onSkip, them
                         style={{
                             position: 'fixed',
                             inset: 0,
-                            background: 'rgba(0, 0, 0, 0.9)',
+                            background: 'rgba(0, 0, 0, 0.92)',
                             zIndex: 9998,
-                            pointerEvents: 'auto'
+                            backdropFilter: 'blur(4px)'
                         }}
+                        onClick={onSkip}
                     />
 
                     {/* Tour Card */}
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                         style={{
                             position: 'fixed',
                             top: '50%',
                             left: '50%',
                             transform: 'translate(-50%, -50%)',
                             zIndex: 9999,
-                            width: '90%',
-                            maxWidth: '400px',
-                            background: 'rgba(0, 0, 0, 0.95)',
+                            width: 'calc(100vw - 32px)',
+                            maxWidth: '360px',
+                            background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.98) 0%, rgba(10, 10, 10, 0.98) 100%)',
                             backdropFilter: 'blur(20px)',
-                            border: `2px solid ${theme.accent}`,
-                            borderRadius: '12px',
-                            padding: '24px',
-                            boxShadow: `0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px ${theme.accent}40`
+                            border: `1px solid ${theme.accent}`,
+                            borderRadius: '16px',
+                            padding: '24px 20px',
+                            boxShadow: `0 20px 60px rgba(0, 0, 0, 0.9), 0 0 0 1px ${theme.accent}20, inset 0 1px 0 rgba(255, 255, 255, 0.05)`
                         }}
                     >
+                        {/* Close Button */}
+                        <button
+                            onClick={onSkip}
+                            style={{
+                                position: 'absolute',
+                                top: '16px',
+                                right: '16px',
+                                background: 'rgba(255, 255, 255, 0.05)',
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                borderRadius: '50%',
+                                width: '32px',
+                                height: '32px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                color: theme.textDim
+                            }}
+                            onMouseEnter={(e) => {
+                                e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+                                e.target.style.borderColor = theme.accent;
+                            }}
+                            onMouseLeave={(e) => {
+                                e.target.style.background = 'rgba(255, 255, 255, 0.05)';
+                                e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                            }}
+                        >
+                            <X size={16} />
+                        </button>
+
                         {/* Header */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                            <h2 style={{ margin: 0, fontSize: '20px', color: theme.accent, fontWeight: '900' }}>
+                        <div style={{ marginBottom: '20px', paddingRight: '32px' }}>
+                            <div style={{
+                                fontSize: '32px',
+                                marginBottom: '8px',
+                                filter: 'drop-shadow(0 2px 8px rgba(0, 255, 65, 0.3))'
+                            }}>
+                                {step.emoji}
+                            </div>
+                            <h2 style={{
+                                margin: 0,
+                                fontSize: '20px',
+                                color: theme.text,
+                                fontWeight: '800',
+                                letterSpacing: '-0.5px',
+                                lineHeight: '1.2'
+                            }}>
                                 {step.title}
                             </h2>
-                            <button
-                                onClick={onSkip}
-                                style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    color: theme.textDim,
-                                    cursor: 'pointer',
-                                    padding: '4px'
-                                }}
-                            >
-                                <X size={20} />
-                            </button>
                         </div>
 
                         {/* Content - Clean List */}
@@ -115,62 +150,86 @@ export default function OnboardingTour({ show, currentStep, onNext, onSkip, them
                             {step.items.map((item, i) => (
                                 <motion.div
                                     key={i}
-                                    initial={{ opacity: 0, x: -20 }}
+                                    initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: i * 0.1 }}
+                                    transition={{ delay: i * 0.08, type: 'spring', damping: 20 }}
                                     style={{
                                         display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px',
-                                        padding: '12px',
-                                        marginBottom: '8px',
-                                        background: 'rgba(255, 255, 255, 0.03)',
-                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                        borderRadius: '6px',
+                                        alignItems: 'flex-start',
+                                        gap: '10px',
+                                        padding: '10px 12px',
+                                        marginBottom: i === step.items.length - 1 ? 0 : '6px',
+                                        background: 'rgba(255, 255, 255, 0.02)',
+                                        border: '1px solid rgba(255, 255, 255, 0.06)',
+                                        borderRadius: '8px',
                                         transition: 'all 0.2s'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-                                        e.currentTarget.style.borderColor = theme.accent + '40';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
-                                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
                                     }}
                                 >
                                     <div style={{
-                                        width: '6px',
-                                        height: '6px',
+                                        width: '4px',
+                                        height: '4px',
                                         borderRadius: '50%',
                                         background: theme.accent,
-                                        flexShrink: 0
+                                        flexShrink: 0,
+                                        marginTop: '6px',
+                                        boxShadow: `0 0 8px ${theme.accent}`
                                     }} />
-                                    <span style={{ fontSize: '14px', color: theme.text }}>{item}</span>
+                                    <span style={{
+                                        fontSize: '14px',
+                                        color: theme.text,
+                                        lineHeight: '1.5',
+                                        fontWeight: '400'
+                                    }}>
+                                        {item}
+                                    </span>
                                 </motion.div>
                             ))}
                         </div>
 
                         {/* Footer */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '12px', color: theme.textDim }}>
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            paddingTop: '16px',
+                            borderTop: '1px solid rgba(255, 255, 255, 0.06)'
+                        }}>
+                            <span style={{
+                                fontSize: '11px',
+                                color: theme.textDim,
+                                fontWeight: '600',
+                                letterSpacing: '0.5px'
+                            }}>
                                 {currentStep + 1} / {tourSteps.length}
                             </span>
                             <button
                                 onClick={onNext}
                                 className="glass-button"
                                 style={{
-                                    padding: '10px 20px',
-                                    borderRadius: '6px',
-                                    fontSize: '14px',
+                                    padding: '10px 18px',
+                                    borderRadius: '8px',
+                                    fontSize: '13px',
                                     fontWeight: '700',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '8px',
-                                    color: theme.accent
+                                    gap: '6px',
+                                    color: '#000',
+                                    background: theme.accent,
+                                    border: 'none',
+                                    boxShadow: `0 4px 12px ${theme.accent}40`,
+                                    transition: 'all 0.2s'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.target.style.transform = 'translateY(-1px)';
+                                    e.target.style.boxShadow = `0 6px 16px ${theme.accent}60`;
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.target.style.transform = 'translateY(0)';
+                                    e.target.style.boxShadow = `0 4px 12px ${theme.accent}40`;
                                 }}
                             >
-                                {isLastStep ? 'START PLAYING' : 'NEXT'}
-                                <ChevronRight size={16} />
+                                {isLastStep ? 'START' : 'NEXT'}
+                                <ChevronRight size={14} />
                             </button>
                         </div>
                     </motion.div>
