@@ -738,14 +738,18 @@ export default function Home() {
   };
 
   const makePrediction = (direction) => {
-    const today = new Date().toDateString();
+    // 5-MINUTE PREDICTION (Hackathon Mode)
+    const duration = 5 * 60 * 1000;
+    const now = Date.now();
+
     const prediction = {
-      date: today,
+      date: new Date().toDateString(),
       prediction: direction,
       startPrice: currentSOLPrice,
-      targetPrice: direction === 'up' ? currentSOLPrice * 1.01 : currentSOLPrice * 0.99,
+      targetPrice: direction === 'up' ? currentSOLPrice : currentSOLPrice, // Simple Up/Down
+      endTime: now + duration,
       result: null,
-      timestamp: Date.now()
+      timestamp: now
     };
 
     setDailyPrediction(prediction);
@@ -754,7 +758,7 @@ export default function Home() {
     playSound('success');
     triggerConfetti();
 
-    showModal('SUCCESS', 'PREDICTION LOCKED', `You predicted SOL will go ${direction.toUpperCase()}!\\nCurrent: $${currentSOLPrice.toFixed(2)}\\nTarget: $${prediction.targetPrice.toFixed(2)}\\n\\nCheck back in 24h for results!`);
+    showModal('SUCCESS', 'PREDICTION LOCKED', `You predicted SOL will go ${direction.toUpperCase()}!\\nEntry: $${currentSOLPrice.toFixed(2)}\\nTime: 5 Minutes`);
   };
 
   const checkPredictionResult = async () => {
