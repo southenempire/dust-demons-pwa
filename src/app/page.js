@@ -8,6 +8,8 @@ import { WalletMultiButton, WalletModalProvider } from '@solana/wallet-adapter-r
 import { PublicKey, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { createBurnInstruction, createCloseAccountInstruction, getAssociatedTokenAddress } from '@solana/spl-token';
 import confetti from 'canvas-confetti';
+import { fetchJupSOLAPY } from '@/utils/jupsol-apy'; // 🛡️ Import JupSOL APY proxy utility
+import { playSynthesizedSound } from '@/utils/sound-effects'; // 🔊 Sound Synth
 import { getTokenPrices } from '@/utils/jupiter-price';
 import { fetchJupSOLAPY } from '@/utils/jupsol-apy';
 import { verifyJupiterSwap, verifyTokenBurns } from '@/utils/on-chain-verification';
@@ -519,8 +521,12 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [jupsolBalance, jupsolAPY]);
 
-  // 🛡️ HELPERS
-  const playSound = (key) => { if (audioEnabled && audioRefs.current[key]) { audioRefs.current[key].currentTime = 0; audioRefs.current[key].play().catch(() => { }); } };
+  // 🔊 SOUND SYSTEM (Starts AudioContext on first interaction)
+  const playSound = (key) => {
+    if (audioEnabled) {
+      playSynthesizedSound(key);
+    }
+  };
   const showModal = (type, title, message, onConfirm = null, actionLabel = 'OK') => { if (type !== 'SWAP_PROMPT') playSound('alert'); setModal({ isOpen: true, type, title, message, actionLabel, onConfirm }); };
   const closeModal = () => setModal(prev => ({ ...prev, isOpen: false }));
 
