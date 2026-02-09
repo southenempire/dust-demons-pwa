@@ -842,6 +842,11 @@ export default function Home() {
     if (!dailyPrediction || dailyPrediction.result) return;
 
     const updateTimer = () => {
+      if (!dailyPrediction.endTime || isNaN(dailyPrediction.endTime)) {
+        setTimeLeft('Error');
+        return;
+      }
+
       const now = Date.now();
       const remaining = dailyPrediction.endTime - now;
 

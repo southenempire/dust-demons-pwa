@@ -11,8 +11,8 @@ const JUPSOL_MINT = 'jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjx93v';
  */
 export async function fetchJupSOLAPY() {
     try {
-        // Option 1: Try Sanctum API (may fail due to CORS)
-        const response = await fetch('https://api.sanctum.so/v1/apy', {
+        // Option 1: Try Sanctum API (via local proxy to avoid CORS)
+        const response = await fetch('/api/apy/jupsol', {
             method: 'GET',
             headers: { 'Accept': 'application/json' }
         }).catch(() => null);
