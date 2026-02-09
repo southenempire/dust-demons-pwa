@@ -60,10 +60,8 @@ export async function GET(request) {
             }
         }
 
-        // Get total player count
-        const { count: totalPlayers } = await supabase
-            .from('players')
-            .select('*', { count: 'exact', head: true });
+        // Use actual player count from the query result
+        const totalPlayers = topPlayers?.length || 0;
 
         // Contest end time (example: 7 days from now)
         const contestEndsIn = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
@@ -71,7 +69,7 @@ export async function GET(request) {
         return NextResponse.json({
             topPlayers: formattedPlayers,
             userRank,
-            totalPlayers: totalPlayers || 0,
+            totalPlayers,
             contestEndsIn,
             lastUpdated: Date.now()
         });
