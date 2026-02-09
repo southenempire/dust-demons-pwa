@@ -1711,23 +1711,46 @@ return (
                     </button>
                   </div>
                 )}
+                {/* Chart & Claim UI */}
+                <PredictionChart
+                  startPrice={dailyPrediction.startPrice}
+                  currentPrice={currentSOLPrice}
+                  direction={dailyPrediction.prediction}
+                  theme={theme}
+                />
+
                 {!dailyPrediction.result && (
                   <button
                     onClick={checkPredictionResult}
                     style={{
                       marginTop: '10px',
                       width: '100%',
-                      padding: '10px',
-                      background: '#a855f7',
-                      border: 'none',
+                      padding: '12px',
+                      background: Date.now() >= dailyPrediction.endTime
+                        ? 'linear-gradient(135deg, #fbbf24, #d97706)' // Gold for Claim
+                        : theme.panel,
+                      border: Date.now() >= dailyPrediction.endTime ? 'none' : `1px solid ${theme.border}`,
                       borderRadius: '4px',
-                      color: '#fff',
+                      color: Date.now() >= dailyPrediction.endTime ? '#000' : theme.textDim,
                       fontWeight: '900',
                       fontSize: '11px',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      gap: '8px',
+                      letterSpacing: '1px'
                     }}
                   >
-                    CHECK RESULT
+                    {Date.now() >= dailyPrediction.endTime ? (
+                      <>
+                        <Crown size={16} /> CLAIM REWARD
+                      </>
+                    ) : (
+                      <>
+                        <Loader2 size={14} className="animate-spin" /> LIVE
+                      </>
+                    )}
                   </button>
                 )}
               </div>
