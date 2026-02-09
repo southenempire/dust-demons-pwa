@@ -868,9 +868,12 @@ export default function Home() {
       <div className="scanner-line" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: `linear-gradient(90deg, transparent, ${theme.accent}, transparent)`, boxShadow: `0 0 15px ${theme.accent}`, zIndex: 5, animation: 'scan 2.5s linear infinite', pointerEvents: 'none' }} />
       <style jsx>{`@keyframes scan { 0% { top: -10%; opacity: 0; } 20% { opacity: 1; } 100% { top: 110%; opacity: 0; } }`}</style>
       <style jsx global>{`
-        .wallet-adapter-button { height: 36px !important; padding: 0 12px !important; font-size: 12px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; max-width: 140px !important; }
+        .wallet-adapter-button { height: 36px !important; padding: 0 12px !important; font-size: 12px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; max-width: 140px !important; cursor: pointer !important; }
         .wallet-adapter-button-trigger { background-color: ${theme.panel} !important; border: 1px solid ${theme.border} !important; color: ${theme.text} !important; }
         @media (max-width: 400px) { .wallet-adapter-button { max-width: 100px !important; } }
+        button { cursor: pointer !important; }
+        button:disabled { cursor: not-allowed !important; }
+        button:hover:not(:disabled) { opacity: 0.9; }
       `}</style>
 
       {/* MODAL */}
@@ -925,7 +928,7 @@ export default function Home() {
                 <Terminal size={24} color={theme.accent} />
                 <h2 style={{ margin: 0, fontSize: '18px', color: theme.accent, fontFamily: 'monospace' }}>SYSTEM CONFIG</h2>
               </div>
-              <button onClick={() => setShowMenu(false)} style={{ background: 'none', border: 'none', color: theme.text }}><X size={24} /></button>
+              <button onClick={() => setShowMenu(false)} style={{ background: 'none', border: 'none', color: theme.text, cursor: 'pointer', transition: 'opacity 0.2s' }} onMouseEnter={(e) => e.target.style.opacity = '0.7'} onMouseLeave={(e) => e.target.style.opacity = '1'}><X size={24} /></button>
             </div>
 
             {/* 🛡️ TACTICAL GUIDE (HOW TO PLAY) */}
@@ -1047,7 +1050,17 @@ export default function Home() {
         {/* VIEW 1: SCANNER */}
         {view === 'SCANNER' && !loading && (
           <div style={{ display: 'flex', flexDirection: 'column', height: '60vh', alignItems: 'center', justifyContent: 'center' }}>
-            <motion.button whileHover="scanning" whileTap="lock" variants={hudVariants} onClick={handleScan} style={{ background: 'none', border: 'none', cursor: 'pointer', position: 'relative' }}>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleScan}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                position: 'relative',
+                transition: 'all 0.2s ease'
+              }}>
               <motion.div variants={radarVariants} animate="ping" style={{ position: 'absolute', inset: -25, border: `1px solid ${theme.accent}`, borderRadius: '50%', opacity: 0.5 }} />
               <motion.div variants={radarVariants} animate="ping" style={{ position: 'absolute', inset: -50, border: `1px solid ${theme.accent}`, borderRadius: '50%', opacity: 0.2, animationDelay: '0.5s' }} />
               <div style={{ width: '160px', height: '160px', borderRadius: '50%', border: `2px solid ${theme.accent}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: theme.panel, boxShadow: `0 0 40px ${theme.accent}40`, position: 'relative' }}>
@@ -1080,9 +1093,9 @@ export default function Home() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px', padding: '16px', background: theme.panel, border: `1px solid ${selectedIds.length > 0 ? rankColor : theme.border}`, position: 'sticky', top: 0, zIndex: 20, borderRadius: '4px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ margin: 0, color: rankColor, fontSize: '12px', fontWeight: '900', letterSpacing: '1px' }}>TARGETS: {selectedIds.length}</h3>
-                <button onClick={handleToggleSelectAll} style={{ background: theme.bg, border: '1px solid #fbbf24', color: '#fbbf24', padding: '6px 12px', borderRadius: '2px', fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px' }}>{selectedIds.length === result.targets.length ? 'DESELECT ALL' : 'SELECT ALL'}</button>
+                <button onClick={handleToggleSelectAll} style={{ background: theme.bg, border: '2px solid #fbbf24', color: '#fbbf24', padding: '6px 12px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(251, 191, 36, 0.3)' }} onMouseEnter={(e) => { e.target.style.background = '#fbbf24'; e.target.style.color = '#000'; }} onMouseLeave={(e) => { e.target.style.background = theme.bg; e.target.style.color = '#fbbf24'; }}>{selectedIds.length === result.targets.length ? 'DESELECT ALL' : 'SELECT ALL'}</button>
               </div>
-              <button onClick={confirmExorcism} disabled={!selectedIds.length || burningId} style={{ width: '100%', padding: '14px', background: selectedIds.length ? '#ff0055' : theme.bg, color: selectedIds.length ? '#fff' : theme.textDim, border: 'none', borderRadius: '2px', fontWeight: '900', letterSpacing: '2px', transition: 'all 0.2s' }}>
+              <button onClick={confirmExorcism} disabled={!selectedIds.length || burningId} style={{ width: '100%', padding: '14px', background: selectedIds.length ? '#ff0055' : theme.bg, color: selectedIds.length ? '#fff' : theme.textDim, border: selectedIds.length ? '2px solid #ff0055' : `1px solid ${theme.border}`, borderRadius: '4px', fontWeight: '900', letterSpacing: '2px', transition: 'all 0.2s', cursor: selectedIds.length ? 'pointer' : 'not-allowed', boxShadow: selectedIds.length ? '0 4px 12px rgba(255, 0, 85, 0.4)' : 'none' }}>
                 {burningId ? <Activity className="animate-spin" size={16} /> : `EXECUTE BURN`}
               </button>
             </div>
