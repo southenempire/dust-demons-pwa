@@ -928,12 +928,44 @@ export default function Home() {
       <AnimatePresence>
         {modal.isOpen && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-            <div style={{ background: theme.modal, border: `1px solid ${modal.type === 'DANGER' ? '#ff0055' : (modal.type === 'SUCCESS' ? '#00ff41' : theme.accent)}`, padding: '24px', borderRadius: '8px', maxWidth: '300px', width: '100%', textAlign: 'center', boxShadow: '0 0 30px rgba(0,0,0,0.5)' }}>
-              <h3 style={{ color: modal.type === 'DANGER' ? '#ff0055' : (modal.type === 'SUCCESS' ? '#00ff41' : theme.accent), margin: '0 0 10px 0', fontSize: '18px', fontWeight: '900' }}>{modal.title}</h3>
-              <p style={{ color: theme.textDim, fontSize: '12px', marginBottom: '20px' }}>{modal.message}</p>
+            <div style={{ background: theme.modal, border: `1px solid ${modal.type === 'DANGER' ? '#ff0055' : (modal.type === 'SUCCESS' ? '#00ff41' : theme.accent)}`, padding: '24px', borderRadius: '8px', maxWidth: '400px', width: '100%', boxShadow: '0 0 30px rgba(0,0,0,0.5)' }}>
+              <h3 style={{ color: modal.type === 'DANGER' ? '#ff0055' : (modal.type === 'SUCCESS' ? '#00ff41' : theme.accent), margin: '0 0 16px 0', fontSize: '18px', fontWeight: '900' }}>{modal.title}</h3>
+
+              {/* Support for list-based content */}
+              {Array.isArray(modal.message) ? (
+                <div style={{ marginBottom: '20px' }}>
+                  {modal.message.map((item, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '12px',
+                        marginBottom: '8px',
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '6px'
+                      }}
+                    >
+                      <div style={{
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '50%',
+                        background: theme.accent,
+                        flexShrink: 0
+                      }} />
+                      <span style={{ fontSize: '14px', color: theme.text }}>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ color: theme.textDim, fontSize: '12px', marginBottom: '20px' }}>{modal.message}</p>
+              )}
+
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                <button onClick={closeModal} style={{ padding: '10px 20px', background: 'transparent', border: `1px solid ${theme.border}`, color: theme.textDim, borderRadius: '4px', fontWeight: 'bold' }}>CANCEL</button>
-                {modal.onConfirm && <button onClick={modal.onConfirm} style={{ padding: '10px 20px', background: modal.type === 'DANGER' ? '#ff0055' : (modal.type === 'SUCCESS' ? '#00ff41' : theme.accent), border: 'none', color: '#fff', borderRadius: '4px', fontWeight: 'bold' }}>{modal.actionLabel}</button>}
+                <button onClick={closeModal} className="glass-button" style={{ padding: '10px 20px', borderRadius: '4px', fontWeight: 'bold', color: theme.textDim }}>CANCEL</button>
+                {modal.onConfirm && <button onClick={modal.onConfirm} className="glass-button" style={{ padding: '10px 20px', background: modal.type === 'DANGER' ? '#ff0055' : (modal.type === 'SUCCESS' ? '#00ff41' : theme.accent), borderRadius: '4px', fontWeight: 'bold', color: '#fff' }}>{modal.actionLabel}</button>}
               </div>
             </div>
           </motion.div>
