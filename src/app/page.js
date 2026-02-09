@@ -727,13 +727,13 @@ export default function Home() {
     // Require wallet connection
     if (!publicKey) {
       showModal('INFO', '🔗 WALLET REQUIRED',
-        'Connect your wallet to start playing!\n\n' +
-        '📱 HOW TO PLAY:\n' +
-        '1. Click wallet button (top right)\n' +
-        '2. Connect your Solana wallet\n' +
-        '3. Scan for dust tokens\n' +
-        '4. Burn & earn XP!\n\n' +
-        '💡 Use Jupiter Mobile for 3x XP!',
+        [
+          'Click wallet button (top right)',
+          'Select your Solana wallet',
+          'Approve the connection',
+          'Start scanning for dust!',
+          '💡 Jupiter Mobile gets 3x XP!'
+        ],
         () => { closeModal(); setShowMenu(true); },
         'VIEW GUIDE'
       );
