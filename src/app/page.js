@@ -20,7 +20,12 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 // ⚡ RPC CONFIGURATION (DAS API endpoint for asset fetching)
-const HELIUS_DAS_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://api.mainnet-beta.solana.com';
+const HELIUS_DAS_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.helius-rpc.com/?api-key=19b096d1-dce5-49a3-ad44-5e7876db7661';
+
+// Debug: Log RPC URL (remove in production)
+if (typeof window !== 'undefined') {
+  console.log('🔧 RPC URL loaded:', HELIUS_DAS_URL ? '✅ Set' : '❌ Missing');
+}
 
 // 🎯 JUPITER CONFIG
 const JUP_SOL_MINT = 'jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjx93v';
@@ -823,11 +828,22 @@ export default function Home() {
           }
         })
       });
-      const { result } = await response.json();
-      return result.items || [];
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(`RPC Error: ${data.error.message || JSON.stringify(data.error)}`);
+      }
+
+      return data.result?.items || [];
     } catch (e) {
       console.error("DAS API Error:", e);
-      throw new Error("Failed to scan on-chain assets.");
+      console.error("RPC URL:", HELIUS_DAS_URL);
+      throw new Error(`Failed to scan: ${e.message}`);
     }
   }
 
