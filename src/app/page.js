@@ -8,10 +8,8 @@ import { WalletMultiButton, WalletModalProvider } from '@solana/wallet-adapter-r
 import { PublicKey, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { createBurnInstruction, createCloseAccountInstruction, getAssociatedTokenAddress } from '@solana/spl-token';
 import confetti from 'canvas-confetti';
-import { fetchJupSOLAPY } from '@/utils/jupsol-apy'; // 🛡️ Import JupSOL APY proxy utility
 import { playSynthesizedSound } from '@/utils/sound-effects'; // 🔊 Sound Synth
 import { getTokenPrices } from '@/utils/jupiter-price';
-import { fetchJupSOLAPY } from '@/utils/jupsol-apy';
 import { verifyJupiterSwap, verifyTokenBurns } from '@/utils/on-chain-verification';
 import { sendJupiterNotification, setupDeepLinking, parseDeepLink } from '@/utils/jupiter-mobile';
 import { TokenSkeleton, BalanceSkeleton, StatsSkeleton } from '@/components/LoadingSkeleton';
