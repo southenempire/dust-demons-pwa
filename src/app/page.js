@@ -359,6 +359,9 @@ export default function Home() {
       connection.getBalance(publicKey)
         .then(bal => setWalletBalance(bal / LAMPORTS_PER_SOL))
         .catch(e => console.warn("Balance check failed:", e));
+
+      // 📊 Auto-submit to leaderboard on wallet connection
+      setTimeout(() => submitToLeaderboard(), 1500);
     }
   }, [publicKey]);
 
