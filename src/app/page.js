@@ -836,6 +836,20 @@ export default function Home() {
   };
 
 
+  // 🕒 AUTO-CHECK PREDICTION
+  useEffect(() => {
+    if (!dailyPrediction || dailyPrediction.result) return;
+
+    const timer = setInterval(() => {
+      if (Date.now() >= dailyPrediction.endTime) {
+        checkPredictionResult();
+        clearInterval(timer);
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [dailyPrediction]);
+
   // 💰 JUPSOL YIELD LOGIC
   const JUPSOL_MINT = 'jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjx93v';
 
