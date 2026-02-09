@@ -20,7 +20,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 // ⚡ RPC CONFIGURATION (DAS API endpoint for asset fetching)
-const HELIUS_DAS_URL = 'https://mainnet.helius-rpc.com/?api-key=691928df-d5b6-40c4-aa85-f00f6723d838';
+const HELIUS_DAS_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://api.mainnet-beta.solana.com';
 
 // 🎯 JUPITER CONFIG
 const JUP_SOL_MINT = 'jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjx93v';
@@ -537,6 +537,29 @@ export default function Home() {
     animate();
   };
 
+  // 🛡️ Security: Validate PublicKey
+  const validatePublicKey = (address) => {
+    try {
+      const pubkey = new PublicKey(address);
+      return PublicKey.isOnCurve(pubkey.toBytes());
+    } catch {
+      return false;
+    }
+  };
+
+  // 🛡️ Security: Validate and parse localStorage
+  const safeGetLocalStorage = (key, defaultValue = null) => {
+    try {
+      const item = localStorage.getItem(key);
+      if (!item) return defaultValue;
+      return JSON.parse(item);
+    } catch (error) {
+      console.error(`Failed to parse localStorage key "${key}":`, error);
+      localStorage.removeItem(key);
+      return defaultValue;
+    }
+  };
+
   const handleShare = (action = 'general', data = null) => {
     let text = "I'm cleaning up my Solana wallet with Dust Demons! 🧹💀";
     if (action === 'burn') text = `I just incinerated ${stats.totalBurned} dust tokens and reclaimed ${stats.solReclaimed.toFixed(3)} SOL on Dust Demons! 🔥`;
@@ -915,6 +938,13 @@ export default function Home() {
         for (const id of chunk) {
           const t = result.targets.find(x => x.id === id);
           if (!t) continue;
+
+          // 🛡️ Security: Validate PublicKey before use
+          if (!validatePublicKey(t.id)) {
+            console.error('Invalid token address:', t.id);
+            continue;
+          }
+
           try {
             const mint = new PublicKey(t.id);
             const tokenAcc = await getAssociatedTokenAddress(mint, publicKey);
@@ -926,7 +956,20 @@ export default function Home() {
             burned++;
           } catch { }
         }
-        txs.push(tx);
+
+        // 🛡️ Security: Simulate transaction before adding to batch
+        if (tx.instructions.length > 0) {
+          try {
+            const simulation = await connection.simulateTransaction(tx);
+            if (simulation.value.err) {
+              console.error('Transaction simulation failed:', simulation.value.err);
+              continue;
+            }
+            txs.push(tx);
+          } catch (simError) {
+            console.error('Simulation error:', simError);
+          }
+        }
       }
 
       if (!txs.length) { showModal('INFO', 'INVALID', 'No valid targets.'); setBurningId(null); return; }
