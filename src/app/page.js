@@ -203,7 +203,7 @@ export default function Home() {
         }, 1000);
       }
     }
-  }, [isMounted, isJupiterMobile]);
+  }, [isMounted, publicKey, isJupiterMobile]);
 
   // 🛡️ INIT JUPITER PLUGIN
   useEffect(() => {

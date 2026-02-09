@@ -197,25 +197,26 @@ export default function OnboardingTour({ show, currentStep, onNext, onSkip, them
                             </span>
                             <button
                                 onClick={onNext}
-                                className="glass-button"
                                 style={{
-                                    padding: '8px 16px',
-                                    borderRadius: '7px',
-                                    fontSize: '12px',
-                                    fontWeight: '700',
+                                    padding: '10px 20px',
+                                    borderRadius: '8px',
+                                    fontSize: '14px',
+                                    fontWeight: '800',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '4px',
-                                    color: '#000',
+                                    gap: '6px',
+                                    color: '#fff',
                                     background: theme.accent,
-                                    border: 'none',
-                                    boxShadow: `0 4px 12px ${theme.accent}35`,
+                                    border: `2px solid ${theme.accent}`,
+                                    boxShadow: `0 4px 16px ${theme.accent}70, 0 0 20px ${theme.accent}40`,
                                     transition: 'all 0.2s',
-                                    cursor: 'pointer'
+                                    cursor: 'pointer',
+                                    letterSpacing: '0.5px',
+                                    textShadow: '0 1px 2px rgba(0,0,0,0.3)'
                                 }}
                             >
                                 {isLastStep ? 'START' : 'NEXT'}
-                                <ChevronRight size={13} />
+                                <ChevronRight size={16} strokeWidth={3} />
                             </button>
                         </div>
                     </motion.div>
