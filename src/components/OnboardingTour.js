@@ -8,10 +8,10 @@ const tourSteps = [
         title: 'Connect Wallet',
         emoji: '🔗',
         items: [
-            'Tap wallet button above',
-            'Choose your Solana wallet',
+            'Tap wallet button',
+            'Choose Solana wallet',
             'Approve connection',
-            '3x XP with Jupiter Mobile!'
+            '3x XP with Jupiter!'
         ]
     },
     {
@@ -19,7 +19,7 @@ const tourSteps = [
         emoji: '🎯',
         items: [
             'Find worthless tokens',
-            'Auto-categorize by value',
+            'Auto-categorize value',
             'See reclaimable SOL',
             'Identify rent accounts'
         ]
@@ -35,7 +35,7 @@ const tourSteps = [
         ]
     },
     {
-        title: 'Climb Leaderboard',
+        title: 'Climb Ranks',
         emoji: '🏆',
         items: [
             'Compete globally',
@@ -64,33 +64,34 @@ export default function OnboardingTour({ show, currentStep, onNext, onSkip, them
                         style={{
                             position: 'fixed',
                             inset: 0,
-                            background: 'rgba(0, 0, 0, 0.92)',
+                            background: 'rgba(0, 0, 0, 0.95)',
                             zIndex: 9998,
-                            backdropFilter: 'blur(4px)'
+                            backdropFilter: 'blur(8px)'
                         }}
                         onClick={onSkip}
                     />
 
                     {/* Tour Card */}
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        initial={{ opacity: 0, scale: 0.96, y: 10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                        exit={{ opacity: 0, scale: 0.96, y: 10 }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 350 }}
                         style={{
                             position: 'fixed',
                             top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
+                            left: '16px',
+                            right: '16px',
+                            transform: 'translateY(-50%)',
                             zIndex: 9999,
-                            width: 'calc(100vw - 32px)',
-                            maxWidth: '360px',
-                            background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.98) 0%, rgba(10, 10, 10, 0.98) 100%)',
+                            maxWidth: '340px',
+                            margin: '0 auto',
+                            background: 'linear-gradient(135deg, rgba(5, 5, 5, 0.98) 0%, rgba(15, 15, 15, 0.98) 100%)',
                             backdropFilter: 'blur(20px)',
-                            border: `1px solid ${theme.accent}`,
-                            borderRadius: '16px',
-                            padding: '24px 20px',
-                            boxShadow: `0 20px 60px rgba(0, 0, 0, 0.9), 0 0 0 1px ${theme.accent}20, inset 0 1px 0 rgba(255, 255, 255, 0.05)`
+                            border: `1.5px solid ${theme.accent}`,
+                            borderRadius: '14px',
+                            padding: '20px 18px',
+                            boxShadow: `0 20px 60px rgba(0, 0, 0, 0.9), 0 0 0 1px ${theme.accent}15, inset 0 1px 0 rgba(255, 255, 255, 0.04)`
                         }}
                     >
                         {/* Close Button */}
@@ -98,47 +99,40 @@ export default function OnboardingTour({ show, currentStep, onNext, onSkip, them
                             onClick={onSkip}
                             style={{
                                 position: 'absolute',
-                                top: '16px',
-                                right: '16px',
-                                background: 'rgba(255, 255, 255, 0.05)',
-                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                top: '14px',
+                                right: '14px',
+                                background: 'rgba(255, 255, 255, 0.04)',
+                                border: '1px solid rgba(255, 255, 255, 0.08)',
                                 borderRadius: '50%',
-                                width: '32px',
-                                height: '32px',
+                                width: '28px',
+                                height: '28px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 cursor: 'pointer',
                                 transition: 'all 0.2s',
-                                color: theme.textDim
-                            }}
-                            onMouseEnter={(e) => {
-                                e.target.style.background = 'rgba(255, 255, 255, 0.1)';
-                                e.target.style.borderColor = theme.accent;
-                            }}
-                            onMouseLeave={(e) => {
-                                e.target.style.background = 'rgba(255, 255, 255, 0.05)';
-                                e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                                color: theme.textDim,
+                                padding: 0
                             }}
                         >
-                            <X size={16} />
+                            <X size={14} />
                         </button>
 
                         {/* Header */}
-                        <div style={{ marginBottom: '20px', paddingRight: '32px' }}>
+                        <div style={{ marginBottom: '16px', paddingRight: '28px' }}>
                             <div style={{
-                                fontSize: '32px',
-                                marginBottom: '8px',
-                                filter: 'drop-shadow(0 2px 8px rgba(0, 255, 65, 0.3))'
+                                fontSize: '28px',
+                                marginBottom: '6px',
+                                filter: `drop-shadow(0 2px 8px ${theme.accent}40)`
                             }}>
                                 {step.emoji}
                             </div>
                             <h2 style={{
                                 margin: 0,
-                                fontSize: '20px',
+                                fontSize: '18px',
                                 color: theme.text,
                                 fontWeight: '800',
-                                letterSpacing: '-0.5px',
+                                letterSpacing: '-0.3px',
                                 lineHeight: '1.2'
                             }}>
                                 {step.title}
@@ -146,23 +140,22 @@ export default function OnboardingTour({ show, currentStep, onNext, onSkip, them
                         </div>
 
                         {/* Content - Clean List */}
-                        <div style={{ marginBottom: '24px' }}>
+                        <div style={{ marginBottom: '18px' }}>
                             {step.items.map((item, i) => (
                                 <motion.div
                                     key={i}
-                                    initial={{ opacity: 0, x: -10 }}
+                                    initial={{ opacity: 0, x: -8 }}
                                     animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: i * 0.08, type: 'spring', damping: 20 }}
+                                    transition={{ delay: i * 0.06, type: 'spring', damping: 20 }}
                                     style={{
                                         display: 'flex',
                                         alignItems: 'flex-start',
-                                        gap: '10px',
-                                        padding: '10px 12px',
-                                        marginBottom: i === step.items.length - 1 ? 0 : '6px',
+                                        gap: '8px',
+                                        padding: '8px 10px',
+                                        marginBottom: i === step.items.length - 1 ? 0 : '4px',
                                         background: 'rgba(255, 255, 255, 0.02)',
-                                        border: '1px solid rgba(255, 255, 255, 0.06)',
-                                        borderRadius: '8px',
-                                        transition: 'all 0.2s'
+                                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                                        borderRadius: '6px'
                                     }}
                                 >
                                     <div style={{
@@ -171,13 +164,13 @@ export default function OnboardingTour({ show, currentStep, onNext, onSkip, them
                                         borderRadius: '50%',
                                         background: theme.accent,
                                         flexShrink: 0,
-                                        marginTop: '6px',
-                                        boxShadow: `0 0 8px ${theme.accent}`
+                                        marginTop: '5px',
+                                        boxShadow: `0 0 6px ${theme.accent}`
                                     }} />
                                     <span style={{
-                                        fontSize: '14px',
+                                        fontSize: '13px',
                                         color: theme.text,
-                                        lineHeight: '1.5',
+                                        lineHeight: '1.4',
                                         fontWeight: '400'
                                     }}>
                                         {item}
@@ -191,11 +184,11 @@ export default function OnboardingTour({ show, currentStep, onNext, onSkip, them
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
-                            paddingTop: '16px',
-                            borderTop: '1px solid rgba(255, 255, 255, 0.06)'
+                            paddingTop: '14px',
+                            borderTop: '1px solid rgba(255, 255, 255, 0.05)'
                         }}>
                             <span style={{
-                                fontSize: '11px',
+                                fontSize: '10px',
                                 color: theme.textDim,
                                 fontWeight: '600',
                                 letterSpacing: '0.5px'
@@ -206,30 +199,23 @@ export default function OnboardingTour({ show, currentStep, onNext, onSkip, them
                                 onClick={onNext}
                                 className="glass-button"
                                 style={{
-                                    padding: '10px 18px',
-                                    borderRadius: '8px',
-                                    fontSize: '13px',
+                                    padding: '8px 16px',
+                                    borderRadius: '7px',
+                                    fontSize: '12px',
                                     fontWeight: '700',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '6px',
+                                    gap: '4px',
                                     color: '#000',
                                     background: theme.accent,
                                     border: 'none',
-                                    boxShadow: `0 4px 12px ${theme.accent}40`,
-                                    transition: 'all 0.2s'
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.target.style.transform = 'translateY(-1px)';
-                                    e.target.style.boxShadow = `0 6px 16px ${theme.accent}60`;
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.target.style.transform = 'translateY(0)';
-                                    e.target.style.boxShadow = `0 4px 12px ${theme.accent}40`;
+                                    boxShadow: `0 4px 12px ${theme.accent}35`,
+                                    transition: 'all 0.2s',
+                                    cursor: 'pointer'
                                 }}
                             >
                                 {isLastStep ? 'START' : 'NEXT'}
-                                <ChevronRight size={14} />
+                                <ChevronRight size={13} />
                             </button>
                         </div>
                     </motion.div>
