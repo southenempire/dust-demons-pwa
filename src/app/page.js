@@ -145,7 +145,7 @@ export default function Home() {
 
   // 💰 JUPSOL YIELD STATE
   const [jupsolBalance, setJupsolBalance] = useState(0);
-  const [jupsolAPY, setJupsolAPY] = useState(7.5); // Default APY estimate
+
   const [jupsolValueUSD, setJupsolValueUSD] = useState(0);
   const [estimatedEarnings, setEstimatedEarnings] = useState({
     daily: 0,
@@ -165,6 +165,24 @@ export default function Home() {
 
   // JupSOL Yield
   const [realtimeEarnings, setRealtimeEarnings] = useState(0);
+  const [jupsolAPY, setJupsolAPY] = useState(0); // Fetch from Sanctum
+
+  // Fetch real APY from Sanctum
+  useEffect(() => {
+    const fetchAPY = async () => {
+      try {
+        const response = await fetch('https://api.sanctum.so/v1/apy/latest?lst=JupSOL');
+        const data = await response.json();
+        if (data && data.apy) {
+          setJupsolAPY(data.apy * 100); // Sanctum returns decimal (0.10), we want percentage (10.0)
+        }
+      } catch (e) {
+        console.error('Failed to fetch JupSOL APY:', e);
+        setJupsolAPY(0); // Fallback to 0 or hide it
+      }
+    };
+    fetchAPY();
+  }, []);
 
   // Transaction states
   const [pendingTx, setPendingTx] = useState(null); // { type: 'burn' | 'swap' | 'prediction', message: string }
@@ -1820,8 +1838,14 @@ export default function Home() {
                 <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: '#00c2ff', letterSpacing: '1px' }}>
                   YIELD CALCULATOR
                 </h2>
-                <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#7dd3fc' }}>
-                  {jupsolAPY.toFixed(1)}% APY • Powered by JupSOL
+                <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#7dd3fc', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  {jupsolAPY > 0 ? (
+                    <>
+                      <Zap size={10} fill="#7dd3fc" /> {jupsolAPY.toFixed(2)}% APY (Live)
+                    </>
+                  ) : (
+                    <>Powered by JupSOL</>
+                  )}
                 </p>
               </div>
             </div>
