@@ -237,7 +237,7 @@ export default function Home() {
                   time: new Date().toLocaleTimeString()
                 }, ...prev]);
                 setTimeout(() => {
-                  showModal('SUCCESS', 'YIELD SECURED', 'Target converted to JupSOL. Earning APY now.', 'SHARE', () => {
+                  showModal('SUCCESS', 'YIELD SECURED', 'Target converted to JupSOL. Earning APY now.', () => {
                     handleShare('swap');
                     closeModal();
                   });
@@ -892,10 +892,10 @@ export default function Home() {
       }, ...prev]);
 
       setTimeout(() => {
-        showModal('SUCCESS', 'EXORCISM COMPLETE', `You recovered ${rent} SOL. Share to recruit more Hunters?`, 'SHARE ON X', () => {
+        showModal('SUCCESS', 'EXORCISM COMPLETE', `You recovered ${rent} SOL. Share to recruit more Hunters?`, () => {
           handleShare('burn');
           closeModal();
-        });
+        }, 'SHARE ON X');
       }, 2000);
 
     } catch (err) { showModal('DANGER', 'FAILED', err.message); }
