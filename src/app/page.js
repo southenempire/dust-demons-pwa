@@ -2077,7 +2077,7 @@ export default function Home() {
         {view === 'REFERRALS' && (
           <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px 15px 100px 15px' }}>
             <ReferralPanel
-              wallet={wallet?.publicKey?.toString()}
+              wallet={walletPublicKey?.toString()}
               theme={theme}
               onCopy={() => {
                 triggerHaptic('light');
