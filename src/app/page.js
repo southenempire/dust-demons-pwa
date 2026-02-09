@@ -836,16 +836,26 @@ export default function Home() {
   };
 
 
-  // 🕒 AUTO-CHECK PREDICTION
+  // 🕒 AUTO-CHECK PREDICTION & VISUAL TIMER
   useEffect(() => {
     if (!dailyPrediction || dailyPrediction.result) return;
 
-    const timer = setInterval(() => {
-      if (Date.now() >= dailyPrediction.endTime) {
+    const updateTimer = () => {
+      const now = Date.now();
+      const remaining = dailyPrediction.endTime - now;
+
+      if (remaining <= 0) {
         checkPredictionResult();
-        clearInterval(timer);
+        setTimeLeft('Checking...');
+      } else {
+        const m = Math.floor(remaining / 60000);
+        const s = Math.floor((remaining % 60000) / 1000);
+        setTimeLeft(`${m}m ${s}s`);
       }
-    }, 1000);
+    };
+
+    updateTimer(); // Initial call
+    const timer = setInterval(updateTimer, 1000);
 
     return () => clearInterval(timer);
   }, [dailyPrediction]);
@@ -1754,7 +1764,7 @@ export default function Home() {
                           </>
                         ) : (
                           <>
-                            <Loader2 size={18} className="animate-spin" /> LIVE TRACKING...
+                            <Loader2 size={18} className="animate-spin" /> {timeLeft || 'LIVE TRACKING...'}
                           </>
                         )}
                       </button>
