@@ -19,7 +19,9 @@ import OnboardingTour from '@/components/OnboardingTour';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import AchievementModal from '@/components/AchievementModal';
 import AchievementGallery from '@/components/AchievementGallery';
+import ReferralPanel from '@/components/ReferralPanel';
 import { checkAchievements, getAllAchievements } from '@/lib/nft/achievementTracker';
+import { detectReferralCode, trackReferralCompletion } from '@/lib/referrals';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 // ⚡ RPC CONFIGURATION (DAS API endpoint for asset fetching)
@@ -265,6 +267,11 @@ export default function Home() {
       }
     };
   }, [view, swapTarget]);
+
+  // 🎁 DETECT REFERRAL CODE FROM URL
+  useEffect(() => {
+    detectReferralCode();
+  }, []);
 
   // 🛡️ SYNC WALLET
   useEffect(() => {
@@ -1988,6 +1995,24 @@ export default function Home() {
           </div>
         )}
 
+        {/* VIEW 8: REFERRALS */}
+        {view === 'REFERRALS' && (
+          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px 15px 100px 15px' }}>
+            <ReferralPanel
+              wallet={wallet?.publicKey?.toString()}
+              theme={theme}
+              onCopy={() => {
+                triggerHaptic('light');
+                triggerConfetti('success');
+              }}
+              onShare={(platform) => {
+                triggerHaptic('medium');
+                console.log('Shared on:', platform);
+              }}
+            />
+          </div>
+        )}
+
       </div>
 
       {/* FOOTER NAV */}
@@ -2034,6 +2059,10 @@ export default function Home() {
               {earnedAchievements.length}
             </span>
           )}
+        </button>
+        <button onClick={() => setView('REFERRALS')} style={{ background: 'none', border: 'none', color: view === 'REFERRALS' ? '#10B981' : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <div style={{ fontSize: '24px' }}>🎁</div>
+          <span style={{ fontSize: '9px' }}>REFER</span>
         </button>
         <button onClick={() => setShowMenu(true)} style={{ background: 'none', border: 'none', color: theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
           <Settings size={24} />
