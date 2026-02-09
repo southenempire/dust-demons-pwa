@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Skull, Ghost, Crosshair, Zap, Activity, Scan, Wallet, Terminal, Settings, Volume2, VolumeX, X, Target, ArrowRightLeft, ArrowLeft, HelpCircle, Loader2, Moon, Sun, Monitor, Share2, Users, Trophy, Crown, Image as ImageIcon, Smartphone, Calendar, CheckCircle, TrendingUp, TrendingDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { WalletMultiButton, WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { PublicKey, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { createBurnInstruction, createCloseAccountInstruction, getAssociatedTokenAddress } from '@solana/spl-token';
 import confetti from 'canvas-confetti';
@@ -171,7 +171,7 @@ export default function Home() {
   useEffect(() => {
     const fetchAPY = async () => {
       try {
-        const response = await fetch('https://api.sanctum.so/v1/apy/latest?lst=JupSOL');
+        const response = await fetch('/api/apy/jupsol');
         const data = await response.json();
         if (data && data.apy) {
           setJupsolAPY(data.apy * 100); // Sanctum returns decimal (0.10), we want percentage (10.0)
@@ -1134,11 +1134,12 @@ export default function Home() {
   if (!isMounted) return <div style={{ background: theme.bg, height: '100dvh', width: '100vw' }} />;
 
   return (
-    <main style={{ height: '100dvh', width: '100vw', backgroundColor: theme.bg, color: theme.text, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: 'monospace' }}>
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: `linear-gradient(${theme.grid} 1px, transparent 1px), linear-gradient(90deg, ${theme.grid} 1px, transparent 1px)`, backgroundSize: '30px 30px' }} />
-      <div style={{ position: 'absolute', inset: 0, background: theme.vignette, zIndex: 1 }} />
-      <div className="scanner-line" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: `linear-gradient(90deg, transparent, ${theme.accent}, transparent)`, boxShadow: `0 0 15px ${theme.accent}`, zIndex: 5, animation: 'scan 2.5s linear infinite', pointerEvents: 'none' }} />
-      <style jsx>{`
+    <WalletModalProvider>
+      <main style={{ height: '100dvh', width: '100vw', backgroundColor: theme.bg, color: theme.text, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: 'monospace' }}>
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: `linear-gradient(${theme.grid} 1px, transparent 1px), linear-gradient(90deg, ${theme.grid} 1px, transparent 1px)`, backgroundSize: '30px 30px' }} />
+        <div style={{ position: 'absolute', inset: 0, background: theme.vignette, zIndex: 1 }} />
+        <div className="scanner-line" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: `linear-gradient(90deg, transparent, ${theme.accent}, transparent)`, boxShadow: `0 0 15px ${theme.accent}`, zIndex: 5, animation: 'scan 2.5s linear infinite', pointerEvents: 'none' }} />
+        <style jsx>{`
         @keyframes scan { 
           0% { top: -10%; opacity: 0; } 
           20% { opacity: 1; } 
@@ -1151,7 +1152,7 @@ export default function Home() {
           20%, 40%, 60%, 80% { transform: translateX(5px); }
         }
       `}</style>
-      <style jsx global>{`
+        <style jsx global>{`
         .wallet-adapter-button { 
           height: 40px !important; 
           padding: 0 16px !important; 
@@ -1221,1038 +1222,1039 @@ export default function Home() {
         button:disabled { cursor: not-allowed !important; }
       `}</style>
 
-      {/* MODAL */}
-      <AnimatePresence>
-        {modal.isOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-            <div style={{ background: theme.modal, border: `1px solid ${modal.type === 'DANGER' ? '#ff0055' : (modal.type === 'SUCCESS' ? '#00ff41' : theme.accent)}`, padding: '24px', borderRadius: '8px', maxWidth: '400px', width: '100%', boxShadow: '0 0 30px rgba(0,0,0,0.5)' }}>
-              <h3 style={{ color: modal.type === 'DANGER' ? '#ff0055' : (modal.type === 'SUCCESS' ? '#00ff41' : theme.accent), margin: '0 0 16px 0', fontSize: '18px', fontWeight: '900' }}>{modal.title}</h3>
+        {/* MODAL */}
+        <AnimatePresence>
+          {modal.isOpen && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+              <div style={{ background: theme.modal, border: `1px solid ${modal.type === 'DANGER' ? '#ff0055' : (modal.type === 'SUCCESS' ? '#00ff41' : theme.accent)}`, padding: '24px', borderRadius: '8px', maxWidth: '400px', width: '100%', boxShadow: '0 0 30px rgba(0,0,0,0.5)' }}>
+                <h3 style={{ color: modal.type === 'DANGER' ? '#ff0055' : (modal.type === 'SUCCESS' ? '#00ff41' : theme.accent), margin: '0 0 16px 0', fontSize: '18px', fontWeight: '900' }}>{modal.title}</h3>
 
-              {/* Support for list-based content */}
-              {Array.isArray(modal.message) ? (
-                <div style={{ marginBottom: '20px' }}>
-                  {modal.message.map((item, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        padding: '12px',
-                        marginBottom: '8px',
-                        background: 'rgba(255, 255, 255, 0.03)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '6px'
-                      }}
-                    >
-                      <div style={{
-                        width: '6px',
-                        height: '6px',
-                        borderRadius: '50%',
-                        background: theme.accent,
-                        flexShrink: 0
-                      }} />
-                      <span style={{ fontSize: '14px', color: theme.text }}>{item}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p style={{ color: theme.textDim, fontSize: '12px', marginBottom: '20px' }}>{modal.message}</p>
-              )}
-
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                <button onClick={closeModal} className="glass-button" style={{ padding: '10px 20px', borderRadius: '4px', fontWeight: 'bold', color: theme.textDim }}>CANCEL</button>
-                {modal.onConfirm && <button onClick={modal.onConfirm} className="glass-button" style={{ padding: '10px 20px', background: modal.type === 'DANGER' ? '#ff0055' : (modal.type === 'SUCCESS' ? '#00ff41' : theme.accent), borderRadius: '4px', fontWeight: 'bold', color: '#fff' }}>{modal.actionLabel}</button>}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* HEADER */}
-      <header style={{ zIndex: 100, padding: '16px', display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid ${theme.border}`, background: 'rgba(5,5,5,0.2)', backdropFilter: 'blur(10px)' }}>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <img src="/demon-logo.jpg" style={{ width: '36px', height: '36px', borderRadius: '4px', border: `1px solid ${theme.border}`, objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
-            <div style={{ background: theme.panel, border: `1px solid ${rankColor}`, padding: '4px 10px', borderRadius: '2px' }}>
-              <p style={{ margin: 0, fontSize: '8px', color: rankColor, fontWeight: 'bold', letterSpacing: '1px' }}>RANK</p>
-              <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px', color: theme.text }}>{currentRank}</h2>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <div style={{ background: theme.panel, border: `1px solid ${theme.border}`, padding: '4px 10px', borderRadius: '2px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <Wallet size={12} color={theme.accent} />
-              <div>
-                <p style={{ margin: 0, fontSize: '8px', color: theme.textDim }}>BALANCE</p>
-                <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text }}>{walletBalance.toFixed(3)} SOL</h2>
-              </div>
-            </div>
-            <div style={{ background: theme.panel, border: `1px solid ${theme.border}`, padding: '4px 10px', borderRadius: '2px' }}>
-              <p style={{ margin: 0, fontSize: '8px', color: '#fbbf24', letterSpacing: '1px' }}>LOOT</p>
-              <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text }}>{stats.solReclaimed.toFixed(3)}</h2>
-            </div>
-          </div>
-        </div>
-        <div style={{ transform: 'scale(0.85)' }} className={!publicKey ? 'pulse-animation' : ''}><WalletMultiButton /></div>
-      </header>
-
-      {/* MENU */}
-      <AnimatePresence>
-        {showMenu && (
-          <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 30, stiffness: 300 }} style={{ position: 'fixed', inset: 0, zIndex: 9999, backgroundColor: theme.bg, padding: '20px', display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'hidden' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: `1px solid ${theme.border}`, paddingBottom: '15px', position: 'sticky', top: 0, background: theme.bg, zIndex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Terminal size={24} color={theme.accent} />
-                <h2 style={{ margin: 0, fontSize: '18px', color: theme.accent, fontFamily: 'monospace' }}>SYSTEM CONFIG</h2>
-              </div>
-              <button onClick={() => setShowMenu(false)} style={{ background: 'none', border: 'none', color: theme.text, cursor: 'pointer', transition: 'opacity 0.2s' }} onMouseEnter={(e) => e.target.style.opacity = '0.7'} onMouseLeave={(e) => e.target.style.opacity = '1'}><X size={24} /></button>
-            </div>
-
-            {/* 🎯 BADGES */}
-            <button
-              onClick={() => { setView('ACHIEVEMENTS'); setShowMenu(false); }}
-              style={{
-                background: theme.panel,
-                border: `2px solid ${theme.accent}`,
-                borderRadius: '8px',
-                padding: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                cursor: 'pointer',
-                transition: '0.2s',
-                width: '100%',
-                marginBottom: '15px'
-              }}
-            >
-              <div style={{ fontSize: '28px' }}>🎯</div>
-              <div style={{ flex: 1, textAlign: 'left' }}>
-                <div style={{ fontSize: '13px', fontWeight: '900', color: theme.text }}>Achievement Badges</div>
-                <div style={{ fontSize: '10px', color: theme.textDim }}>View your NFT achievements</div>
-              </div>
-              {earnedAchievements.length > 0 && (
-                <span style={{
-                  background: theme.accent,
-                  color: '#000',
-                  borderRadius: '10px',
-                  padding: '3px 7px',
-                  fontSize: '10px',
-                  fontWeight: '900'
-                }}>
-                  {earnedAchievements.length}
-                </span>
-              )}
-            </button>
-
-            {/* 🎁 REFERRALS */}
-            <button
-              onClick={() => { setView('REFERRALS'); setShowMenu(false); }}
-              style={{
-                background: theme.panel,
-                border: `2px solid #10B981`,
-                borderRadius: '8px',
-                padding: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                cursor: 'pointer',
-                transition: '0.2s',
-                width: '100%',
-                marginBottom: '20px'
-              }}
-            >
-              <div style={{ fontSize: '28px' }}>🎁</div>
-              <div style={{ flex: 1, textAlign: 'left' }}>
-                <div style={{ fontSize: '13px', fontWeight: '900', color: theme.text }}>Invite Friends</div>
-                <div style={{ fontSize: '10px', color: theme.textDim }}>Earn +50 XP per referral</div>
-              </div>
-            </button>
-
-            {/* 🛡️ TACTICAL GUIDE (HOW TO PLAY) */}
-            <div style={{ marginBottom: '20px', padding: '15px', background: theme.panel, border: `1px solid ${theme.accent}`, borderRadius: '4px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                <HelpCircle size={18} color={theme.accent} />
-                <h4 style={{ margin: 0, fontSize: '14px', color: theme.accent, fontWeight: '900', letterSpacing: '1px' }}>TACTICAL GUIDE</h4>
-              </div>
-              <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12px', color: theme.textDim, lineHeight: '1.8' }}>
-                <li><strong>SCAN:</strong> Find dust & spam in your wallet.</li>
-                <li><strong><span style={{ color: '#00ff41' }}>GREEN</span> (RENT):</strong> Empty accounts. Burn to reclaim SOL.</li>
-                <li><strong><span style={{ color: '#00c2ff' }}>BLUE</span> (YIELD):</strong> Swap tokens for <strong style={{ color: '#00c2ff' }}>JupSOL</strong>.</li>
-                <li><strong><span style={{ color: '#fbbf24' }}>YELLOW</span> (DUST):</strong> Worthless tokens. Burn them.</li>
-              </ul>
-            </div>
-
-            {/* 🛡️ DAILY QUESTS (NEW) */}
-            <div style={{ marginBottom: '20px', padding: '15px', background: theme.panel, border: `1px solid #fbbf24`, borderRadius: '4px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                <Calendar size={18} color="#fbbf24" />
-                <h4 style={{ margin: 0, fontSize: '14px', color: '#fbbf24', fontWeight: '900', letterSpacing: '1px' }}>DAILY QUESTS</h4>
-              </div>
-              {missions.map(m => {
-                if (m.mobileOnly && !isJupiterMobile) return null;
-                const progress = Math.min(m.progress, m.target);
-                const percentage = (progress / m.target) * 100;
-                return (
-                  <div key={m.id} style={{ marginBottom: '10px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
-                      <span style={{ fontSize: '11px', color: m.completed ? '#00ff41' : theme.textDim, fontWeight: '700' }}>
-                        {m.completed ? '✅' : '⏳'} {m.label}
-                      </span>
-                      <span style={{ fontSize: '10px', color: '#fbbf24', fontWeight: 'bold' }}>+{m.xp} XP</span>
-                    </div>
-                    <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
-                      <div style={{ width: `${percentage}%`, height: '100%', background: m.completed ? '#00ff41' : '#fbbf24', transition: 'width 0.3s' }}></div>
-                    </div>
-                    <div style={{ fontSize: '9px', color: theme.textDim, marginTop: '2px' }}>{progress} / {m.target}</div>
+                {/* Support for list-based content */}
+                {Array.isArray(modal.message) ? (
+                  <div style={{ marginBottom: '20px' }}>
+                    {modal.message.map((item, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          padding: '12px',
+                          marginBottom: '8px',
+                          background: 'rgba(255, 255, 255, 0.03)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '6px'
+                        }}
+                      >
+                        <div style={{
+                          width: '6px',
+                          height: '6px',
+                          borderRadius: '50%',
+                          background: theme.accent,
+                          flexShrink: 0
+                        }} />
+                        <span style={{ fontSize: '14px', color: theme.text }}>{item}</span>
+                      </div>
+                    ))}
                   </div>
-                );
-              })}
+                ) : (
+                  <p style={{ color: theme.textDim, fontSize: '12px', marginBottom: '20px' }}>{modal.message}</p>
+                )}
 
-              {/* VERIFY ON-CHAIN BUTTON */}
-              {publicKey && (
-                <button
-                  onClick={() => {
-                    setShowMenu(false);
-                    verifyMissionsOnChain();
-                  }}
-                  disabled={pendingTx?.type === 'verification'}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    marginTop: '12px',
-                    background: pendingTx?.type === 'verification' ? theme.panel : 'linear-gradient(135deg, #00ff41, #00c2ff)',
-                    border: 'none',
-                    borderRadius: '4px',
-                    color: '#000',
-                    fontSize: '12px',
-                    fontWeight: '900',
-                    letterSpacing: '1px',
-                    cursor: pendingTx?.type === 'verification' ? 'not-allowed' : 'pointer',
-                    opacity: pendingTx?.type === 'verification' ? 0.5 : 1,
-                    transition: '0.2s'
-                  }}
-                >
-                  {pendingTx?.type === 'verification' ? '⏳ VERIFYING...' : '🔗 VERIFY ON-CHAIN'}
-                </button>
-              )}
-              <p style={{ fontSize: '10px', color: theme.textDim, marginTop: '8px', textAlign: 'center' }}>Streak: {stats.streak} Days 🔥</p>
-            </div>
-
-            {/* 🛡️ MISSION LOG (REAL DATA) */}
-            <div style={{ marginBottom: '20px', padding: '15px', background: theme.panel, border: `1px solid ${theme.accent}`, borderRadius: '4px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                <Activity size={18} color={theme.accent} />
-                <h4 style={{ margin: 0, fontSize: '14px', color: theme.accent, fontWeight: '900', letterSpacing: '1px' }}>MISSION LOG</h4>
-              </div>
-              {sessionHistory.length === 0 ? (
-                <p style={{ color: theme.textDim, fontSize: '11px', textAlign: 'center' }}>No actions recorded this session.</p>
-              ) : (
-                sessionHistory.map((item, i) => (
-                  <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px dashed #333' }}>
-                    <span style={{ color: theme.text, fontSize: '11px' }}>{item.action}</span>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <span style={{ color: '#00ff41', fontSize: '11px' }}>{item.value}</span>
-                      <span style={{ color: theme.textDim, fontSize: '11px' }}>{item.time}</span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* 🛡️ SETTINGS */}
-            <div style={{ background: theme.panel, padding: '15px', borderRadius: '4px', border: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 'bold', color: theme.text }}>{audioEnabled ? <Volume2 size={16} color={theme.accent} /> : <VolumeX size={16} color={theme.textDim} />} AUDIO</span>
-                <button onClick={() => setAudioEnabled(!audioEnabled)} style={{ background: audioEnabled ? `${theme.accent}20` : theme.bg, border: `1px solid ${audioEnabled ? theme.accent : theme.border}`, color: audioEnabled ? theme.accent : theme.textDim, padding: '4px 12px', fontSize: '10px', fontWeight: 'bold', borderRadius: '2px' }}>{audioEnabled ? 'ONLINE' : 'MUTED'}</button>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 'bold', color: theme.text }}>{hapticsEnabled ? <Smartphone size={16} color={theme.accent} /> : <Smartphone size={16} color={theme.textDim} />} HAPTICS</span>
-                <button onClick={() => setHapticsEnabled(!hapticsEnabled)} style={{ background: hapticsEnabled ? `${theme.accent}20` : theme.bg, border: `1px solid ${hapticsEnabled ? theme.accent : theme.border}`, color: hapticsEnabled ? theme.accent : theme.textDim, padding: '4px 12px', fontSize: '10px', fontWeight: 'bold', borderRadius: '2px' }}>{hapticsEnabled ? 'ON' : 'OFF'}</button>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 'bold', color: theme.text }}>{themeMode === 'light' ? <Sun size={16} color={theme.accent} /> : (themeMode === 'system' ? <Monitor size={16} color={theme.accent} /> : <Moon size={16} color={theme.accent} />)} THEME</span>
-                <div style={{ display: 'flex', gap: '5px' }}>
-                  <button onClick={() => setThemeMode('dark')} style={{ padding: '6px', background: themeMode === 'dark' ? theme.accent : theme.bg, color: themeMode === 'dark' ? '#000' : theme.textDim, border: `1px solid ${theme.border}`, borderRadius: '2px' }}><Moon size={14} /></button>
-                  <button onClick={() => setThemeMode('light')} style={{ padding: '6px', background: themeMode === 'light' ? theme.accent : theme.bg, color: themeMode === 'light' ? '#000' : theme.textDim, border: `1px solid ${theme.border}`, borderRadius: '2px' }}><Sun size={14} /></button>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                  <button onClick={closeModal} className="glass-button" style={{ padding: '10px 20px', borderRadius: '4px', fontWeight: 'bold', color: theme.textDim }}>CANCEL</button>
+                  {modal.onConfirm && <button onClick={modal.onConfirm} className="glass-button" style={{ padding: '10px 20px', background: modal.type === 'DANGER' ? '#ff0055' : (modal.type === 'SUCCESS' ? '#00ff41' : theme.accent), borderRadius: '4px', fontWeight: 'bold', color: '#fff' }}>{modal.actionLabel}</button>}
                 </div>
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* MAIN CONTENT AREA */}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', paddingBottom: '100px', zIndex: 10 }}>
-
-        {/* VIEW 1: SCANNER */}
-        {view === 'SCANNER' && !loading && (
-          <div style={{ display: 'flex', flexDirection: 'column', height: '60vh', alignItems: 'center', justifyContent: 'center' }}>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleScan}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                position: 'relative',
-                transition: 'all 0.2s ease'
-              }}>
-              <motion.div variants={radarVariants} animate="ping" style={{ position: 'absolute', inset: -25, border: `1px solid ${theme.accent}`, borderRadius: '50%', opacity: 0.5 }} />
-              <motion.div variants={radarVariants} animate="ping" style={{ position: 'absolute', inset: -50, border: `1px solid ${theme.accent}`, borderRadius: '50%', opacity: 0.2, animationDelay: '0.5s' }} />
-              <div style={{ width: '160px', height: '160px', borderRadius: '50%', border: `2px solid ${theme.accent}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: theme.panel, boxShadow: `0 0 40px ${theme.accent}40`, position: 'relative' }}>
-                <Crosshair size={70} color={theme.accent} strokeWidth={1} />
-                <p style={{ color: theme.accent, fontWeight: '900', marginTop: '12px', letterSpacing: '4px', fontSize: '12px' }}>INITIATE</p>
-              </div>
-            </motion.button>
-            {!publicKey && <p style={{ color: theme.textDim, fontSize: '10px', marginTop: '40px', letterSpacing: '2px', fontWeight: 'bold' }}>[ AWAITING UPLINK ]</p>}
-          </div>
-        )}
-
-        {/* 🛡️ GHOST LOADING (SKELETON UI) */}
-        {loading && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px', maxWidth: '600px', margin: '0 auto', marginTop: '50px' }}>
-            {[...Array(6)].map((_, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0.3 }}
-                animate={{ opacity: [0.3, 0.7, 0.3] }}
-                transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.1 }}
-                style={{ height: '160px', background: theme.panel, borderRadius: '4px', border: `1px solid ${theme.border}` }}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* VIEW 2: INVENTORY */}
-        {view === 'INVENTORY' && !loading && result && (
-          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px', padding: '16px', background: theme.panel, border: `1px solid ${selectedIds.length > 0 ? rankColor : theme.border}`, position: 'sticky', top: 0, zIndex: 20, borderRadius: '4px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ margin: 0, color: rankColor, fontSize: '12px', fontWeight: '900', letterSpacing: '1px' }}>TARGETS: {selectedIds.length}</h3>
-                <button onClick={handleToggleSelectAll} className="glass-button" style={{ padding: '6px 12px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px', color: '#fbbf24' }}>{selectedIds.length === result.targets.length ? 'DESELECT ALL' : 'SELECT ALL'}</button>
-              </div>
-              <button onClick={confirmExorcism} disabled={!selectedIds.length || burningId} className="glass-button" style={{ width: '100%', padding: '14px', background: selectedIds.length ? '#ff0055' : 'rgba(255, 255, 255, 0.05)', color: selectedIds.length ? '#fff' : theme.textDim, borderRadius: '4px', fontWeight: '900', letterSpacing: '2px' }}>
-                {burningId ? <LoadingSpinner theme={theme} type="flame" size={20} /> : `EXECUTE BURN`}
-              </button>
-            </div>
-
-            <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px', paddingBottom: '40px' }}>
-              <AnimatePresence>
-                {result.targets.map((t, i) => (
-                  <motion.div key={t.id} variants={itemVariants} layout>
-                    <BountyPoster data={t} theme={theme} selected={selectedIds.includes(t.id)} onSelect={() => toggleSelect(t)} onSwap={() => handleSwap(t)} />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
             </motion.div>
-          </div>
-        )}
+          )}
+        </AnimatePresence>
 
-        {/* VIEW 3: PROPHECY (PREDICTION MARKETS) - GAMIFIED ORACLE */}
-        {view === 'PROPHECY' && (
-          <div style={{ maxWidth: '600px', margin: '0 auto', paddingTop: '10px', paddingBottom: '100px', paddingLeft: '15px', paddingRight: '15px' }}>
-
-            {/* 🔮 ORACLE HEADER CARD */}
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              style={{
-                padding: '20px',
-                background: 'linear-gradient(135deg, #1a0033 0%, #0f0f1a 100%)',
-                border: '1px solid #a855f7',
-                borderRadius: '12px',
-                marginBottom: '20px',
-                boxShadow: '0 0 30px rgba(168, 85, 247, 0.2)',
-                position: 'relative',
-                overflow: 'hidden'
-              }}
-            >
-              <div style={{ position: 'absolute', top: -10, right: -10, width: '60px', height: '60px', background: '#a855f7', opacity: 0.2, filter: 'blur(30px)', borderRadius: '50%' }} />
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '20px' }}>🔮</span>
-                  <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#a855f7', letterSpacing: '2px', textShadow: '0 0 10px rgba(168, 85, 247, 0.5)' }}>ORACLE PROTOCOL</h2>
-                </div>
-                <div style={{ background: 'rgba(168, 85, 247, 0.2)', border: '1px solid #a855f7', padding: '4px 8px', borderRadius: '4px' }}>
-                  <span style={{ fontSize: '10px', color: '#d8b4fe', fontWeight: 'bold' }}>5 MIN ROUNDS</span>
+        {/* HEADER */}
+        <header style={{ zIndex: 100, padding: '16px', display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid ${theme.border}`, background: 'rgba(5,5,5,0.2)', backdropFilter: 'blur(10px)' }}>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <img src="/demon-logo.jpg" style={{ width: '36px', height: '36px', borderRadius: '4px', border: `1px solid ${theme.border}`, objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
+              <div style={{ background: theme.panel, border: `1px solid ${rankColor}`, padding: '4px 10px', borderRadius: '2px' }}>
+                <p style={{ margin: 0, fontSize: '8px', color: rankColor, fontWeight: 'bold', letterSpacing: '1px' }}>RANK</p>
+                <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px', color: theme.text }}>{currentRank}</h2>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <div style={{ background: theme.panel, border: `1px solid ${theme.border}`, padding: '4px 10px', borderRadius: '2px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <Wallet size={12} color={theme.accent} />
+                <div>
+                  <p style={{ margin: 0, fontSize: '8px', color: theme.textDim }}>BALANCE</p>
+                  <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text }}>{walletBalance.toFixed(3)} SOL</h2>
                 </div>
               </div>
+              <div style={{ background: theme.panel, border: `1px solid ${theme.border}`, padding: '4px 10px', borderRadius: '2px' }}>
+                <p style={{ margin: 0, fontSize: '8px', color: '#fbbf24', letterSpacing: '1px' }}>LOOT</p>
+                <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text }}>{stats.solReclaimed.toFixed(3)}</h2>
+              </div>
+            </div>
+          </div>
+          <div style={{ transform: 'scale(0.85)' }} className={!publicKey ? 'pulse-animation' : ''}><WalletMultiButton /></div>
+        </header>
 
-              {/* LIVE PRICE DISPLAY */}
-              <div style={{ textAlign: 'center', margin: '20px 0' }}>
-                <p style={{ margin: 0, fontSize: '10px', color: '#9333ea', letterSpacing: '2px', fontWeight: 'bold', textTransform: 'uppercase' }}>SOL/USD ORACLE PRICE</p>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-                  <h1 style={{ margin: '5px 0', fontSize: '42px', fontWeight: '900', fontFamily: 'monospace', color: '#fff', textShadow: '0 0 20px rgba(255,255,255,0.3)' }}>
-                    ${currentSOLPrice.toFixed(2)}
-                  </h1>
+        {/* MENU */}
+        <AnimatePresence>
+          {showMenu && (
+            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 30, stiffness: 300 }} style={{ position: 'fixed', inset: 0, zIndex: 9999, backgroundColor: theme.bg, padding: '20px', display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'hidden' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: `1px solid ${theme.border}`, paddingBottom: '15px', position: 'sticky', top: 0, background: theme.bg, zIndex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Terminal size={24} color={theme.accent} />
+                  <h2 style={{ margin: 0, fontSize: '18px', color: theme.accent, fontFamily: 'monospace' }}>SYSTEM CONFIG</h2>
                 </div>
-                {previousSOLPrice > 0 && currentSOLPrice !== previousSOLPrice && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: currentSOLPrice > previousSOLPrice ? '#00ff41' : '#ff0055' }}>
-                      {currentSOLPrice > previousSOLPrice ? '▲' : '▼'} ${(Math.abs(currentSOLPrice - previousSOLPrice)).toFixed(2)}
-                    </span>
-                    <span style={{ fontSize: '10px', color: theme.textDim }}>last tick</span>
-                  </div>
+                <button onClick={() => setShowMenu(false)} style={{ background: 'none', border: 'none', color: theme.text, cursor: 'pointer', transition: 'opacity 0.2s' }} onMouseEnter={(e) => e.target.style.opacity = '0.7'} onMouseLeave={(e) => e.target.style.opacity = '1'}><X size={24} /></button>
+              </div>
+
+              {/* 🎯 BADGES */}
+              <button
+                onClick={() => { setView('ACHIEVEMENTS'); setShowMenu(false); }}
+                style={{
+                  background: theme.panel,
+                  border: `2px solid ${theme.accent}`,
+                  borderRadius: '8px',
+                  padding: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  cursor: 'pointer',
+                  transition: '0.2s',
+                  width: '100%',
+                  marginBottom: '15px'
+                }}
+              >
+                <div style={{ fontSize: '28px' }}>🎯</div>
+                <div style={{ flex: 1, textAlign: 'left' }}>
+                  <div style={{ fontSize: '13px', fontWeight: '900', color: theme.text }}>Achievement Badges</div>
+                  <div style={{ fontSize: '10px', color: theme.textDim }}>View your NFT achievements</div>
+                </div>
+                {earnedAchievements.length > 0 && (
+                  <span style={{
+                    background: theme.accent,
+                    color: '#000',
+                    borderRadius: '10px',
+                    padding: '3px 7px',
+                    fontSize: '10px',
+                    fontWeight: '900'
+                  }}>
+                    {earnedAchievements.length}
+                  </span>
+                )}
+              </button>
+
+              {/* 🎁 REFERRALS */}
+              <button
+                onClick={() => { setView('REFERRALS'); setShowMenu(false); }}
+                style={{
+                  background: theme.panel,
+                  border: `2px solid #10B981`,
+                  borderRadius: '8px',
+                  padding: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  cursor: 'pointer',
+                  transition: '0.2s',
+                  width: '100%',
+                  marginBottom: '20px'
+                }}
+              >
+                <div style={{ fontSize: '28px' }}>🎁</div>
+                <div style={{ flex: 1, textAlign: 'left' }}>
+                  <div style={{ fontSize: '13px', fontWeight: '900', color: theme.text }}>Invite Friends</div>
+                  <div style={{ fontSize: '10px', color: theme.textDim }}>Earn +50 XP per referral</div>
+                </div>
+              </button>
+
+              {/* 🛡️ TACTICAL GUIDE (HOW TO PLAY) */}
+              <div style={{ marginBottom: '20px', padding: '15px', background: theme.panel, border: `1px solid ${theme.accent}`, borderRadius: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                  <HelpCircle size={18} color={theme.accent} />
+                  <h4 style={{ margin: 0, fontSize: '14px', color: theme.accent, fontWeight: '900', letterSpacing: '1px' }}>TACTICAL GUIDE</h4>
+                </div>
+                <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12px', color: theme.textDim, lineHeight: '1.8' }}>
+                  <li><strong>SCAN:</strong> Find dust & spam in your wallet.</li>
+                  <li><strong><span style={{ color: '#00ff41' }}>GREEN</span> (RENT):</strong> Empty accounts. Burn to reclaim SOL.</li>
+                  <li><strong><span style={{ color: '#00c2ff' }}>BLUE</span> (YIELD):</strong> Swap tokens for <strong style={{ color: '#00c2ff' }}>JupSOL</strong>.</li>
+                  <li><strong><span style={{ color: '#fbbf24' }}>YELLOW</span> (DUST):</strong> Worthless tokens. Burn them.</li>
+                </ul>
+              </div>
+
+              {/* 🛡️ DAILY QUESTS (NEW) */}
+              <div style={{ marginBottom: '20px', padding: '15px', background: theme.panel, border: `1px solid #fbbf24`, borderRadius: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                  <Calendar size={18} color="#fbbf24" />
+                  <h4 style={{ margin: 0, fontSize: '14px', color: '#fbbf24', fontWeight: '900', letterSpacing: '1px' }}>DAILY QUESTS</h4>
+                </div>
+                {missions.map(m => {
+                  if (m.mobileOnly && !isJupiterMobile) return null;
+                  const progress = Math.min(m.progress, m.target);
+                  const percentage = (progress / m.target) * 100;
+                  return (
+                    <div key={m.id} style={{ marginBottom: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                        <span style={{ fontSize: '11px', color: m.completed ? '#00ff41' : theme.textDim, fontWeight: '700' }}>
+                          {m.completed ? '✅' : '⏳'} {m.label}
+                        </span>
+                        <span style={{ fontSize: '10px', color: '#fbbf24', fontWeight: 'bold' }}>+{m.xp} XP</span>
+                      </div>
+                      <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+                        <div style={{ width: `${percentage}%`, height: '100%', background: m.completed ? '#00ff41' : '#fbbf24', transition: 'width 0.3s' }}></div>
+                      </div>
+                      <div style={{ fontSize: '9px', color: theme.textDim, marginTop: '2px' }}>{progress} / {m.target}</div>
+                    </div>
+                  );
+                })}
+
+                {/* VERIFY ON-CHAIN BUTTON */}
+                {publicKey && (
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      verifyMissionsOnChain();
+                    }}
+                    disabled={pendingTx?.type === 'verification'}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      marginTop: '12px',
+                      background: pendingTx?.type === 'verification' ? theme.panel : 'linear-gradient(135deg, #00ff41, #00c2ff)',
+                      border: 'none',
+                      borderRadius: '4px',
+                      color: '#000',
+                      fontSize: '12px',
+                      fontWeight: '900',
+                      letterSpacing: '1px',
+                      cursor: pendingTx?.type === 'verification' ? 'not-allowed' : 'pointer',
+                      opacity: pendingTx?.type === 'verification' ? 0.5 : 1,
+                      transition: '0.2s'
+                    }}
+                  >
+                    {pendingTx?.type === 'verification' ? '⏳ VERIFYING...' : '🔗 VERIFY ON-CHAIN'}
+                  </button>
+                )}
+                <p style={{ fontSize: '10px', color: theme.textDim, marginTop: '8px', textAlign: 'center' }}>Streak: {stats.streak} Days 🔥</p>
+              </div>
+
+              {/* 🛡️ MISSION LOG (REAL DATA) */}
+              <div style={{ marginBottom: '20px', padding: '15px', background: theme.panel, border: `1px solid ${theme.accent}`, borderRadius: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                  <Activity size={18} color={theme.accent} />
+                  <h4 style={{ margin: 0, fontSize: '14px', color: theme.accent, fontWeight: '900', letterSpacing: '1px' }}>MISSION LOG</h4>
+                </div>
+                {sessionHistory.length === 0 ? (
+                  <p style={{ color: theme.textDim, fontSize: '11px', textAlign: 'center' }}>No actions recorded this session.</p>
+                ) : (
+                  sessionHistory.map((item, i) => (
+                    <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px dashed #333' }}>
+                      <span style={{ color: theme.text, fontSize: '11px' }}>{item.action}</span>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <span style={{ color: '#00ff41', fontSize: '11px' }}>{item.value}</span>
+                        <span style={{ color: theme.textDim, fontSize: '11px' }}>{item.time}</span>
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
 
-              {/* PROGRESS BAR (Visual Flair) */}
-              <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
-                <motion.div
-                  className="scanner-line"
-                  style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, #a855f7, transparent)' }}
-                />
+              {/* 🛡️ SETTINGS */}
+              <div style={{ background: theme.panel, padding: '15px', borderRadius: '4px', border: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 'bold', color: theme.text }}>{audioEnabled ? <Volume2 size={16} color={theme.accent} /> : <VolumeX size={16} color={theme.textDim} />} AUDIO</span>
+                  <button onClick={() => setAudioEnabled(!audioEnabled)} style={{ background: audioEnabled ? `${theme.accent}20` : theme.bg, border: `1px solid ${audioEnabled ? theme.accent : theme.border}`, color: audioEnabled ? theme.accent : theme.textDim, padding: '4px 12px', fontSize: '10px', fontWeight: 'bold', borderRadius: '2px' }}>{audioEnabled ? 'ONLINE' : 'MUTED'}</button>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 'bold', color: theme.text }}>{hapticsEnabled ? <Smartphone size={16} color={theme.accent} /> : <Smartphone size={16} color={theme.textDim} />} HAPTICS</span>
+                  <button onClick={() => setHapticsEnabled(!hapticsEnabled)} style={{ background: hapticsEnabled ? `${theme.accent}20` : theme.bg, border: `1px solid ${hapticsEnabled ? theme.accent : theme.border}`, color: hapticsEnabled ? theme.accent : theme.textDim, padding: '4px 12px', fontSize: '10px', fontWeight: 'bold', borderRadius: '2px' }}>{hapticsEnabled ? 'ON' : 'OFF'}</button>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 'bold', color: theme.text }}>{themeMode === 'light' ? <Sun size={16} color={theme.accent} /> : (themeMode === 'system' ? <Monitor size={16} color={theme.accent} /> : <Moon size={16} color={theme.accent} />)} THEME</span>
+                  <div style={{ display: 'flex', gap: '5px' }}>
+                    <button onClick={() => setThemeMode('dark')} style={{ padding: '6px', background: themeMode === 'dark' ? theme.accent : theme.bg, color: themeMode === 'dark' ? '#000' : theme.textDim, border: `1px solid ${theme.border}`, borderRadius: '2px' }}><Moon size={14} /></button>
+                    <button onClick={() => setThemeMode('light')} style={{ padding: '6px', background: themeMode === 'light' ? theme.accent : theme.bg, color: themeMode === 'light' ? '#000' : theme.textDim, border: `1px solid ${theme.border}`, borderRadius: '2px' }}><Sun size={14} /></button>
+                  </div>
+                </div>
               </div>
             </motion.div>
+          )}
+        </AnimatePresence>
 
-            {/* 🎮 GAMEPLAY AREA */}
-            {!dailyPrediction || dailyPrediction.date !== new Date().toDateString() ? (
-              <div style={{ display: 'flex', gap: '12px', height: '180px' }}>
-                {/* BULLISH BUTTON */}
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => makePrediction('up')}
-                  style={{
-                    flex: 1,
-                    background: 'linear-gradient(180deg, rgba(0,255,65,0.1) 0%, rgba(0,255,65,0.05) 100%)',
-                    border: '2px solid #00ff41',
-                    borderRadius: '12px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '10px',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}
-                >
-                  <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at center, rgba(0,255,65,0.2), transparent 70%)', opacity: 0.5 }} />
-                  <TrendingUp size={40} color="#00ff41" strokeWidth={3} />
-                  <span style={{ fontSize: '18px', fontWeight: '900', color: '#fff', textShadow: '0 0 10px #00ff41' }}>PUMP</span>
-                  <div style={{ padding: '4px 8px', background: '#00ff41', borderRadius: '4px', color: '#000', fontSize: '10px', fontWeight: '900' }}>
-                    +300 XP
-                  </div>
-                </motion.button>
+        {/* MAIN CONTENT AREA */}
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', paddingBottom: '100px', zIndex: 10 }}>
 
-                {/* BEARISH BUTTON */}
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => makePrediction('down')}
-                  style={{
-                    flex: 1,
-                    background: 'linear-gradient(180deg, rgba(255,0,85,0.1) 0%, rgba(255,0,85,0.05) 100%)',
-                    border: '2px solid #ff0055',
-                    borderRadius: '12px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '10px',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}
-                >
-                  <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at center, rgba(255,0,85,0.2), transparent 70%)', opacity: 0.5 }} />
-                  <TrendingDown size={40} color="#ff0055" strokeWidth={3} />
-                  <span style={{ fontSize: '18px', fontWeight: '900', color: '#fff', textShadow: '0 0 10px #ff0055' }}>DUMP</span>
-                  <div style={{ padding: '4px 8px', background: '#ff0055', borderRadius: '4px', color: '#fff', fontSize: '10px', fontWeight: '900' }}>
-                    +300 XP
-                  </div>
-                </motion.button>
-              </div>
-            ) : (
-              /* ACTIVE PREDICTION STATUS */
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+          {/* VIEW 1: SCANNER */}
+          {view === 'SCANNER' && !loading && (
+            <div style={{ display: 'flex', flexDirection: 'column', height: '60vh', alignItems: 'center', justifyContent: 'center' }}>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleScan}
                 style={{
-                  background: theme.panel,
-                  border: `1px solid ${dailyPrediction.result ? (dailyPrediction.result === 'correct' ? '#00ff41' : '#ff0055') : theme.accent}`,
-                  borderRadius: '12px',
-                  padding: '20px',
-                  boxShadow: `0 0 20px ${dailyPrediction.result ? (dailyPrediction.result === 'correct' ? 'rgba(0,255,65,0.2)' : 'rgba(255,0,85,0.2)') : 'rgba(168,85,247,0.1)'}`
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                  <span style={{ fontSize: '12px', color: theme.textDim, fontWeight: 'bold' }}>YOUR POSITION</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    {dailyPrediction.prediction === 'up' ? <TrendingUp size={16} color="#00ff41" /> : <TrendingDown size={16} color="#ff0055" />}
-                    <span style={{ fontSize: '14px', fontWeight: '900', color: dailyPrediction.prediction === 'up' ? '#00ff41' : '#ff0055' }}>
-                      {dailyPrediction.prediction === 'up' ? 'LONG (PUMP)' : 'SHORT (DUMP)'}
-                    </span>
-                  </div>
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  transition: 'all 0.2s ease'
+                }}>
+                <motion.div variants={radarVariants} animate="ping" style={{ position: 'absolute', inset: -25, border: `1px solid ${theme.accent}`, borderRadius: '50%', opacity: 0.5 }} />
+                <motion.div variants={radarVariants} animate="ping" style={{ position: 'absolute', inset: -50, border: `1px solid ${theme.accent}`, borderRadius: '50%', opacity: 0.2, animationDelay: '0.5s' }} />
+                <div style={{ width: '160px', height: '160px', borderRadius: '50%', border: `2px solid ${theme.accent}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: theme.panel, boxShadow: `0 0 40px ${theme.accent}40`, position: 'relative' }}>
+                  <Crosshair size={70} color={theme.accent} strokeWidth={1} />
+                  <p style={{ color: theme.accent, fontWeight: '900', marginTop: '12px', letterSpacing: '4px', fontSize: '12px' }}>INITIATE</p>
                 </div>
+              </motion.button>
+              {!publicKey && <p style={{ color: theme.textDim, fontSize: '10px', marginTop: '40px', letterSpacing: '2px', fontWeight: 'bold' }}>[ AWAITING UPLINK ]</p>}
+            </div>
+          )}
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
-                  <div style={{ background: theme.bg, padding: '10px', borderRadius: '8px' }}>
-                    <span style={{ fontSize: '10px', color: theme.textDim }}>ENTRY PRICE</span>
-                    <div style={{ fontSize: '16px', fontWeight: '900', color: theme.text, fontFamily: 'monospace' }}>${dailyPrediction.startPrice.toFixed(2)}</div>
-                  </div>
-                  <div style={{ background: theme.bg, padding: '10px', borderRadius: '8px' }}>
-                    <span style={{ fontSize: '10px', color: theme.textDim }}>TARGET</span>
-                    <div style={{ fontSize: '16px', fontWeight: '900', color: dailyPrediction.prediction === 'up' ? '#00ff41' : '#ff0055', fontFamily: 'monospace' }}>
-                      {dailyPrediction.prediction === 'up' ? '> Entry' : '< Entry'}
-                    </div>
-                  </div>
-                </div>
-
-                <PredictionChart
-                  startPrice={dailyPrediction.startPrice}
-                  currentPrice={currentSOLPrice}
-                  direction={dailyPrediction.prediction}
-                  theme={theme}
+          {/* 🛡️ GHOST LOADING (SKELETON UI) */}
+          {loading && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px', maxWidth: '600px', margin: '0 auto', marginTop: '50px' }}>
+              {[...Array(6)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0.3 }}
+                  animate={{ opacity: [0.3, 0.7, 0.3] }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.1 }}
+                  style={{ height: '160px', background: theme.panel, borderRadius: '4px', border: `1px solid ${theme.border}` }}
                 />
+              ))}
+            </div>
+          )}
 
-                <div style={{ marginTop: '20px' }}>
-                  {!dailyPrediction.result ? (
-                    <button
-                      onClick={checkPredictionResult}
-                      style={{
-                        width: '100%',
-                        padding: '16px',
-                        background: Date.now() >= dailyPrediction.endTime
-                          ? 'linear-gradient(135deg, #fbbf24, #d97706)' // Gold for Claim
-                          : 'rgba(255,255,255,0.05)',
-                        border: Date.now() >= dailyPrediction.endTime ? 'none' : `1px solid ${theme.border}`,
-                        borderRadius: '8px',
-                        color: Date.now() >= dailyPrediction.endTime ? '#000' : theme.textDim,
-                        fontWeight: '900',
-                        fontSize: '14px',
-                        cursor: Date.now() >= dailyPrediction.endTime ? 'pointer' : 'default',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        gap: '10px',
-                        letterSpacing: '1px',
-                        transition: 'all 0.3s'
-                      }}
-                    >
-                      {Date.now() >= dailyPrediction.endTime ? (
-                        <>
-                          <Crown size={20} /> CLAIM REWARD
-                        </>
-                      ) : (
-                        <>
-                          <Loader2 size={18} className="animate-spin" /> LIVE TRACKING...
-                        </>
-                      )}
-                    </button>
-                  ) : (
-                    <motion.div
-                      initial={{ scale: 0.9 }}
-                      animate={{ scale: 1 }}
-                      style={{
-                        padding: '15px',
-                        background: dailyPrediction.result === 'correct' ? 'rgba(0, 255, 65, 0.1)' : 'rgba(255, 0, 85, 0.1)',
-                        border: `1px solid ${dailyPrediction.result === 'correct' ? '#00ff41' : '#ff0055'}`,
-                        borderRadius: '8px',
-                        textAlign: 'center'
-                      }}
-                    >
-                      <h3 style={{ margin: '0 0 5px 0', color: dailyPrediction.result === 'correct' ? '#00ff41' : '#ff0055', fontSize: '18px', fontWeight: '900' }}>
-                        {dailyPrediction.result === 'correct' ? '✅ WINNER' : '❌ REKT'}
-                      </h3>
-                      <p style={{ margin: 0, fontSize: '12px', color: theme.text }}>
-                        {dailyPrediction.result === 'correct' ? `You earned +300 XP!` : 'Consolation prize: +50 XP'}
-                      </p>
+          {/* VIEW 2: INVENTORY */}
+          {view === 'INVENTORY' && !loading && result && (
+            <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px', padding: '16px', background: theme.panel, border: `1px solid ${selectedIds.length > 0 ? rankColor : theme.border}`, position: 'sticky', top: 0, zIndex: 20, borderRadius: '4px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ margin: 0, color: rankColor, fontSize: '12px', fontWeight: '900', letterSpacing: '1px' }}>TARGETS: {selectedIds.length}</h3>
+                  <button onClick={handleToggleSelectAll} className="glass-button" style={{ padding: '6px 12px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px', color: '#fbbf24' }}>{selectedIds.length === result.targets.length ? 'DESELECT ALL' : 'SELECT ALL'}</button>
+                </div>
+                <button onClick={confirmExorcism} disabled={!selectedIds.length || burningId} className="glass-button" style={{ width: '100%', padding: '14px', background: selectedIds.length ? '#ff0055' : 'rgba(255, 255, 255, 0.05)', color: selectedIds.length ? '#fff' : theme.textDim, borderRadius: '4px', fontWeight: '900', letterSpacing: '2px' }}>
+                  {burningId ? <LoadingSpinner theme={theme} type="flame" size={20} /> : `EXECUTE BURN`}
+                </button>
+              </div>
+
+              <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px', paddingBottom: '40px' }}>
+                <AnimatePresence>
+                  {result.targets.map((t, i) => (
+                    <motion.div key={t.id} variants={itemVariants} layout>
+                      <BountyPoster data={t} theme={theme} selected={selectedIds.includes(t.id)} onSelect={() => toggleSelect(t)} onSwap={() => handleSwap(t)} />
                     </motion.div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-
-            {/* RECENT HISTORY */}
-            {predictionHistory.length > 0 && (
-              <div style={{ marginTop: '30px' }}>
-                <h4 style={{ fontSize: '12px', color: theme.textDim, marginBottom: '10px', letterSpacing: '1px', fontWeight: 'bold' }}>RECENT PROPHECIES</h4>
-                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '10px' }}>
-                  {predictionHistory.slice(0, 5).map((p, i) => (
-                    <div key={i} style={{
-                      minWidth: '100px',
-                      padding: '10px',
-                      background: theme.panel,
-                      border: `1px solid ${p.result === 'correct' ? '#00ff41' : '#ff0055'}`,
-                      borderRadius: '8px',
-                      flexShrink: 0
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                        <span style={{ fontSize: '10px', fontWeight: 'bold', color: theme.text }}>{p.prediction === 'up' ? 'PUMP' : 'DUMP'}</span>
-                        <span style={{ fontSize: '10px' }}>{p.result === 'correct' ? '✅' : '❌'}</span>
-                      </div>
-                      <div style={{ fontSize: '9px', color: theme.textDim }}>{new Date(p.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                    </div>
                   ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* VIEW 4: SWAP STATION (JUPITER PLUGIN) */}
-        {view === 'SWAP_STATION' && (
-          <div style={{
-            position: 'fixed', inset: 0, zIndex: 9999, background: theme.bg,
-            display: 'flex', flexDirection: 'column'
-          }}>
-            <div style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: `1px solid ${theme.border}` }}>
-              <button onClick={() => { setView('INVENTORY'); if (window.Jupiter) window.Jupiter.close(); setJupiterInitialized(false); }} style={{ background: theme.panel, border: `1px solid ${theme.border}`, color: theme.text, padding: '8px', borderRadius: '4px' }}>
-                <ArrowLeft size={20} />
-              </button>
-              <h2 style={{ fontSize: '16px', fontWeight: '900', color: '#00c2ff' }}>YIELD GENERATOR (JupSOL)</h2>
+                </AnimatePresence>
+              </motion.div>
             </div>
-            {/* JUPITER PLUGIN CONTAINER */}
-            <div id="integrated-terminal" style={{ flex: 1, width: '100%', height: '100%', position: 'relative' }}>
-              {!jupiterInitialized && (
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: theme.textDim }}>
-                  <Loader2 className="animate-spin" size={24} /> INITIALIZING...
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* VIEW 5: YIELD DASHBOARD - MOBILE OPTIMIZED */}
-        {view === 'YIELD' && (
-          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '15px 15px 100px 15px' }}>
-            {/* Compact Header */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '10px',
-              marginBottom: '15px',
-              padding: '15px',
-              background: 'linear-gradient(135deg, #001a33 0%, #003d52 100%)',
-              border: '2px solid #00c2ff',
-              borderRadius: '10px',
-              boxShadow: '0 0 20px rgba(0, 194, 255, 0.3)'
-            }}>
-              <div style={{ fontSize: '32px' }}>💰</div>
-              <div>
-                <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: '#00c2ff', letterSpacing: '1px' }}>
-                  YIELD CALCULATOR
-                </h2>
-                <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#7dd3fc', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  {jupsolAPY > 0 ? (
-                    <>
-                      <Zap size={10} fill="#7dd3fc" /> {jupsolAPY.toFixed(2)}% APY (Live)
-                    </>
-                  ) : (
-                    <>Powered by JupSOL</>
-                  )}
-                </p>
-              </div>
-            </div>
+          {/* VIEW 3: PROPHECY (PREDICTION MARKETS) - GAMIFIED ORACLE */}
+          {view === 'PROPHECY' && (
+            <div style={{ maxWidth: '600px', margin: '0 auto', paddingTop: '10px', paddingBottom: '100px', paddingLeft: '15px', paddingRight: '15px' }}>
 
-            {/* Calculator Input */}
-            <div style={{ marginBottom: '15px' }}>
-              <input
-                type="number"
-                value={calculatorAmount}
-                onChange={(e) => setCalculatorAmount(e.target.value)}
-                placeholder="Enter JupSOL amount..."
-                style={{
-                  width: '100%',
-                  padding: '15px',
-                  background: 'rgba(0, 194, 255, 0.05)',
-                  border: '2px solid rgba(0, 194, 255, 0.3)',
-                  borderRadius: '8px',
-                  color: theme.text,
-                  fontSize: '18px',
-                  fontWeight: '900',
-                  textAlign: 'center',
-                  fontFamily: 'monospace',
-                  boxSizing: 'border-box',
-                  outline: 'none'
-                }}
-              />
-              {calculatorAmount && currentSOLPrice > 0 && (
-                <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: '#7dd3fc', textAlign: 'center' }}>
-                  ≈ ${(parseFloat(calculatorAmount || 0) * currentSOLPrice).toFixed(2)} USD
-                </p>
-              )}
-            </div>
-
-            {/* Calculator Results */}
-            {calculatorAmount && parseFloat(calculatorAmount) > 0 ? (
+              {/* 🔮 ORACLE HEADER CARD */}
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '15px' }}
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                style={{
+                  padding: '20px',
+                  background: 'linear-gradient(135deg, #1a0033 0%, #0f0f1a 100%)',
+                  border: '1px solid #a855f7',
+                  borderRadius: '12px',
+                  marginBottom: '20px',
+                  boxShadow: '0 0 30px rgba(168, 85, 247, 0.2)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
               >
-                <div style={{ background: 'rgba(0, 194, 255, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(0, 194, 255, 0.3)' }}>
-                  <p style={{ margin: 0, fontSize: '9px', color: theme.textDim }}>Daily</p>
-                  <p style={{ margin: '3px 0 0 0', fontSize: '13px', fontWeight: '900', color: '#00c2ff' }}>
-                    {((parseFloat(calculatorAmount) * jupsolAPY / 100) / 365).toFixed(4)}
-                  </p>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '8px', color: '#7dd3fc' }}>
-                    ${((parseFloat(calculatorAmount) * jupsolAPY / 100 / 365) * currentSOLPrice).toFixed(2)}
-                  </p>
-                </div>
-                <div style={{ background: 'rgba(0, 194, 255, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(0, 194, 255, 0.3)' }}>
-                  <p style={{ margin: 0, fontSize: '9px', color: theme.textDim }}>Monthly</p>
-                  <p style={{ margin: '3px 0 0 0', fontSize: '13px', fontWeight: '900', color: '#00c2ff' }}>
-                    {((parseFloat(calculatorAmount) * jupsolAPY / 100) / 12).toFixed(4)}
-                  </p>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '8px', color: '#7dd3fc' }}>
-                    ${((parseFloat(calculatorAmount) * jupsolAPY / 100 / 12) * currentSOLPrice).toFixed(2)}
-                  </p>
-                </div>
-                <div style={{ background: 'rgba(0, 255, 136, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(0, 255, 136, 0.3)', gridColumn: '1 / -1' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '10px', color: theme.textDim }}>Yearly Earnings</span>
-                    <div style={{ textAlign: 'right' }}>
-                      <p style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#00ff88' }}>
-                        {(parseFloat(calculatorAmount) * jupsolAPY / 100).toFixed(4)} SOL
-                      </p>
-                      <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#7dd3fc' }}>
-                        ${((parseFloat(calculatorAmount) * jupsolAPY / 100) * currentSOLPrice).toFixed(2)} USD
-                      </p>
-                    </div>
+                <div style={{ position: 'absolute', top: -10, right: -10, width: '60px', height: '60px', background: '#a855f7', opacity: 0.2, filter: 'blur(30px)', borderRadius: '50%' }} />
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '20px' }}>🔮</span>
+                    <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#a855f7', letterSpacing: '2px', textShadow: '0 0 10px rgba(168, 85, 247, 0.5)' }}>ORACLE PROTOCOL</h2>
                   </div>
+                  <div style={{ background: 'rgba(168, 85, 247, 0.2)', border: '1px solid #a855f7', padding: '4px 8px', borderRadius: '4px' }}>
+                    <span style={{ fontSize: '10px', color: '#d8b4fe', fontWeight: 'bold' }}>5 MIN ROUNDS</span>
+                  </div>
+                </div>
+
+                {/* LIVE PRICE DISPLAY */}
+                <div style={{ textAlign: 'center', margin: '20px 0' }}>
+                  <p style={{ margin: 0, fontSize: '10px', color: '#9333ea', letterSpacing: '2px', fontWeight: 'bold', textTransform: 'uppercase' }}>SOL/USD ORACLE PRICE</p>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                    <h1 style={{ margin: '5px 0', fontSize: '42px', fontWeight: '900', fontFamily: 'monospace', color: '#fff', textShadow: '0 0 20px rgba(255,255,255,0.3)' }}>
+                      ${currentSOLPrice.toFixed(2)}
+                    </h1>
+                  </div>
+                  {previousSOLPrice > 0 && currentSOLPrice !== previousSOLPrice && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 'bold', color: currentSOLPrice > previousSOLPrice ? '#00ff41' : '#ff0055' }}>
+                        {currentSOLPrice > previousSOLPrice ? '▲' : '▼'} ${(Math.abs(currentSOLPrice - previousSOLPrice)).toFixed(2)}
+                      </span>
+                      <span style={{ fontSize: '10px', color: theme.textDim }}>last tick</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* PROGRESS BAR (Visual Flair) */}
+                <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+                  <motion.div
+                    className="scanner-line"
+                    style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, #a855f7, transparent)' }}
+                  />
                 </div>
               </motion.div>
-            ) : (
-              <div style={{
-                padding: '30px 20px',
-                textAlign: 'center',
-                background: 'rgba(0, 194, 255, 0.05)',
-                borderRadius: '8px',
-                border: '1px dashed rgba(0, 194, 255, 0.3)',
-                marginBottom: '15px'
-              }}>
-                <p style={{ margin: 0, fontSize: '12px', color: theme.textDim }}>
-                  👆 Enter an amount to calculate earnings
-                </p>
-              </div>
-            )}
 
-            {/* Current Holdings (if any) - Compact */}
-            {jupsolBalance > 0 && (
-              <div style={{ background: 'rgba(0, 255, 136, 0.1)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(0, 255, 136, 0.3)', marginBottom: '15px' }}>
-                <p style={{ margin: '0 0 8px 0', fontSize: '10px', color: '#00ff88', fontWeight: '900', letterSpacing: '1px' }}>
-                  💎 YOUR HOLDINGS
-                </p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '11px', color: theme.text }}>Balance</span>
-                  <span style={{ fontSize: '14px', fontWeight: '900', color: '#00c2ff' }}>{jupsolBalance.toFixed(4)} JupSOL</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '11px', color: theme.text }}>Yearly</span>
-                  <span style={{ fontSize: '12px', fontWeight: '900', color: '#00ff88' }}>{estimatedEarnings.yearly.toFixed(4)} SOL</span>
-                </div>
-              </div>
-            )}
-
-            {/* Call to Action */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setView('SCANNER')}
-              style={{
-                width: '100%',
-                padding: '15px',
-                background: jupsolBalance === 0
-                  ? 'linear-gradient(135deg, #00c2ff 0%, #00ff88 100%)'
-                  : 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)',
-                border: `3px solid ${jupsolBalance === 0 ? '#00c2ff' : '#a855f7'}`,
-                borderRadius: '10px',
-                color: jupsolBalance === 0 ? '#000' : '#fff',
-                fontWeight: '900',
-                fontSize: '13px',
-                cursor: 'pointer',
-                boxShadow: `0 0 20px ${jupsolBalance === 0 ? 'rgba(0, 194, 255, 0.4)' : 'rgba(168, 85, 247, 0.4)'}`,
-                letterSpacing: '1px'
-              }}
-            >
-              {jupsolBalance === 0 ? 'FIND TOKENS TO CONVERT' : 'SCAN FOR MORE TOKENS'}
-            </motion.button>
-          </div>
-        )}
-
-        {/* VIEW 6: LEADERBOARD - MOBILE OPTIMIZED */}
-        {view === 'LEADERBOARD' && (
-          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '15px 15px 100px 15px' }}>
-            {/* Compact Header */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '10px',
-              marginBottom: '15px',
-              padding: '15px',
-              background: 'linear-gradient(135deg, #1a0033 0%, #2d0052 100%)',
-              border: '2px solid #fbbf24',
-              borderRadius: '10px',
-              boxShadow: '0 0 20px rgba(251, 191, 36, 0.3)'
-            }}>
-              <div style={{ fontSize: '32px' }}>🏆</div>
-              <div>
-                <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: '#fbbf24', letterSpacing: '1px' }}>
-                  LEADERBOARD
-                </h2>
-                <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#fcd34d' }}>
-                  Live Rankings
-                </p>
-              </div>
-            </div>
-
-            {/* User Rank Card */}
-            {userRank && (
-              <div style={{
-                background: 'linear-gradient(135deg, #000000 0%, #1a0033 100%)',
-                padding: '15px',
-                borderRadius: '8px',
-                marginBottom: '15px',
-                border: '2px solid #fbbf24',
-                boxShadow: '0 0 15px rgba(251, 191, 36, 0.3)'
-              }}>
-                <p style={{ margin: '0 0 8px 0', fontSize: '10px', color: '#fcd34d', fontWeight: '900', letterSpacing: '1px' }}>
-                  YOUR RANK
-                </p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <h1 style={{ margin: 0, fontSize: '32px', fontWeight: '900', color: '#fbbf24', fontFamily: 'monospace' }}>
-                      #{userRank}
-                    </h1>
-                    <p style={{ margin: '5px 0 0 0', fontSize: '11px', color: theme.text }}>
-                      {stats.xp.toLocaleString()} XP • {currentRank}
-                    </p>
-                  </div>
-                  {isJupiterMobile && (
-                    <div style={{
-                      background: 'rgba(0, 194, 255, 0.2)',
-                      padding: '6px 10px',
-                      borderRadius: '6px',
-                      border: '1px solid #00c2ff'
-                    }}>
-                      <p style={{ margin: 0, fontSize: '10px', color: '#00c2ff', fontWeight: '900' }}>📱 MOBILE</p>
+              {/* 🎮 GAMEPLAY AREA */}
+              {!dailyPrediction || dailyPrediction.date !== new Date().toDateString() ? (
+                <div style={{ display: 'flex', gap: '12px', height: '180px' }}>
+                  {/* BULLISH BUTTON */}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => makePrediction('up')}
+                    style={{
+                      flex: 1,
+                      background: 'linear-gradient(180deg, rgba(0,255,65,0.1) 0%, rgba(0,255,65,0.05) 100%)',
+                      border: '2px solid #00ff41',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '10px',
+                      cursor: 'pointer',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at center, rgba(0,255,65,0.2), transparent 70%)', opacity: 0.5 }} />
+                    <TrendingUp size={40} color="#00ff41" strokeWidth={3} />
+                    <span style={{ fontSize: '18px', fontWeight: '900', color: '#fff', textShadow: '0 0 10px #00ff41' }}>PUMP</span>
+                    <div style={{ padding: '4px 8px', background: '#00ff41', borderRadius: '4px', color: '#000', fontSize: '10px', fontWeight: '900' }}>
+                      +300 XP
                     </div>
-                  )}
-                </div>
-              </div>
-            )}
+                  </motion.button>
 
-            {/* Top 10 Leaderboard */}
-            <div style={{ background: theme.panel, padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}` }}>
-              <h3 style={{ margin: '0 0 12px 0', fontSize: '12px', fontWeight: '900', color: theme.accent }}>
-                TOP 10 HUNTERS
-              </h3>
-
-              {leaderboardData.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '20px', color: theme.textDim }}>
-                  <p style={{ margin: '0 0 8px 0', fontSize: '24px' }}>👻</p>
-                  <p style={{ margin: 0, fontSize: '11px' }}>No hunters yet. Be the first to burn!</p>
+                  {/* BEARISH BUTTON */}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => makePrediction('down')}
+                    style={{
+                      flex: 1,
+                      background: 'linear-gradient(180deg, rgba(255,0,85,0.1) 0%, rgba(255,0,85,0.05) 100%)',
+                      border: '2px solid #ff0055',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '10px',
+                      cursor: 'pointer',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at center, rgba(255,0,85,0.2), transparent 70%)', opacity: 0.5 }} />
+                    <TrendingDown size={40} color="#ff0055" strokeWidth={3} />
+                    <span style={{ fontSize: '18px', fontWeight: '900', color: '#fff', textShadow: '0 0 10px #ff0055' }}>DUMP</span>
+                    <div style={{ padding: '4px 8px', background: '#ff0055', borderRadius: '4px', color: '#fff', fontSize: '10px', fontWeight: '900' }}>
+                      +300 XP
+                    </div>
+                  </motion.button>
                 </div>
               ) : (
-                leaderboardData.map((player, index) => {
-                  const isTop3 = index < 3;
-                  const trophies = ['🥇', '🥈', '🥉'];
-                  const truncatedWallet = player.isUser
-                    ? 'YOU'
-                    : `${player.wallet.slice(0, 4)}...${player.wallet.slice(-4)}`;
+                /* ACTIVE PREDICTION STATUS */
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    background: theme.panel,
+                    border: `1px solid ${dailyPrediction.result ? (dailyPrediction.result === 'correct' ? '#00ff41' : '#ff0055') : theme.accent}`,
+                    borderRadius: '12px',
+                    padding: '20px',
+                    boxShadow: `0 0 20px ${dailyPrediction.result ? (dailyPrediction.result === 'correct' ? 'rgba(0,255,65,0.2)' : 'rgba(255,0,85,0.2)') : 'rgba(168,85,247,0.1)'}`
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                    <span style={{ fontSize: '12px', color: theme.textDim, fontWeight: 'bold' }}>YOUR POSITION</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {dailyPrediction.prediction === 'up' ? <TrendingUp size={16} color="#00ff41" /> : <TrendingDown size={16} color="#ff0055" />}
+                      <span style={{ fontSize: '14px', fontWeight: '900', color: dailyPrediction.prediction === 'up' ? '#00ff41' : '#ff0055' }}>
+                        {dailyPrediction.prediction === 'up' ? 'LONG (PUMP)' : 'SHORT (DUMP)'}
+                      </span>
+                    </div>
+                  </div>
 
-                  return (
-                    <div
-                      key={player.wallet}
-                      style={{
-                        padding: '10px',
-                        background: player.isUser ? 'rgba(251, 191, 36, 0.1)' : theme.bg,
-                        borderRadius: '6px',
-                        marginBottom: '8px',
-                        border: player.isUser ? '1px solid #fbbf24' : `1px solid ${theme.border}`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px'
-                      }}
-                    >
-                      {/* Rank */}
-                      <div style={{
-                        minWidth: '30px',
-                        textAlign: 'center',
-                        fontSize: isTop3 ? '18px' : '12px',
-                        fontWeight: '900',
-                        color: isTop3 ? '#fbbf24' : theme.textDim
-                      }}>
-                        {isTop3 ? trophies[index] : `#${index + 1}`}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
+                    <div style={{ background: theme.bg, padding: '10px', borderRadius: '8px' }}>
+                      <span style={{ fontSize: '10px', color: theme.textDim }}>ENTRY PRICE</span>
+                      <div style={{ fontSize: '16px', fontWeight: '900', color: theme.text, fontFamily: 'monospace' }}>${dailyPrediction.startPrice.toFixed(2)}</div>
+                    </div>
+                    <div style={{ background: theme.bg, padding: '10px', borderRadius: '8px' }}>
+                      <span style={{ fontSize: '10px', color: theme.textDim }}>TARGET</span>
+                      <div style={{ fontSize: '16px', fontWeight: '900', color: dailyPrediction.prediction === 'up' ? '#00ff41' : '#ff0055', fontFamily: 'monospace' }}>
+                        {dailyPrediction.prediction === 'up' ? '> Entry' : '< Entry'}
                       </div>
+                    </div>
+                  </div>
 
-                      {/* Player Info */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
-                          <p style={{
-                            margin: 0,
-                            fontSize: '11px',
-                            fontWeight: '900',
-                            color: player.isUser ? '#fbbf24' : theme.text,
-                            fontFamily: 'monospace',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }}>
-                            {truncatedWallet}
-                          </p>
-                          {player.isMobile && (
-                            <span style={{ fontSize: '10px' }}>📱</span>
-                          )}
+                  <PredictionChart
+                    startPrice={dailyPrediction.startPrice}
+                    currentPrice={currentSOLPrice}
+                    direction={dailyPrediction.prediction}
+                    theme={theme}
+                  />
+
+                  <div style={{ marginTop: '20px' }}>
+                    {!dailyPrediction.result ? (
+                      <button
+                        onClick={checkPredictionResult}
+                        style={{
+                          width: '100%',
+                          padding: '16px',
+                          background: Date.now() >= dailyPrediction.endTime
+                            ? 'linear-gradient(135deg, #fbbf24, #d97706)' // Gold for Claim
+                            : 'rgba(255,255,255,0.05)',
+                          border: Date.now() >= dailyPrediction.endTime ? 'none' : `1px solid ${theme.border}`,
+                          borderRadius: '8px',
+                          color: Date.now() >= dailyPrediction.endTime ? '#000' : theme.textDim,
+                          fontWeight: '900',
+                          fontSize: '14px',
+                          cursor: Date.now() >= dailyPrediction.endTime ? 'pointer' : 'default',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          gap: '10px',
+                          letterSpacing: '1px',
+                          transition: 'all 0.3s'
+                        }}
+                      >
+                        {Date.now() >= dailyPrediction.endTime ? (
+                          <>
+                            <Crown size={20} /> CLAIM REWARD
+                          </>
+                        ) : (
+                          <>
+                            <Loader2 size={18} className="animate-spin" /> LIVE TRACKING...
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <motion.div
+                        initial={{ scale: 0.9 }}
+                        animate={{ scale: 1 }}
+                        style={{
+                          padding: '15px',
+                          background: dailyPrediction.result === 'correct' ? 'rgba(0, 255, 65, 0.1)' : 'rgba(255, 0, 85, 0.1)',
+                          border: `1px solid ${dailyPrediction.result === 'correct' ? '#00ff41' : '#ff0055'}`,
+                          borderRadius: '8px',
+                          textAlign: 'center'
+                        }}
+                      >
+                        <h3 style={{ margin: '0 0 5px 0', color: dailyPrediction.result === 'correct' ? '#00ff41' : '#ff0055', fontSize: '18px', fontWeight: '900' }}>
+                          {dailyPrediction.result === 'correct' ? '✅ WINNER' : '❌ REKT'}
+                        </h3>
+                        <p style={{ margin: 0, fontSize: '12px', color: theme.text }}>
+                          {dailyPrediction.result === 'correct' ? `You earned +300 XP!` : 'Consolation prize: +50 XP'}
+                        </p>
+                      </motion.div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* RECENT HISTORY */}
+              {predictionHistory.length > 0 && (
+                <div style={{ marginTop: '30px' }}>
+                  <h4 style={{ fontSize: '12px', color: theme.textDim, marginBottom: '10px', letterSpacing: '1px', fontWeight: 'bold' }}>RECENT PROPHECIES</h4>
+                  <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '10px' }}>
+                    {predictionHistory.slice(0, 5).map((p, i) => (
+                      <div key={i} style={{
+                        minWidth: '100px',
+                        padding: '10px',
+                        background: theme.panel,
+                        border: `1px solid ${p.result === 'correct' ? '#00ff41' : '#ff0055'}`,
+                        borderRadius: '8px',
+                        flexShrink: 0
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                          <span style={{ fontSize: '10px', fontWeight: 'bold', color: theme.text }}>{p.prediction === 'up' ? 'PUMP' : 'DUMP'}</span>
+                          <span style={{ fontSize: '10px' }}>{p.result === 'correct' ? '✅' : '❌'}</span>
                         </div>
-                        <p style={{ margin: 0, fontSize: '9px', color: theme.textDim }}>
-                          {player.xp.toLocaleString()} XP • {player.solReclaimed} SOL
+                        <div style={{ fontSize: '9px', color: theme.textDim }}>{new Date(p.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* VIEW 4: SWAP STATION (JUPITER PLUGIN) */}
+          {view === 'SWAP_STATION' && (
+            <div style={{
+              position: 'fixed', inset: 0, zIndex: 9999, background: theme.bg,
+              display: 'flex', flexDirection: 'column'
+            }}>
+              <div style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: `1px solid ${theme.border}` }}>
+                <button onClick={() => { setView('INVENTORY'); if (window.Jupiter) window.Jupiter.close(); setJupiterInitialized(false); }} style={{ background: theme.panel, border: `1px solid ${theme.border}`, color: theme.text, padding: '8px', borderRadius: '4px' }}>
+                  <ArrowLeft size={20} />
+                </button>
+                <h2 style={{ fontSize: '16px', fontWeight: '900', color: '#00c2ff' }}>YIELD GENERATOR (JupSOL)</h2>
+              </div>
+              {/* JUPITER PLUGIN CONTAINER */}
+              <div id="integrated-terminal" style={{ flex: 1, width: '100%', height: '100%', position: 'relative' }}>
+                {!jupiterInitialized && (
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: theme.textDim }}>
+                    <Loader2 className="animate-spin" size={24} /> INITIALIZING...
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* VIEW 5: YIELD DASHBOARD - MOBILE OPTIMIZED */}
+          {view === 'YIELD' && (
+            <div style={{ maxWidth: '600px', margin: '0 auto', padding: '15px 15px 100px 15px' }}>
+              {/* Compact Header */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px',
+                marginBottom: '15px',
+                padding: '15px',
+                background: 'linear-gradient(135deg, #001a33 0%, #003d52 100%)',
+                border: '2px solid #00c2ff',
+                borderRadius: '10px',
+                boxShadow: '0 0 20px rgba(0, 194, 255, 0.3)'
+              }}>
+                <div style={{ fontSize: '32px' }}>💰</div>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: '#00c2ff', letterSpacing: '1px' }}>
+                    YIELD CALCULATOR
+                  </h2>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#7dd3fc', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    {jupsolAPY > 0 ? (
+                      <>
+                        <Zap size={10} fill="#7dd3fc" /> {jupsolAPY.toFixed(2)}% APY (Live)
+                      </>
+                    ) : (
+                      <>Powered by JupSOL</>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Calculator Input */}
+              <div style={{ marginBottom: '15px' }}>
+                <input
+                  type="number"
+                  value={calculatorAmount}
+                  onChange={(e) => setCalculatorAmount(e.target.value)}
+                  placeholder="Enter JupSOL amount..."
+                  style={{
+                    width: '100%',
+                    padding: '15px',
+                    background: 'rgba(0, 194, 255, 0.05)',
+                    border: '2px solid rgba(0, 194, 255, 0.3)',
+                    borderRadius: '8px',
+                    color: theme.text,
+                    fontSize: '18px',
+                    fontWeight: '900',
+                    textAlign: 'center',
+                    fontFamily: 'monospace',
+                    boxSizing: 'border-box',
+                    outline: 'none'
+                  }}
+                />
+                {calculatorAmount && currentSOLPrice > 0 && (
+                  <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: '#7dd3fc', textAlign: 'center' }}>
+                    ≈ ${(parseFloat(calculatorAmount || 0) * currentSOLPrice).toFixed(2)} USD
+                  </p>
+                )}
+              </div>
+
+              {/* Calculator Results */}
+              {calculatorAmount && parseFloat(calculatorAmount) > 0 ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '15px' }}
+                >
+                  <div style={{ background: 'rgba(0, 194, 255, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(0, 194, 255, 0.3)' }}>
+                    <p style={{ margin: 0, fontSize: '9px', color: theme.textDim }}>Daily</p>
+                    <p style={{ margin: '3px 0 0 0', fontSize: '13px', fontWeight: '900', color: '#00c2ff' }}>
+                      {((parseFloat(calculatorAmount) * jupsolAPY / 100) / 365).toFixed(4)}
+                    </p>
+                    <p style={{ margin: '2px 0 0 0', fontSize: '8px', color: '#7dd3fc' }}>
+                      ${((parseFloat(calculatorAmount) * jupsolAPY / 100 / 365) * currentSOLPrice).toFixed(2)}
+                    </p>
+                  </div>
+                  <div style={{ background: 'rgba(0, 194, 255, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(0, 194, 255, 0.3)' }}>
+                    <p style={{ margin: 0, fontSize: '9px', color: theme.textDim }}>Monthly</p>
+                    <p style={{ margin: '3px 0 0 0', fontSize: '13px', fontWeight: '900', color: '#00c2ff' }}>
+                      {((parseFloat(calculatorAmount) * jupsolAPY / 100) / 12).toFixed(4)}
+                    </p>
+                    <p style={{ margin: '2px 0 0 0', fontSize: '8px', color: '#7dd3fc' }}>
+                      ${((parseFloat(calculatorAmount) * jupsolAPY / 100 / 12) * currentSOLPrice).toFixed(2)}
+                    </p>
+                  </div>
+                  <div style={{ background: 'rgba(0, 255, 136, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(0, 255, 136, 0.3)', gridColumn: '1 / -1' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '10px', color: theme.textDim }}>Yearly Earnings</span>
+                      <div style={{ textAlign: 'right' }}>
+                        <p style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#00ff88' }}>
+                          {(parseFloat(calculatorAmount) * jupsolAPY / 100).toFixed(4)} SOL
+                        </p>
+                        <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#7dd3fc' }}>
+                          ${((parseFloat(calculatorAmount) * jupsolAPY / 100) * currentSOLPrice).toFixed(2)} USD
                         </p>
                       </div>
                     </div>
-                  );
-                })
+                  </div>
+                </motion.div>
+              ) : (
+                <div style={{
+                  padding: '30px 20px',
+                  textAlign: 'center',
+                  background: 'rgba(0, 194, 255, 0.05)',
+                  borderRadius: '8px',
+                  border: '1px dashed rgba(0, 194, 255, 0.3)',
+                  marginBottom: '15px'
+                }}>
+                  <p style={{ margin: 0, fontSize: '12px', color: theme.textDim }}>
+                    👆 Enter an amount to calculate earnings
+                  </p>
+                </div>
+              )}
+
+              {/* Current Holdings (if any) - Compact */}
+              {jupsolBalance > 0 && (
+                <div style={{ background: 'rgba(0, 255, 136, 0.1)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(0, 255, 136, 0.3)', marginBottom: '15px' }}>
+                  <p style={{ margin: '0 0 8px 0', fontSize: '10px', color: '#00ff88', fontWeight: '900', letterSpacing: '1px' }}>
+                    💎 YOUR HOLDINGS
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '11px', color: theme.text }}>Balance</span>
+                    <span style={{ fontSize: '14px', fontWeight: '900', color: '#00c2ff' }}>{jupsolBalance.toFixed(4)} JupSOL</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '11px', color: theme.text }}>Yearly</span>
+                    <span style={{ fontSize: '12px', fontWeight: '900', color: '#00ff88' }}>{estimatedEarnings.yearly.toFixed(4)} SOL</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Call to Action */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setView('SCANNER')}
+                style={{
+                  width: '100%',
+                  padding: '15px',
+                  background: jupsolBalance === 0
+                    ? 'linear-gradient(135deg, #00c2ff 0%, #00ff88 100%)'
+                    : 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)',
+                  border: `3px solid ${jupsolBalance === 0 ? '#00c2ff' : '#a855f7'}`,
+                  borderRadius: '10px',
+                  color: jupsolBalance === 0 ? '#000' : '#fff',
+                  fontWeight: '900',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  boxShadow: `0 0 20px ${jupsolBalance === 0 ? 'rgba(0, 194, 255, 0.4)' : 'rgba(168, 85, 247, 0.4)'}`,
+                  letterSpacing: '1px'
+                }}
+              >
+                {jupsolBalance === 0 ? 'FIND TOKENS TO CONVERT' : 'SCAN FOR MORE TOKENS'}
+              </motion.button>
+            </div>
+          )}
+
+          {/* VIEW 6: LEADERBOARD - MOBILE OPTIMIZED */}
+          {view === 'LEADERBOARD' && (
+            <div style={{ maxWidth: '600px', margin: '0 auto', padding: '15px 15px 100px 15px' }}>
+              {/* Compact Header */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px',
+                marginBottom: '15px',
+                padding: '15px',
+                background: 'linear-gradient(135deg, #1a0033 0%, #2d0052 100%)',
+                border: '2px solid #fbbf24',
+                borderRadius: '10px',
+                boxShadow: '0 0 20px rgba(251, 191, 36, 0.3)'
+              }}>
+                <div style={{ fontSize: '32px' }}>🏆</div>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: '#fbbf24', letterSpacing: '1px' }}>
+                    LEADERBOARD
+                  </h2>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#fcd34d' }}>
+                    Live Rankings
+                  </p>
+                </div>
+              </div>
+
+              {/* User Rank Card */}
+              {userRank && (
+                <div style={{
+                  background: 'linear-gradient(135deg, #000000 0%, #1a0033 100%)',
+                  padding: '15px',
+                  borderRadius: '8px',
+                  marginBottom: '15px',
+                  border: '2px solid #fbbf24',
+                  boxShadow: '0 0 15px rgba(251, 191, 36, 0.3)'
+                }}>
+                  <p style={{ margin: '0 0 8px 0', fontSize: '10px', color: '#fcd34d', fontWeight: '900', letterSpacing: '1px' }}>
+                    YOUR RANK
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <h1 style={{ margin: 0, fontSize: '32px', fontWeight: '900', color: '#fbbf24', fontFamily: 'monospace' }}>
+                        #{userRank}
+                      </h1>
+                      <p style={{ margin: '5px 0 0 0', fontSize: '11px', color: theme.text }}>
+                        {stats.xp.toLocaleString()} XP • {currentRank}
+                      </p>
+                    </div>
+                    {isJupiterMobile && (
+                      <div style={{
+                        background: 'rgba(0, 194, 255, 0.2)',
+                        padding: '6px 10px',
+                        borderRadius: '6px',
+                        border: '1px solid #00c2ff'
+                      }}>
+                        <p style={{ margin: 0, fontSize: '10px', color: '#00c2ff', fontWeight: '900' }}>📱 MOBILE</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Top 10 Leaderboard */}
+              <div style={{ background: theme.panel, padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}` }}>
+                <h3 style={{ margin: '0 0 12px 0', fontSize: '12px', fontWeight: '900', color: theme.accent }}>
+                  TOP 10 HUNTERS
+                </h3>
+
+                {leaderboardData.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '20px', color: theme.textDim }}>
+                    <p style={{ margin: '0 0 8px 0', fontSize: '24px' }}>👻</p>
+                    <p style={{ margin: 0, fontSize: '11px' }}>No hunters yet. Be the first to burn!</p>
+                  </div>
+                ) : (
+                  leaderboardData.map((player, index) => {
+                    const isTop3 = index < 3;
+                    const trophies = ['🥇', '🥈', '🥉'];
+                    const truncatedWallet = player.isUser
+                      ? 'YOU'
+                      : `${player.wallet.slice(0, 4)}...${player.wallet.slice(-4)}`;
+
+                    return (
+                      <div
+                        key={player.wallet}
+                        style={{
+                          padding: '10px',
+                          background: player.isUser ? 'rgba(251, 191, 36, 0.1)' : theme.bg,
+                          borderRadius: '6px',
+                          marginBottom: '8px',
+                          border: player.isUser ? '1px solid #fbbf24' : `1px solid ${theme.border}`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px'
+                        }}
+                      >
+                        {/* Rank */}
+                        <div style={{
+                          minWidth: '30px',
+                          textAlign: 'center',
+                          fontSize: isTop3 ? '18px' : '12px',
+                          fontWeight: '900',
+                          color: isTop3 ? '#fbbf24' : theme.textDim
+                        }}>
+                          {isTop3 ? trophies[index] : `#${index + 1}`}
+                        </div>
+
+                        {/* Player Info */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+                            <p style={{
+                              margin: 0,
+                              fontSize: '11px',
+                              fontWeight: '900',
+                              color: player.isUser ? '#fbbf24' : theme.text,
+                              fontFamily: 'monospace',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {truncatedWallet}
+                            </p>
+                            {player.isMobile && (
+                              <span style={{ fontSize: '10px' }}>📱</span>
+                            )}
+                          </div>
+                          <p style={{ margin: 0, fontSize: '9px', color: theme.textDim }}>
+                            {player.xp.toLocaleString()} XP • {player.solReclaimed} SOL
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Mobile Exclusive Section */}
+              {isJupiterMobile && (
+                <div style={{
+                  marginTop: '15px',
+                  background: 'rgba(0, 194, 255, 0.1)',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #00c2ff'
+                }}>
+                  <p style={{ margin: '0 0 6px 0', fontSize: '10px', color: '#00c2ff', fontWeight: '900', letterSpacing: '1px' }}>
+                    📱 MOBILE EXCLUSIVE
+                  </p>
+                  <p style={{ margin: 0, fontSize: '11px', color: theme.text }}>
+                    Earning <strong style={{ color: '#00c2ff' }}>3x XP</strong> on Jupiter Mobile
+                  </p>
+                </div>
               )}
             </div>
-
-            {/* Mobile Exclusive Section */}
-            {isJupiterMobile && (
-              <div style={{
-                marginTop: '15px',
-                background: 'rgba(0, 194, 255, 0.1)',
-                padding: '12px',
-                borderRadius: '8px',
-                border: '1px solid #00c2ff'
-              }}>
-                <p style={{ margin: '0 0 6px 0', fontSize: '10px', color: '#00c2ff', fontWeight: '900', letterSpacing: '1px' }}>
-                  📱 MOBILE EXCLUSIVE
-                </p>
-                <p style={{ margin: 0, fontSize: '11px', color: theme.text }}>
-                  Earning <strong style={{ color: '#00c2ff' }}>3x XP</strong> on Jupiter Mobile
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* VIEW 7: ACHIEVEMENTS */}
-        {view === 'ACHIEVEMENTS' && (
-          <div style={{ minHeight: '100vh', paddingBottom: '90px' }}>
-            <AchievementGallery
-              earnedAchievements={earnedAchievements}
-              stats={stats}
-              context={{
-                jupsolBalance,
-                predictions: predictionHistory,
-                isJupiterMobile,
-                userRank,
-              }}
-              theme={theme}
-            />
-          </div>
-        )}
-
-        {/* VIEW 8: REFERRALS */}
-        {view === 'REFERRALS' && (
-          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px 15px 100px 15px' }}>
-            <ReferralPanel
-              wallet={publicKey?.toString()}
-              theme={theme}
-              onCopy={() => {
-                triggerHaptic('light');
-                triggerConfetti('success');
-              }}
-              onShare={(platform) => {
-                triggerHaptic('medium');
-                console.log('Shared on:', platform);
-              }}
-            />
-          </div>
-        )}
-
-      </div>
-
-      {/* FOOTER NAV - Streamlined to 6 core actions */}
-      <nav style={{
-        position: 'fixed',
-        bottom: 0,
-        width: '100%',
-        height: 'calc(70px + env(safe-area-inset-bottom))',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-        background: theme.bg,
-        borderTop: `1px solid ${theme.border}`,
-        display: 'flex',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        zIndex: 1000
-      }}>
-        <button onClick={() => setView('SCANNER')} style={{ background: 'none', border: 'none', color: view === 'SCANNER' ? theme.accent : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <Crosshair size={24} />
-          <span style={{ fontSize: '9px' }}>SCAN</span>
-        </button>
-        <button onClick={() => setView('INVENTORY')} style={{ background: 'none', border: 'none', color: view === 'INVENTORY' ? '#ff0055' : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <Ghost size={24} />
-          <span style={{ fontSize: '9px' }}>BURN</span>
-        </button>
-        <button onClick={() => setView('PROPHECY')} style={{ background: 'none', border: 'none', color: view === 'PROPHECY' ? '#a855f7' : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <div style={{ fontSize: '24px' }}>🔮</div>
-          <span style={{ fontSize: '9px' }}>PREDICT</span>
-        </button>
-        <button onClick={() => setView('YIELD')} style={{ background: 'none', border: 'none', color: view === 'YIELD' ? '#00c2ff' : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <div style={{ fontSize: '24px' }}>💰</div>
-          <span style={{ fontSize: '9px' }}>YIELD</span>
-        </button>
-        <button onClick={() => setView('LEADERBOARD')} style={{ background: 'none', border: 'none', color: view === 'LEADERBOARD' ? '#fbbf24' : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <div style={{ fontSize: '24px' }}>🏆</div>
-          <span style={{ fontSize: '9px' }}>RANKS</span>
-        </button>
-        <button onClick={() => setShowMenu(true)} style={{ background: 'none', border: 'none', color: theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', position: 'relative' }}>
-          <Settings size={24} />
-          <span style={{ fontSize: '9px' }}>MORE</span>
-          {earnedAchievements.length > 0 && (
-            <span style={{
-              position: 'absolute',
-              top: '-2px',
-              right: '-2px',
-              background: theme.accent,
-              color: '#000',
-              borderRadius: '50%',
-              width: '14px',
-              height: '14px',
-              fontSize: '8px',
-              fontWeight: '900',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              {earnedAchievements.length}
-            </span>
           )}
-        </button>
-      </nav>
 
-      {shake && <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(255,0,0,0.2)', zIndex: 2000, pointerEvents: 'none' }} />}
-      <AnimatePresence>
-        {lootDrops.map(l => (
-          <motion.div key={l.id} initial={{ opacity: 0, y: 0, scale: 0.5 }} animate={{ opacity: [0, 1, 0], y: -100, scale: 1.5 }} className="fixed top-1/2 left-1/2 transform -translate-x-1/2 z-[3000] pointer-events-none">
-            <div style={{ color: '#fbbf24', fontWeight: '900', fontSize: '24px', textShadow: '0 0 10px #fbbf24' }}><Zap fill="currentColor" /> {l.text}</div>
-          </motion.div>
-        ))}
-      </AnimatePresence>
+          {/* VIEW 7: ACHIEVEMENTS */}
+          {view === 'ACHIEVEMENTS' && (
+            <div style={{ minHeight: '100vh', paddingBottom: '90px' }}>
+              <AchievementGallery
+                earnedAchievements={earnedAchievements}
+                stats={stats}
+                context={{
+                  jupsolBalance,
+                  predictions: predictionHistory,
+                  isJupiterMobile,
+                  userRank,
+                }}
+                theme={theme}
+              />
+            </div>
+          )}
 
-      {/* ONBOARDING TOUR */}
-      <OnboardingTour
-        show={showTour}
-        currentStep={tourStep}
-        onNext={handleTourNext}
-        onSkip={handleTourSkip}
-        theme={theme}
-      />
+          {/* VIEW 8: REFERRALS */}
+          {view === 'REFERRALS' && (
+            <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px 15px 100px 15px' }}>
+              <ReferralPanel
+                wallet={publicKey?.toString()}
+                theme={theme}
+                onCopy={() => {
+                  triggerHaptic('light');
+                  triggerConfetti('success');
+                }}
+                onShare={(platform) => {
+                  triggerHaptic('medium');
+                  console.log('Shared on:', platform);
+                }}
+              />
+            </div>
+          )}
 
-      {/* Achievement Unlock Modal */}
-      <AchievementModal
-        achievement={achievementToShow}
-        isOpen={!!achievementToShow}
-        onClose={() => setAchievementToShow(null)}
-      />
-    </main>
+        </div>
+
+        {/* FOOTER NAV - Streamlined to 6 core actions */}
+        <nav style={{
+          position: 'fixed',
+          bottom: 0,
+          width: '100%',
+          height: 'calc(70px + env(safe-area-inset-bottom))',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+          background: theme.bg,
+          borderTop: `1px solid ${theme.border}`,
+          display: 'flex',
+          justifyContent: 'space-around',
+          alignItems: 'center',
+          zIndex: 1000
+        }}>
+          <button onClick={() => setView('SCANNER')} style={{ background: 'none', border: 'none', color: view === 'SCANNER' ? theme.accent : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+            <Crosshair size={24} />
+            <span style={{ fontSize: '9px' }}>SCAN</span>
+          </button>
+          <button onClick={() => setView('INVENTORY')} style={{ background: 'none', border: 'none', color: view === 'INVENTORY' ? '#ff0055' : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+            <Ghost size={24} />
+            <span style={{ fontSize: '9px' }}>BURN</span>
+          </button>
+          <button onClick={() => setView('PROPHECY')} style={{ background: 'none', border: 'none', color: view === 'PROPHECY' ? '#a855f7' : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+            <div style={{ fontSize: '24px' }}>🔮</div>
+            <span style={{ fontSize: '9px' }}>PREDICT</span>
+          </button>
+          <button onClick={() => setView('YIELD')} style={{ background: 'none', border: 'none', color: view === 'YIELD' ? '#00c2ff' : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+            <div style={{ fontSize: '24px' }}>💰</div>
+            <span style={{ fontSize: '9px' }}>YIELD</span>
+          </button>
+          <button onClick={() => setView('LEADERBOARD')} style={{ background: 'none', border: 'none', color: view === 'LEADERBOARD' ? '#fbbf24' : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+            <div style={{ fontSize: '24px' }}>🏆</div>
+            <span style={{ fontSize: '9px' }}>RANKS</span>
+          </button>
+          <button onClick={() => setShowMenu(true)} style={{ background: 'none', border: 'none', color: theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', position: 'relative' }}>
+            <Settings size={24} />
+            <span style={{ fontSize: '9px' }}>MORE</span>
+            {earnedAchievements.length > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: '-2px',
+                right: '-2px',
+                background: theme.accent,
+                color: '#000',
+                borderRadius: '50%',
+                width: '14px',
+                height: '14px',
+                fontSize: '8px',
+                fontWeight: '900',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                {earnedAchievements.length}
+              </span>
+            )}
+          </button>
+        </nav>
+
+        {shake && <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(255,0,0,0.2)', zIndex: 2000, pointerEvents: 'none' }} />}
+        <AnimatePresence>
+          {lootDrops.map(l => (
+            <motion.div key={l.id} initial={{ opacity: 0, y: 0, scale: 0.5 }} animate={{ opacity: [0, 1, 0], y: -100, scale: 1.5 }} className="fixed top-1/2 left-1/2 transform -translate-x-1/2 z-[3000] pointer-events-none">
+              <div style={{ color: '#fbbf24', fontWeight: '900', fontSize: '24px', textShadow: '0 0 10px #fbbf24' }}><Zap fill="currentColor" /> {l.text}</div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+
+        {/* ONBOARDING TOUR */}
+        <OnboardingTour
+          show={showTour}
+          currentStep={tourStep}
+          onNext={handleTourNext}
+          onSkip={handleTourSkip}
+          theme={theme}
+        />
+
+        {/* Achievement Unlock Modal */}
+        <AchievementModal
+          achievement={achievementToShow}
+          isOpen={!!achievementToShow}
+          onClose={() => setAchievementToShow(null)}
+        />
+      </main>
+    </WalletModalProvider>
   );
 }
 

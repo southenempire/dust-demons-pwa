@@ -21,3 +21,4 @@ export default function AppWalletProvider({ children }) {
     </ConnectionProvider>
   );
 }
+// Force rebuild
