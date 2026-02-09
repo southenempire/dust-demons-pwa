@@ -17,6 +17,9 @@ import { trackEvent, AnalyticsEvents, PerformanceMonitor, TransactionMonitor } f
 import { canBurn, canSwap, canScan, canPredict } from '@/utils/rate-limiter';
 import OnboardingTour from '@/components/OnboardingTour';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import AchievementModal from '@/components/AchievementModal';
+import AchievementGallery from '@/components/AchievementGallery';
+import { checkAchievements, getAllAchievements } from '@/lib/nft/achievementTracker';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 // ⚡ RPC CONFIGURATION (DAS API endpoint for asset fetching)
@@ -151,6 +154,10 @@ export default function Home() {
 
   // 🏆 LEADERBOARD STATE
   const [leaderboardData, setLeaderboardData] = useState([]);
+
+  // 🏆 ACHIEVEMENT STATE
+  const [earnedAchievements, setEarnedAchievements] = useState([]);
+  const [achievementToShow, setAchievementToShow] = useState(null);
   const [userRank, setUserRank] = useState(null);
 
   // JupSOL Yield
@@ -1987,6 +1994,29 @@ export default function Home() {
         <button onClick={() => setView('LEADERBOARD')} style={{ background: 'none', border: 'none', color: view === 'LEADERBOARD' ? '#fbbf24' : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
           <div style={{ fontSize: '24px' }}>🏆</div>
           <span style={{ fontSize: '9px' }}>RANKS</span>
+        </button>
+        <button onClick={() => setView('ACHIEVEMENTS')} style={{ background: 'none', border: 'none', color: view === 'ACHIEVEMENTS' ? theme.accent : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', position: 'relative' }}>
+          <div style={{ fontSize: '24px' }}>🎯</div>
+          <span style={{ fontSize: '9px' }}>BADGES</span>
+          {earnedAchievements.length > 0 && (
+            <span style={{
+              position: 'absolute',
+              top: '-2px',
+              right: '2px',
+              background: theme.accent,
+              color: '#000',
+              borderRadius: '50%',
+              width: '16px',
+              height: '16px',
+              fontSize: '9px',
+              fontWeight: '900',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              {earnedAchievements.length}
+            </span>
+          )}
         </button>
         <button onClick={() => setShowMenu(true)} style={{ background: 'none', border: 'none', color: theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
           <Settings size={24} />
