@@ -408,6 +408,9 @@ export default function Home() {
 
         const data = await response.json();
 
+        console.log('📊 Leaderboard data:', data);
+        console.log('📊 Top players count:', data.topPlayers?.length || 0);
+
         setLeaderboardData(data.topPlayers || []);
         if (data.userRank) {
           setUserRank(data.userRank.rank);
@@ -1857,64 +1860,72 @@ export default function Home() {
               <h3 style={{ margin: '0 0 12px 0', fontSize: '12px', fontWeight: '900', color: theme.accent }}>
                 TOP 10 HUNTERS
               </h3>
-              {leaderboardData.map((player, index) => {
-                const isTop3 = index < 3;
-                const trophies = ['🥇', '🥈', '🥉'];
-                const truncatedWallet = player.isUser
-                  ? 'YOU'
-                  : `${player.wallet.slice(0, 4)}...${player.wallet.slice(-4)}`;
 
-                return (
-                  <div
-                    key={player.wallet}
-                    style={{
-                      padding: '10px',
-                      background: player.isUser ? 'rgba(251, 191, 36, 0.1)' : theme.bg,
-                      borderRadius: '6px',
-                      marginBottom: '8px',
-                      border: player.isUser ? '1px solid #fbbf24' : `1px solid ${theme.border}`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px'
-                    }}
-                  >
-                    {/* Rank */}
-                    <div style={{
-                      minWidth: '30px',
-                      textAlign: 'center',
-                      fontSize: isTop3 ? '18px' : '12px',
-                      fontWeight: '900',
-                      color: isTop3 ? '#fbbf24' : theme.textDim
-                    }}>
-                      {isTop3 ? trophies[index] : `#${index + 1}`}
-                    </div>
+              {leaderboardData.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '20px', color: theme.textDim }}>
+                  <p style={{ margin: '0 0 8px 0', fontSize: '24px' }}>👻</p>
+                  <p style={{ margin: 0, fontSize: '11px' }}>No hunters yet. Be the first to burn!</p>
+                </div>
+              ) : (
+                leaderboardData.map((player, index) => {
+                  const isTop3 = index < 3;
+                  const trophies = ['🥇', '🥈', '🥉'];
+                  const truncatedWallet = player.isUser
+                    ? 'YOU'
+                    : `${player.wallet.slice(0, 4)}...${player.wallet.slice(-4)}`;
 
-                    {/* Player Info */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
-                        <p style={{
-                          margin: 0,
-                          fontSize: '11px',
-                          fontWeight: '900',
-                          color: player.isUser ? '#fbbf24' : theme.text,
-                          fontFamily: 'monospace',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}>
-                          {truncatedWallet}
-                        </p>
-                        {player.isMobile && (
-                          <span style={{ fontSize: '10px' }}>📱</span>
-                        )}
+                  return (
+                    <div
+                      key={player.wallet}
+                      style={{
+                        padding: '10px',
+                        background: player.isUser ? 'rgba(251, 191, 36, 0.1)' : theme.bg,
+                        borderRadius: '6px',
+                        marginBottom: '8px',
+                        border: player.isUser ? '1px solid #fbbf24' : `1px solid ${theme.border}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px'
+                      }}
+                    >
+                      {/* Rank */}
+                      <div style={{
+                        minWidth: '30px',
+                        textAlign: 'center',
+                        fontSize: isTop3 ? '18px' : '12px',
+                        fontWeight: '900',
+                        color: isTop3 ? '#fbbf24' : theme.textDim
+                      }}>
+                        {isTop3 ? trophies[index] : `#${index + 1}`}
                       </div>
-                      <p style={{ margin: 0, fontSize: '9px', color: theme.textDim }}>
-                        {player.xp.toLocaleString()} XP • {player.solReclaimed} SOL
-                      </p>
+
+                      {/* Player Info */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+                          <p style={{
+                            margin: 0,
+                            fontSize: '11px',
+                            fontWeight: '900',
+                            color: player.isUser ? '#fbbf24' : theme.text,
+                            fontFamily: 'monospace',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {truncatedWallet}
+                          </p>
+                          {player.isMobile && (
+                            <span style={{ fontSize: '10px' }}>📱</span>
+                          )}
+                        </div>
+                        <p style={{ margin: 0, fontSize: '9px', color: theme.textDim }}>
+                          {player.xp.toLocaleString()} XP • {player.solReclaimed} SOL
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
 
             {/* Mobile Exclusive Section */}
