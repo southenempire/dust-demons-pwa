@@ -399,11 +399,15 @@ export default function Home() {
     const fetchLeaderboard = async () => {
       try {
         const wallet = publicKey?.toString();
+        const timestamp = Date.now(); // Cache buster
         const url = wallet
-          ? `/api/leaderboard/rankings?wallet=${wallet}&limit=100`
-          : `/api/leaderboard/rankings?limit=100`;
+          ? `/api/leaderboard/rankings?wallet=${wallet}&limit=100&t=${timestamp}`
+          : `/api/leaderboard/rankings?limit=100&t=${timestamp}`;
 
-        const response = await fetch(url);
+        const response = await fetch(url, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' }
+        });
         if (!response.ok) throw new Error('Failed to fetch leaderboard');
 
         const data = await response.json();
