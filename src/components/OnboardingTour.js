@@ -198,25 +198,24 @@ export default function OnboardingTour({ show, currentStep, onNext, onSkip, them
                             <button
                                 onClick={onNext}
                                 style={{
-                                    padding: '10px 20px',
-                                    borderRadius: '8px',
+                                    padding: '12px 24px',
+                                    borderRadius: '12px',
                                     fontSize: '14px',
                                     fontWeight: '800',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '6px',
-                                    color: '#fff',
-                                    background: theme.accent,
-                                    border: `2px solid ${theme.accent}`,
-                                    boxShadow: `0 4px 16px ${theme.accent}70, 0 0 20px ${theme.accent}40`,
+                                    gap: '8px',
+                                    color: '#000',
+                                    background: `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent}dd 100%)`,
+                                    border: 'none',
+                                    boxShadow: `0 6px 20px ${theme.accent}50, 0 0 30px ${theme.accent}30, inset 0 1px 0 rgba(255,255,255,0.3)`,
                                     transition: 'all 0.2s',
                                     cursor: 'pointer',
                                     letterSpacing: '0.5px',
-                                    textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                                    textTransform: 'uppercase'
                                 }}
                             >
-                                {isLastStep ? 'START' : 'NEXT'}
-                                <ChevronRight size={16} strokeWidth={3} />
+                                {isLastStep ? '🚀 START' : 'NEXT ➜'}
                             </button>
                         </div>
                     </motion.div>

@@ -917,9 +917,31 @@ export default function Home() {
       <div className="scanner-line" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: `linear-gradient(90deg, transparent, ${theme.accent}, transparent)`, boxShadow: `0 0 15px ${theme.accent}`, zIndex: 5, animation: 'scan 2.5s linear infinite', pointerEvents: 'none' }} />
       <style jsx>{`@keyframes scan { 0% { top: -10%; opacity: 0; } 20% { opacity: 1; } 100% { top: 110%; opacity: 0; } }`}</style>
       <style jsx global>{`
-        .wallet-adapter-button { height: 36px !important; padding: 0 12px !important; font-size: 12px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; max-width: 140px !important; cursor: pointer !important; }
-        .wallet-adapter-button-trigger { background-color: ${theme.panel} !important; border: 1px solid ${theme.border} !important; color: ${theme.text} !important; }
-        @media (max-width: 400px) { .wallet-adapter-button { max-width: 100px !important; } }
+        .wallet-adapter-button { 
+          height: 40px !important; 
+          padding: 0 16px !important; 
+          font-size: 13px !important; 
+          font-weight: 700 !important;
+          white-space: nowrap !important; 
+          overflow: hidden !important; 
+          text-overflow: ellipsis !important; 
+          max-width: 160px !important; 
+          cursor: pointer !important;
+          border-radius: 8px !important;
+        }
+        .wallet-adapter-button-trigger { 
+          background-color: ${theme.panel} !important; 
+          border: 1.5px solid ${theme.accent} !important; 
+          color: ${theme.text} !important;
+          box-shadow: 0 2px 8px ${theme.accent}30 !important;
+        }
+        @media (max-width: 400px) { 
+          .wallet-adapter-button { 
+            max-width: 120px !important;
+            font-size: 12px !important;
+            padding: 0 12px !important;
+          } 
+        }
         
         /* Glassmorphism Buttons */
         .glass-button {
