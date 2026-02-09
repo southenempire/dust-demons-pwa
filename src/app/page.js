@@ -183,7 +183,7 @@ export default function Home() {
 
   // 🛡️ DAILY QUEST & LOGIN LOGIC
   useEffect(() => {
-    if (isMounted) {
+    if (isMounted && publicKey) { // Require wallet connection
       const today = new Date().toDateString();
       if (stats.lastLogin !== today) {
         const newStreak = stats.lastLogin === new Date(Date.now() - 86400000).toDateString() ? stats.streak + 1 : 1;
