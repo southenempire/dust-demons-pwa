@@ -1801,3 +1801,12 @@ function BountyPoster({ data, selected, onSelect, onSwap, theme }) {
     </motion.div>
   );
 }
+
+{/* ONBOARDING TOUR */ }
+<OnboardingTour
+  show={showTour}
+  currentStep={tourStep}
+  onNext={handleTourNext}
+  onSkip={handleTourSkip}
+  theme={theme}
+/>
