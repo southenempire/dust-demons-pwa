@@ -455,7 +455,7 @@ export default function Home() {
 
   // 🛡️ HELPERS
   const playSound = (key) => { if (audioEnabled && audioRefs.current[key]) { audioRefs.current[key].currentTime = 0; audioRefs.current[key].play().catch(() => { }); } };
-  const showModal = (type, title, message, actionLabel = 'OK', onConfirm = null) => { if (type !== 'SWAP_PROMPT') playSound('alert'); setModal({ isOpen: true, type, title, message, actionLabel, onConfirm }); };
+  const showModal = (type, title, message, onConfirm = null, actionLabel = 'OK') => { if (type !== 'SWAP_PROMPT') playSound('alert'); setModal({ isOpen: true, type, title, message, actionLabel, onConfirm }); };
   const closeModal = () => setModal(prev => ({ ...prev, isOpen: false }));
   const triggerHaptic = (pattern = 50) => { if (hapticsEnabled && window.navigator?.vibrate) window.navigator.vibrate(pattern); };
 
