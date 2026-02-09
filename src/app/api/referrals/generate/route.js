@@ -21,9 +21,9 @@ export async function POST(request) {
             .select('referrer_code')
             .eq('referrer_wallet', wallet)
             .limit(1)
-            .single();
+            .maybeSingle();
 
-        if (existing && !checkError) {
+        if (existing) {
             return NextResponse.json({
                 code: existing.referrer_code,
                 message: 'Existing code retrieved'

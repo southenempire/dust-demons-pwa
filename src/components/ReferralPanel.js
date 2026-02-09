@@ -164,43 +164,57 @@ export default function ReferralPanel({ wallet, theme, onCopy, onShare }) {
                 }}>
                     YOUR REFERRAL CODE
                 </label>
-                <div style={{
-                    display: 'flex',
-                    gap: '8px'
-                }}>
+                {referralCode ? (
                     <div style={{
-                        flex: 1,
-                        background: theme.bg,
-                        border: `1px solid ${theme.border}`,
-                        borderRadius: '8px',
-                        padding: '12px',
-                        fontSize: '18px',
-                        fontWeight: '900',
-                        color: theme.accent,
-                        textAlign: 'center',
-                        letterSpacing: '2px'
+                        display: 'flex',
+                        gap: '8px'
                     }}>
-                        {referralCode}
-                    </div>
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleCopyCode}
-                        style={{
-                            background: copied ? '#10B981' : theme.accent,
-                            border: 'none',
+                        <div style={{
+                            flex: 1,
+                            background: theme.bg,
+                            border: `1px solid ${theme.border}`,
                             borderRadius: '8px',
                             padding: '12px',
-                            cursor: 'pointer',
-                            color: '#000',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                    >
-                        <Copy size={20} />
-                    </motion.button>
-                </div>
+                            fontSize: '18px',
+                            fontWeight: '900',
+                            color: theme.accent,
+                            textAlign: 'center',
+                            letterSpacing: '2px'
+                        }}>
+                            {referralCode}
+                        </div>
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleCopyCode}
+                            style={{
+                                background: copied ? '#10B981' : theme.accent,
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '12px',
+                                cursor: 'pointer',
+                                color: '#000',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            <Copy size={20} />
+                        </motion.button>
+                    </div>
+                ) : (
+                    <div style={{
+                        background: '#ff005520',
+                        border: '1px solid #ff0055',
+                        borderRadius: '8px',
+                        padding: '12px',
+                        textAlign: 'center',
+                        color: '#ff0055',
+                        fontSize: '12px'
+                    }}>
+                        Unable to load code. Please reconnect wallet.
+                    </div>
+                )}
             </div>
 
             {/* Share Buttons */}
