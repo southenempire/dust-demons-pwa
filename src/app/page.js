@@ -2098,174 +2098,73 @@ export default function Home() {
         theme={theme}
       />
 
-      {/* SETTINGS MENU */}
-      <AnimatePresence>
-        {showMenu && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setShowMenu(false)}
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              background: 'rgba(0,0,0,0.8)',
-              zIndex: 2000,
-              display: 'flex',
-              alignItems: 'flex-end',
-              justifyContent: 'center',
-              backdropFilter: 'blur(4px)'
-            }}
-          >
-            <motion.div
-              initial={{ y: 300 }}
-              animate={{ y: 0 }}
-              exit={{ y: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                background: theme.panel,
-                width: '100%',
-                maxWidth: '500px',
-                borderTopLeftRadius: '20px',
-                borderTopRightRadius: '20px',
-                padding: '20px',
-                paddingBottom: '40px',
-                maxHeight: '80vh',
-                overflowY: 'auto'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: theme.text }}>MORE OPTIONS</h3>
-                <button onClick={() => setShowMenu(false)} style={{ background: 'none', border: 'none', color: theme.textDim, cursor: 'pointer' }}>
-                  <X size={24} />
-                </button>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {/* Badges */}
-                <button
-                  onClick={() => { setView('ACHIEVEMENTS'); setShowMenu(false); }}
-                  style={{
-                    background: theme.bg,
-                    border: `1px solid ${theme.border}`,
-                    borderRadius: '12px',
-                    padding: '16px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    cursor: 'pointer',
-                    transition: '0.2s',
-                    position: 'relative'
-                  }}
-                >
-                  <div style={{ fontSize: '32px' }}>🎯</div>
-                  <div style={{ flex: 1, textAlign: 'left' }}>
-                    <div style={{ fontSize: '14px', fontWeight: '900', color: theme.text }}>Achievement Badges</div>
-                    <div style={{ fontSize: '11px', color: theme.textDim }}>View your NFT achievements</div>
-                  </div>
-                  {earnedAchievements.length > 0 && (
-                    <span style={{
-                      background: theme.accent,
-                      color: '#000',
-                      borderRadius: '12px',
-                      padding: '4px 8px',
-                      fontSize: '11px',
-                      fontWeight: '900'
-                    }}>
-                      {earnedAchievements.length}
-                    </span>
-                  )}
-                </button>
-
-                {/* Referrals */}
-                <button
-                  onClick={() => { setView('REFERRALS'); setShowMenu(false); }}
-                  style={{
-                    background: theme.bg,
-                    border: `1px solid ${theme.border}`,
-                    borderRadius: '12px',
-                    padding: '16px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    cursor: 'pointer',
-                    transition: '0.2s'
-                  }}
-                >
-                  <div style={{ fontSize: '32px' }}>🎁</div>
-                  <div style={{ flex: 1, textAlign: 'left' }}>
-                    <div style={{ fontSize: '14px', fontWeight: '900', color: theme.text }}>Invite Friends</div>
-                    <div style={{ fontSize: '11px', color: theme.textDim }}>Earn +50 XP per referral</div>
-                  </div>
-                </button>
-
-                <div style={{ height: '1px', background: theme.border, margin: '10px 0' }} />
-
-                {/* Theme Toggle */}
-              </main >
-              );
+      {/* Achievement Unlock Modal */}
+      <AchievementModal
+        achievement={achievementToShow}
+        isOpen={!!achievementToShow}
+        onClose={() => setAchievementToShow(null)}
+      />
+    </main>
+  );
 }
 
-              // 🛡️ GAMIFIED POSTER COMPONENT
-              function BountyPoster({data, selected, onSelect, onSwap, theme}) {
-  const {isScam, isRentClaimable, isEmpty, isSafe, isHighValue, isNFT, isTradeable} = data;
+// 🛡️ GAMIFIED POSTER COMPONENT
+function BountyPoster({ data, selected, onSelect, onSwap, theme }) {
+  const { isScam, isRentClaimable, isEmpty, isSafe, isHighValue, isNFT, isTradeable } = data;
 
-              // 🛡️ GAMIFIED COLOR LOGIC
-              const mainColor = isTradeable ? '#00c2ff' : (isScam ? '#ff0055' : (isNFT ? '#a855f7' : '#fbbf24'));
-              const glow = selected ? `0 0 15px ${mainColor}` : 'none';
-              const bgStyle = selected ? `rgba(0,194,255,0.1)` : theme.panel;
-              const [imgError, setImgError] = useState(false);
+  // 🛡️ GAMIFIED COLOR LOGIC
+  const mainColor = isTradeable ? '#00c2ff' : (isScam ? '#ff0055' : (isNFT ? '#a855f7' : '#fbbf24'));
+  const glow = selected ? `0 0 15px ${mainColor}` : 'none';
+  const bgStyle = selected ? `rgba(0,194,255,0.1)` : theme.panel;
+  const [imgError, setImgError] = useState(false);
 
-              return (
-              <motion.div
-                onClick={isTradeable ? onSwap : onSelect}
-                whileHover={{ scale: 1.05, boxShadow: `0 0 25px ${mainColor}40` }}
-                whileTap={{ scale: 0.95 }}
-                style={{
-                  background: bgStyle,
-                  border: `1px solid ${mainColor}60`,
-                  borderRadius: '6px',
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                  position: 'relative',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: '170px',
-                  boxShadow: selected ? glow : `0 4px 10px rgba(0,0,0,0.2)`,
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                {/* 🛡️ RARE HOLO EFFECT */}
-                <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, transparent 40%, ${mainColor}20 50%, transparent 60%)`, opacity: 0.3, pointerEvents: 'none' }} />
+  return (
+    <motion.div
+      onClick={isTradeable ? onSwap : onSelect}
+      whileHover={{ scale: 1.05, boxShadow: `0 0 25px ${mainColor}40` }}
+      whileTap={{ scale: 0.95 }}
+      style={{
+        background: bgStyle,
+        border: `1px solid ${mainColor}60`,
+        borderRadius: '6px',
+        overflow: 'hidden',
+        cursor: 'pointer',
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '170px',
+        boxShadow: selected ? glow : `0 4px 10px rgba(0,0,0,0.2)`,
+        transition: 'all 0.2s ease'
+      }}
+    >
+      {/* 🛡️ RARE HOLO EFFECT */}
+      <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, transparent 40%, ${mainColor}20 50%, transparent 60%)`, opacity: 0.3, pointerEvents: 'none' }} />
 
-                {selected && <div style={{ position: 'absolute', inset: 0, border: `2px solid ${mainColor}`, zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)' }}><Scan size={40} color={mainColor} strokeWidth={2} /></div>}
+      {selected && <div style={{ position: 'absolute', inset: 0, border: `2px solid ${mainColor}`, zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)' }}><Scan size={40} color={mainColor} strokeWidth={2} /></div>}
 
-                {isRentClaimable && !selected && <div style={{ position: 'absolute', inset: 0, border: '2px solid #00ff41', opacity: 0.5, animation: 'pulse 2s infinite' }} />}
+      {isRentClaimable && !selected && <div style={{ position: 'absolute', inset: 0, border: '2px solid #00ff41', opacity: 0.5, animation: 'pulse 2s infinite' }} />}
 
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(180deg, ${mainColor}15 0%, transparent 100%)`, position: 'relative' }}>
-                  <div style={{ position: 'absolute', top: 8, right: 8 }}>{isTradeable ? <ArrowRightLeft size={16} color="#00c2ff" /> : (isScam ? <Skull size={16} color="#ff0055" /> : (isNFT ? <ImageIcon size={16} color="#a855f7" /> : <Target size={16} color="#fbbf24" />))}</div>
-                  <div style={{ width: '64px', height: '64px', borderRadius: '50%', border: `2px solid ${mainColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', boxShadow: `0 0 20px ${mainColor}30` }}>
-                    {data.image && !imgError ? <img src={data.image} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} onError={() => setImgError(true)} /> : <Ghost size={28} color={mainColor} />}
-                  </div>
-                </div>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(180deg, ${mainColor}15 0%, transparent 100%)`, position: 'relative' }}>
+        <div style={{ position: 'absolute', top: 8, right: 8 }}>{isTradeable ? <ArrowRightLeft size={16} color="#00c2ff" /> : (isScam ? <Skull size={16} color="#ff0055" /> : (isNFT ? <ImageIcon size={16} color="#a855f7" /> : <Target size={16} color="#fbbf24" />))}</div>
+        <div style={{ width: '64px', height: '64px', borderRadius: '50%', border: `2px solid ${mainColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', boxShadow: `0 0 20px ${mainColor}30` }}>
+          {data.image && !imgError ? <img src={data.image} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} onError={() => setImgError(true)} /> : <Ghost size={28} color={mainColor} />}
+        </div>
+      </div>
 
-                <div style={{ padding: '12px', borderTop: `1px solid ${mainColor}20`, background: theme.panel }}>
-                  <h4 style={{ margin: 0, fontSize: '11px', fontWeight: '900', color: theme.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'center', letterSpacing: '0.5px', textTransform: 'uppercase' }}>{data.name}</h4>
-                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '8px' }}>
-                    <span style={{
-                      fontSize: '9px', padding: '3px 8px', borderRadius: '2px',
-                      background: isTradeable ? 'rgba(0,194,255,0.15)' : 'rgba(251,191,36,0.1)',
-                      color: mainColor, fontWeight: '900', border: `1px solid ${mainColor}40`, textTransform: 'uppercase', letterSpacing: '1px'
-                    }}>
-                      {isTradeable ? 'YIELD FARM' : (isScam ? 'THREAT' : (isNFT ? 'NFT DUST' : 'TARGET'))}
-                    </span>
-                  </div>
-                  <p style={{ margin: '6px 0 0 0', fontSize: '10px', color: theme.textDim, textAlign: 'center', fontFamily: 'monospace' }}>${data.value.toFixed(2)}</p>
-                </div>
-              </motion.div>
-              );
+      <div style={{ padding: '12px', borderTop: `1px solid ${mainColor}20`, background: theme.panel }}>
+        <h4 style={{ margin: 0, fontSize: '11px', fontWeight: '900', color: theme.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'center', letterSpacing: '0.5px', textTransform: 'uppercase' }}>{data.name}</h4>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '8px' }}>
+          <span style={{
+            fontSize: '9px', padding: '3px 8px', borderRadius: '2px',
+            background: isTradeable ? 'rgba(0,194,255,0.15)' : 'rgba(251,191,36,0.1)',
+            color: mainColor, fontWeight: '900', border: `1px solid ${mainColor}40`, textTransform: 'uppercase', letterSpacing: '1px'
+          }}>
+            {isTradeable ? 'YIELD FARM' : (isScam ? 'THREAT' : (isNFT ? 'NFT DUST' : 'TARGET'))}
+          </span>
+        </div>
+        <p style={{ margin: '6px 0 0 0', fontSize: '10px', color: theme.textDim, textAlign: 'center', fontFamily: 'monospace' }}>${data.value.toFixed(2)}</p>
+      </div>
+    </motion.div>
+  );
 }
 
