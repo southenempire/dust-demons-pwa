@@ -22,11 +22,6 @@ import '@solana/wallet-adapter-react-ui/styles.css';
 // ⚡ RPC CONFIGURATION (DAS API endpoint for asset fetching)
 const HELIUS_DAS_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.helius-rpc.com/?api-key=19b096d1-dce5-49a3-ad44-5e7876db7661';
 
-// Debug: Log RPC URL (remove in production)
-if (typeof window !== 'undefined') {
-  console.log('🔧 RPC URL loaded:', HELIUS_DAS_URL ? '✅ Set' : '❌ Missing');
-}
-
 // 🎯 JUPITER CONFIG
 const JUP_SOL_MINT = 'jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjx93v';
 
