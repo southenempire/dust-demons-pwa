@@ -16,6 +16,7 @@ import { TokenSkeleton, BalanceSkeleton, StatsSkeleton } from '@/components/Load
 import { trackEvent, AnalyticsEvents, PerformanceMonitor, TransactionMonitor } from '@/utils/analytics';
 import { canBurn, canSwap, canScan, canPredict } from '@/utils/rate-limiter';
 import OnboardingTour from '@/components/OnboardingTour';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 // ⚡ RPC CONFIGURATION (DAS API endpoint for asset fetching)
@@ -1323,7 +1324,7 @@ export default function Home() {
                 <button onClick={handleToggleSelectAll} className="glass-button" style={{ padding: '6px 12px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px', color: '#fbbf24' }}>{selectedIds.length === result.targets.length ? 'DESELECT ALL' : 'SELECT ALL'}</button>
               </div>
               <button onClick={confirmExorcism} disabled={!selectedIds.length || burningId} className="glass-button" style={{ width: '100%', padding: '14px', background: selectedIds.length ? '#ff0055' : 'rgba(255, 255, 255, 0.05)', color: selectedIds.length ? '#fff' : theme.textDim, borderRadius: '4px', fontWeight: '900', letterSpacing: '2px' }}>
-                {burningId ? <Activity className="animate-spin" size={16} /> : `EXECUTE BURN`}
+                {burningId ? <LoadingSpinner theme={theme} type="flame" size={20} /> : `EXECUTE BURN`}
               </button>
             </div>
 
