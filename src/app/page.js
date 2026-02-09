@@ -466,7 +466,75 @@ export default function Home() {
   const playSound = (key) => { if (audioEnabled && audioRefs.current[key]) { audioRefs.current[key].currentTime = 0; audioRefs.current[key].play().catch(() => { }); } };
   const showModal = (type, title, message, onConfirm = null, actionLabel = 'OK') => { if (type !== 'SWAP_PROMPT') playSound('alert'); setModal({ isOpen: true, type, title, message, actionLabel, onConfirm }); };
   const closeModal = () => setModal(prev => ({ ...prev, isOpen: false }));
-  const triggerHaptic = (pattern = 50) => { if (hapticsEnabled && window.navigator?.vibrate) window.navigator.vibrate(pattern); };
+
+  // Enhanced haptic feedback with patterns
+  const triggerHaptic = (type = 'light') => {
+    if (!hapticsEnabled || !window.navigator?.vibrate) return;
+
+    const patterns = {
+      light: 50,           // Button press
+      medium: 100,         // Successful scan
+      strong: [100, 50, 100],  // Burn complete
+      success: [50, 30, 50, 30, 50],  // Achievement
+      error: [200, 100, 200]   // Error state
+    };
+
+    window.navigator.vibrate(patterns[type] || patterns.light);
+  };
+
+  // 🎉 Confetti celebration
+  const triggerConfetti = (type = 'default') => {
+    const colors = [theme.accent, '#FFD700', '#FFA500'];
+
+    if (type === 'burn') {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: colors
+      });
+    } else if (type === 'achievement') {
+      confetti({
+        particleCount: 150,
+        spread: 100,
+        origin: { y: 0.5 },
+        colors: colors,
+        ticks: 200
+      });
+    } else {
+      confetti({
+        particleCount: 50,
+        spread: 50,
+        origin: { y: 0.7 },
+        colors: colors
+      });
+    }
+  };
+
+  // 📳 Screen shake effect
+  const triggerScreenShake = () => {
+    const app = document.querySelector('main');
+    if (!app) return;
+
+    app.style.animation = 'shake 0.5s';
+    setTimeout(() => {
+      app.style.animation = '';
+    }, 500);
+  };
+
+  // 🔢 Animate number count-up
+  const animateNumber = (start, end, duration, callback) => {
+    const startTime = Date.now();
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easeOutQuad = 1 - (1 - progress) * (1 - progress);
+      const current = Math.floor(start + (end - start) * easeOutQuad);
+      callback(current);
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+    animate();
+  };
 
   const handleShare = (action = 'general', data = null) => {
     let text = "I'm cleaning up my Solana wallet with Dust Demons! 🧹💀";
@@ -891,6 +959,11 @@ export default function Home() {
         time: new Date().toLocaleTimeString()
       }, ...prev]);
 
+      // 🎉 GAME FEEL: Confetti + Shake + Haptic
+      triggerConfetti('burn');
+      triggerScreenShake();
+      triggerHaptic('strong');
+
       setTimeout(() => {
         showModal('SUCCESS', 'EXORCISM COMPLETE', `You recovered ${rent} SOL. Share to recruit more Hunters?`, () => {
           handleShare('burn');
@@ -915,7 +988,19 @@ export default function Home() {
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: `linear-gradient(${theme.grid} 1px, transparent 1px), linear-gradient(90deg, ${theme.grid} 1px, transparent 1px)`, backgroundSize: '30px 30px' }} />
       <div style={{ position: 'absolute', inset: 0, background: theme.vignette, zIndex: 1 }} />
       <div className="scanner-line" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: `linear-gradient(90deg, transparent, ${theme.accent}, transparent)`, boxShadow: `0 0 15px ${theme.accent}`, zIndex: 5, animation: 'scan 2.5s linear infinite', pointerEvents: 'none' }} />
-      <style jsx>{`@keyframes scan { 0% { top: -10%; opacity: 0; } 20% { opacity: 1; } 100% { top: 110%; opacity: 0; } }`}</style>
+      <style jsx>{`
+        @keyframes scan { 
+          0% { top: -10%; opacity: 0; } 
+          20% { opacity: 1; } 
+          100% { top: 110%; opacity: 0; } 
+        }
+        
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+          20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+      `}</style>
       <style jsx global>{`
         .wallet-adapter-button { 
           height: 40px !important; 
@@ -949,7 +1034,7 @@ export default function Home() {
           backdrop-filter: blur(10px) !important;
           border: 1px solid rgba(255, 255, 255, 0.15) !important;
           box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
-          transition: all 0.3s ease !important;
+          transition: all 0.2s ease !important;
           cursor: pointer !important;
         }
         .glass-button:hover:not(:disabled) {
@@ -958,9 +1043,28 @@ export default function Home() {
           transform: translateY(-2px) !important;
           box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5) !important;
         }
+        .glass-button:active:not(:disabled) {
+          transform: translateY(0) scale(0.98) !important;
+          box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.3) !important;
+        }
         .glass-button:disabled {
           opacity: 0.5 !important;
           cursor: not-allowed !important;
+        }
+        
+        /* All Button Active States */
+        button:active:not(:disabled) {
+          transform: scale(0.95) !important;
+        }
+        
+        /* Pulse Animation for Important Buttons */
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.05); opacity: 0.9; }
+        }
+        
+        .pulse-animation {
+          animation: pulse 2s ease-in-out infinite;
         }
         
         button { cursor: pointer !important; }
@@ -1039,7 +1143,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <div style={{ transform: 'scale(0.85)' }}><WalletMultiButton /></div>
+        <div style={{ transform: 'scale(0.85)' }} className={!publicKey ? 'pulse-animation' : ''}><WalletMultiButton /></div>
       </header>
 
       {/* MENU */}
