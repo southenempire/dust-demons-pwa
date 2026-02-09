@@ -13,27 +13,41 @@ export default function ReferralPanel({ wallet, theme, onCopy, onShare }) {
 
     // Fetch or generate referral code
     useEffect(() => {
-        if (!wallet) return;
+        if (!wallet) {
+            console.log('ReferralPanel: No wallet connected');
+            return;
+        }
+
+        console.log('ReferralPanel: Fetching referral data for wallet:', wallet);
 
         async function fetchReferralData() {
             try {
                 // Generate code if doesn't exist
+                console.log('ReferralPanel: Calling /api/referrals/generate');
                 const genRes = await fetch('/api/referrals/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ wallet })
                 });
                 const genData = await genRes.json();
-                setReferralCode(genData.code);
+                console.log('ReferralPanel: Generate response:', genData);
+
+                if (genData.code) {
+                    setReferralCode(genData.code);
+                } else {
+                    console.error('ReferralPanel: No code in response:', genData);
+                }
 
                 // Fetch stats
+                console.log('ReferralPanel: Calling /api/referrals/stats');
                 const statsRes = await fetch(`/api/referrals/stats?wallet=${wallet}`);
                 const statsData = await statsRes.json();
+                console.log('ReferralPanel: Stats response:', statsData);
                 setStats(statsData);
 
                 setLoading(false);
             } catch (error) {
-                console.error('Referral data fetch error:', error);
+                console.error('ReferralPanel: Fetch error:', error);
                 setLoading(false);
             }
         }
