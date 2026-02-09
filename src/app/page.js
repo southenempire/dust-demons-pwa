@@ -142,6 +142,7 @@ export default function Home() {
   const [dailyPrediction, setDailyPrediction] = useState(null); // { date, prediction: 'up'/'down', targetPrice, result: null/'correct'/'wrong' }
   const [predictionHistory, setPredictionHistory] = useState([]);
   const [timeUntilNextPrediction, setTimeUntilNextPrediction] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(''); // 🕒 Visual Timer
 
   // 💰 JUPSOL YIELD STATE
   const [jupsolBalance, setJupsolBalance] = useState(0);
