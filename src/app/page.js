@@ -270,7 +270,7 @@ export default function Home() {
                   showModal('SUCCESS', 'YIELD SECURED', 'Target converted to JupSOL. Earning APY now.', () => {
                     handleShare('swap');
                     closeModal();
-                  });
+                  }, 'SHARE ON X');
                 }, 1500);
               },
             });
@@ -788,7 +788,10 @@ export default function Home() {
 
     triggerConfetti();
 
-    showModal('SUCCESS', 'PREDICTION LOCKED', `You predicted SOL will go ${direction.toUpperCase()}!\\nEntry: $${currentSOLPrice.toFixed(2)}\\nTime: 5 Minutes`);
+    showModal('SUCCESS', 'PREDICTION LOCKED', `You predicted SOL will go ${direction.toUpperCase()}!\\nEntry: $${currentSOLPrice.toFixed(2)}\\nTime: 5 Minutes`, () => {
+      handleShare('prediction', prediction);
+      closeModal();
+    }, 'SHARE ON X');
   };
 
   const checkPredictionResult = async () => {
@@ -833,10 +836,16 @@ export default function Home() {
 
     if (isCorrect) {
       setStats(s => ({ ...s, xp: s.xp + bonusXP }));
-      showModal('SUCCESS', '💰 PROFIT!', `Prediction CORRECT!\\nEntry: $${dailyPrediction.startPrice.toFixed(2)}\\nExit: $${finalPrice.toFixed(2)}\\n\\n+${bonusXP} XP`);
+      showModal('SUCCESS', '💰 PROFIT!', `Prediction CORRECT!\\nEntry: $${dailyPrediction.startPrice.toFixed(2)}\\nExit: $${finalPrice.toFixed(2)}\\n\\n+${bonusXP} XP`, () => {
+        handleShare('prediction', updatedPrediction);
+        closeModal();
+      }, 'SHARE WIN');
     } else {
       setStats(s => ({ ...s, xp: s.xp + bonusXP })); // Consolation XP
-      showModal('DANGER', 'REKT!', `Prediction WRONG.\\nEntry: $${dailyPrediction.startPrice.toFixed(2)}\\nExit: $${finalPrice.toFixed(2)}\\n\\n+${bonusXP} XP (Consolation)`);
+      showModal('DANGER', 'REKT!', `Prediction WRONG.\\nEntry: $${dailyPrediction.startPrice.toFixed(2)}\\nExit: $${finalPrice.toFixed(2)}\\n\\n+${bonusXP} XP (Consolation)`, () => {
+        handleShare('prediction', updatedPrediction);
+        closeModal();
+      }, 'SHARE ON X');
     }
   };
 
@@ -2067,11 +2076,30 @@ export default function Home() {
                         background: 'rgba(0, 194, 255, 0.2)',
                         padding: '6px 10px',
                         borderRadius: '6px',
-                        border: '1px solid #00c2ff'
+                        border: '1px solid #00c2ff',
+                        marginRight: '8px'
                       }}>
                         <p style={{ margin: 0, fontSize: '10px', color: '#00c2ff', fontWeight: '900' }}>📱 MOBILE</p>
                       </div>
                     )}
+                    <button
+                      onClick={() => handleShare('rank')}
+                      style={{
+                        background: 'rgba(251, 191, 36, 0.1)',
+                        border: '1px solid #fbbf24',
+                        color: '#fbbf24',
+                        borderRadius: '6px',
+                        padding: '6px 12px',
+                        fontSize: '10px',
+                        fontWeight: '900',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      SHARE
+                    </button>
                   </div>
                 </div>
               )}
