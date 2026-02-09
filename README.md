@@ -159,7 +159,11 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 1. Create a Supabase project at [supabase.com](https://supabase.com)
 2. Run the SQL schema from `supabase-schema.sql` in the SQL Editor
-3. Add environment variables to `.env.local` and Vercel
+3. Add environment variables to `.env.local`
+4. **Deploying to Vercel:**
+   - Import project to Vercel
+   - Add the same environment variables in Vercel Project Settings
+   - **Important:** If you add variables *after* deploying, you must **Redeploy** for them to take effect!
 
 ---
 
