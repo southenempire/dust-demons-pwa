@@ -1574,7 +1574,7 @@ export default function Home() {
                 </button>
               </div>
 
-              <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px', paddingBottom: '40px' }}>
+              <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '16px', paddingBottom: '40px' }}>
                 <AnimatePresence>
                   {result.targets.map((t, i) => (
                     <motion.div key={t.id} variants={itemVariants} layout>
