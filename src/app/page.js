@@ -1554,7 +1554,7 @@ export default function Home() {
         </AnimatePresence>
 
         {/* MAIN CONTENT AREA */}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', paddingBottom: '100px', zIndex: 10 }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', paddingBottom: 'calc(120px + env(safe-area-inset-bottom))', zIndex: 10 }}>
 
           {/* VIEW 1: SCANNER */}
           {view === 'SCANNER' && !loading && (
