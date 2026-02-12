@@ -24,6 +24,8 @@ import ReferralPanel from '@/components/ReferralPanel';
 import PredictionChart from '@/components/PredictionChart';
 import { checkAchievements, getAllAchievements } from '@/lib/nft/achievementTracker';
 import { detectReferralCode, trackReferralCompletion } from '@/lib/referrals';
+import PriceTicker from '@/components/PriceTicker';
+import SplashScreen from '@/components/SplashScreen';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 // ⚡ RPC CONFIGURATION (DAS API endpoint for asset fetching)
@@ -99,7 +101,6 @@ export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isJupiterMobile, setIsJupiterMobile] = useState(false);
   const [result, setResult] = useState(null);
   const [view, setView] = useState('SCANNER');
   const [burningId, setBurningId] = useState(null);
@@ -1217,6 +1218,7 @@ export default function Home() {
 
   return (
     <WalletModalProvider>
+      <SplashScreen />
       <main style={{ height: '100dvh', width: '100vw', backgroundColor: theme.bg, color: theme.text, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: 'monospace' }}>
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: `linear-gradient(${theme.grid} 1px, transparent 1px), linear-gradient(90deg, ${theme.grid} 1px, transparent 1px)`, backgroundSize: '30px 30px' }} />
         <div style={{ position: 'absolute', inset: 0, background: theme.vignette, zIndex: 1 }} />
@@ -1465,11 +1467,11 @@ export default function Home() {
                 </ul>
               </div>
 
-              {/* 🛡️ DAILY QUESTS (NEW) */}
-              <div style={{ marginBottom: '20px', padding: '15px', background: theme.panel, border: `1px solid #fbbf24`, borderRadius: '4px' }}>
+              {/* 🛡️ JUPITER QUESTS (NEW) */}
+              <div style={{ marginBottom: '20px', padding: '15px', background: theme.panel, border: `1px solid #00c2ff`, borderRadius: '4px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                  <Calendar size={18} color="#fbbf24" />
-                  <h4 style={{ margin: 0, fontSize: '14px', color: '#fbbf24', fontWeight: '900', letterSpacing: '1px' }}>DAILY QUESTS</h4>
+                  <Zap size={18} color="#00c2ff" fill="#00c2ff" />
+                  <h4 style={{ margin: 0, fontSize: '14px', color: '#00c2ff', fontWeight: '900', letterSpacing: '1px' }}>JUPITER QUESTS</h4>
                 </div>
                 {missions.map(m => {
                   if (m.mobileOnly && !isJupiterMobile) return null;
@@ -1484,7 +1486,7 @@ export default function Home() {
                         <span style={{ fontSize: '10px', color: '#fbbf24', fontWeight: 'bold' }}>+{m.xp} XP</span>
                       </div>
                       <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
-                        <div style={{ width: `${percentage}%`, height: '100%', background: m.completed ? '#00ff41' : '#fbbf24', transition: 'width 0.3s' }}></div>
+                        <div style={{ width: `${percentage}%`, height: '100%', background: m.completed ? '#00ff41' : '#00c2ff', transition: 'width 0.3s' }}></div>
                       </div>
                       <div style={{ fontSize: '9px', color: theme.textDim, marginTop: '2px' }}>{progress} / {m.target}</div>
                     </div>
@@ -1565,6 +1567,7 @@ export default function Home() {
         </AnimatePresence>
 
         {/* MAIN CONTENT AREA */}
+        <PriceTicker />
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', paddingBottom: 'calc(120px + env(safe-area-inset-bottom))', zIndex: 10 }}>
 
           {/* VIEW 1: SCANNER */}
