@@ -784,6 +784,10 @@ export default function Home() {
     };
 
     setDailyPrediction(prediction);
+    // Request Notification Permission on first prediction
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
     localStorage.setItem('dust_demons_prediction', JSON.stringify(prediction));
     updateMission('predict', 1);
 
@@ -841,6 +845,20 @@ export default function Home() {
     setDailyPrediction(updatedPrediction);
     setPredictionHistory(prev => [updatedPrediction, ...prev.slice(0, 9)]);
     localStorage.setItem('dust_demons_prediction', JSON.stringify(updatedPrediction));
+
+    // 🔔 SEND LOCAL NOTIFICATION
+    if (Notification.permission === 'granted') {
+      try {
+        new Notification(isCorrect ? '💰 PROFIT! Prediction Correct' : '💀 REKT! Prediction Wrong', {
+          body: isCorrect
+            ? `+${bonusXP} XP! You predicted correctly.`
+            : `+${bonusXP} XP (Consolation). Better luck next time.`,
+          icon: '/icon.jpg'
+        });
+      } catch (e) {
+        console.error('Notification failed', e);
+      }
+    }
 
     if (isCorrect) {
       setStats(s => ({ ...s, xp: s.xp + bonusXP }));
