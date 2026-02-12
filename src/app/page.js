@@ -1273,7 +1273,10 @@ export default function Home() {
 
       triggerConfetti();
       playSynthesizedSound('success');
-      alert(`Minted ${achievement.name}! 🎨`);
+
+      // Award XP for Minting
+      setStats(prev => ({ ...prev, xp: prev.xp + 500 }));
+      alert(`Minted ${achievement.name}! 🎨\n+500 XP Awarded!`);
 
     } catch (err) {
       console.error("Mint Error:", err);
