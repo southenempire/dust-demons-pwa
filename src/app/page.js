@@ -9,6 +9,7 @@ import { PublicKey, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { createBurnInstruction, createCloseAccountInstruction, getAssociatedTokenAddress } from '@solana/spl-token';
 import confetti from 'canvas-confetti';
 import { playSynthesizedSound } from '@/utils/sound-effects'; // 🔊 Sound Synth
+import { fetchJupSOLAPY } from '@/utils/jupsol-apy';
 import { getTokenPrices } from '@/utils/jupiter-price';
 import { verifyJupiterSwap, verifyTokenBurns } from '@/utils/on-chain-verification';
 import { sendJupiterNotification, setupDeepLinking, parseDeepLink } from '@/utils/jupiter-mobile';
@@ -97,6 +98,8 @@ export default function Home() {
   const { connection } = useConnection();
   const [isMounted, setIsMounted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isJupiterMobile, setIsJupiterMobile] = useState(false);
   const [result, setResult] = useState(null);
   const [view, setView] = useState('SCANNER');
   const [burningId, setBurningId] = useState(null);
@@ -187,6 +190,14 @@ export default function Home() {
 
   // Transaction states
   const [pendingTx, setPendingTx] = useState(null); // { type: 'burn' | 'swap' | 'prediction', message: string }
+
+  // 📱 DETECT MOBILE ENVIRONMENT
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsMobile(/Mobi|Android/i.test(navigator.userAgent));
+      setIsJupiterMobile(/Jupiter/i.test(navigator.userAgent) || window.jupiter);
+    }
+  }, []);
 
   const getActiveTheme = () => {
     if (themeMode === 'system') {
