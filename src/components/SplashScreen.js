@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { Zap, Ghost } from 'lucide-react';
+import { Zap } from 'lucide-react';
 
 export default function SplashScreen() {
     const [visible, setVisible] = useState(true);
@@ -36,7 +36,7 @@ export default function SplashScreen() {
                         style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}
                     >
                         <div style={{ position: 'relative' }}>
-                            <Ghost size={80} color="#00ff41" />
+                            <img src="/icon.jpg" alt="Dust Demons" style={{ width: '80px', height: '80px', borderRadius: '50%', boxShadow: '0 0 20px #00ff41' }} />
                             <motion.div
                                 animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
                                 transition={{ duration: 2, repeat: Infinity }}
