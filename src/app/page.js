@@ -620,13 +620,13 @@ export default function Home() {
     }
   };
 
-  const handleShare = (action = 'general', data = null) => {
+  const handleShare = async (action = 'general', data = null) => {
     let text = "I'm cleaning up my Solana wallet with Dust Demons! 🧹💀";
     if (action === 'burn') text = `I just incinerated ${stats.totalBurned} dust tokens and reclaimed ${stats.solReclaimed.toFixed(3)} SOL on Dust Demons! 🔥`;
     if (action === 'swap') text = `I just turned my dust into Yield-Bearing JupSOL on Dust Demons! 🪐`;
     if (action === 'prediction' && data) {
       const result = data.result === 'correct' ? '🎯 CORRECT' : '❌ MISSED';
-      text = `${result}! I predicted SOL would go ${data.prediction.toUpperCase()} on Dust Demons! 🔮\n\nCurrent Rank: ${currentRank}\nTotal XP: ${stats.xp}`;
+      text = `${result}! I predicted SOL will go ${data.prediction.toUpperCase()} on Dust Demons! 🔮\n\nCurrent Rank: ${currentRank}\nTotal XP: ${stats.xp}`;
     }
     if (action === 'rank') text = `I just reached ${currentRank} rank on Dust Demons! 💀\n\nTotal XP: ${stats.xp}\nSOL Reclaimed: ${stats.solReclaimed.toFixed(3)}`;
 
@@ -634,20 +634,28 @@ export default function Home() {
     const tweetText = encodeURIComponent(text);
     const tweetUrl = encodeURIComponent(refLink);
     const hashtags = 'JupiterMobile,Solana,JupSOL,DustDemons';
-
-    // Try to open X app first on mobile (deep linking)
-    const xAppUrl = `twitter://post?message=${tweetText}%20${tweetUrl}%20%23${hashtags.replace(/,/g, '%20%23')}`;
     const webUrl = `https://twitter.com/intent/tweet?text=${tweetText}&url=${tweetUrl}&hashtags=${hashtags}`;
 
-    if (isMobile) {
-      // Try app deep link first
-      window.location.href = xAppUrl;
-      // Fallback to web if app doesn't open (1 second timeout)
-      setTimeout(() => {
-        window.open(webUrl, '_blank');
-      }, 1000);
+    // 1. Try Native Web Share API (Mobile)
+    if (isMobile && navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Dust Demons',
+          text: text,
+          url: refLink
+        });
+        return;
+      } catch (err) {
+        console.warn('Share cancelled or failed:', err);
+        // If user cancelled, we might not want to fallback. 
+        // But if it failed for other reasons, we might.
+        // Usually cancellation throws error. 
+        if (err.name !== 'AbortError') {
+          window.open(webUrl, '_blank');
+        }
+      }
     } else {
-      // Desktop: just open web
+      // 2. Fallback to Twitter Web Intent (Universal Link)
       window.open(webUrl, '_blank');
     }
   };
