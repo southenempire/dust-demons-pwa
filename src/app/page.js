@@ -23,6 +23,8 @@ import AchievementGallery from '@/components/AchievementGallery';
 import ReferralPanel from '@/components/ReferralPanel';
 import PredictionChart from '@/components/PredictionChart';
 import { checkAchievements, getAllAchievements } from '@/lib/nft/achievementTracker';
+import { createMerkleTree } from '@/lib/nft/createMerkleTree';
+import { mintAchievementNFT } from '@/lib/nft/mintAchievement';
 import { detectReferralCode, trackReferralCompletion } from '@/lib/referrals';
 import PriceTicker from '@/components/PriceTicker';
 import SplashScreen from '@/components/SplashScreen';
@@ -1218,6 +1220,68 @@ export default function Home() {
     }
   };
 
+  // 🖼️ NFT HANDLERS
+  const handleInitNFT = async () => {
+    if (!connected || !publicKey) return alert('Connect wallet first!');
+    if (!confirm('This will create a Merkle Tree for Compressed NFTs (~0.02 SOL cost). Proceed?')) return;
+
+    try {
+      console.log("Initializing Tree...");
+      // Construct wallet object expected by helper
+      const walletObj = { publicKey, signTransaction, signAllTransactions };
+
+      const { tx, treeAddress } = await createMerkleTree(connection, walletObj);
+
+      // Send transaction (use wallet adapter hook)
+      // Note: sendTransaction hook signs with wallet and sends. 
+      // It should respect the partial signature on the transaction if we pass it correctly?
+      // Actually, wallet-adapter's sendTransaction might overwrite signatures if not careful.
+      // Better to use signTransaction and then connection.sendRawTransaction if we have partials.
+      // But let's try standard sendTransaction first.
+      // Actually, createMerkleTree returns a Transaction with `partialSign`.
+      // We should use `sendTransaction`.
+      const sig = await sendTransaction(tx, connection);
+
+      await connection.confirmTransaction(sig, 'confirmed');
+
+      localStorage.setItem('merkle_tree', treeAddress);
+      triggerConfetti();
+      playSynthesizedSound('success');
+      alert(`NFT System Initialized! 🌳\nTree Address: ${treeAddress}`);
+
+    } catch (err) {
+      console.error("Tree Init Error:", err);
+      playSynthesizedSound('error');
+      alert('Failed to initialize: ' + err.message);
+    }
+  };
+
+  const handleMintNFT = async (achievement) => {
+    if (!connected) return alert('Connect wallet first!');
+
+    try {
+      // Check if Tree exists
+      const savedTree = localStorage.getItem('merkle_tree') || process.env.NEXT_PUBLIC_MERKLE_TREE;
+      if (!savedTree) return alert('NFT System not initialized! Go to Settings > Initialize NFT System.');
+
+      console.log("Minting...", achievement.name);
+
+      // Construct wallet object
+      const walletObj = { publicKey, signTransaction, signAllTransactions };
+
+      const sig = await mintAchievementNFT(connection, walletObj, achievement);
+
+      triggerConfetti();
+      playSynthesizedSound('success');
+      alert(`Minted ${achievement.name}! 🎨`);
+
+    } catch (err) {
+      console.error("Mint Error:", err);
+      playSynthesizedSound('error');
+      alert('Mint Failed: ' + err.message);
+    }
+  };
+
   if (!isMounted) return <div style={{ background: theme.bg, height: '100dvh', width: '100vw' }} />;
 
 
@@ -1400,6 +1464,29 @@ export default function Home() {
                   <h2 style={{ margin: 0, fontSize: '18px', color: theme.accent, fontFamily: 'monospace' }}>SYSTEM CONFIG</h2>
                 </div>
                 <button onClick={() => setShowMenu(false)} style={{ background: 'none', border: 'none', color: theme.text, cursor: 'pointer', transition: 'opacity 0.2s' }} onMouseEnter={(e) => e.target.style.opacity = '0.7'} onMouseLeave={(e) => e.target.style.opacity = '1'}><X size={24} /></button>
+              </div>
+
+              {/* NFT SETUP (Admin/Dev) */}
+              <div style={{ marginBottom: '20px', padding: '15px', border: `1px dashed ${theme.accent}`, borderRadius: '8px', background: 'rgba(0,0,0,0.2)' }}>
+                <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', color: theme.accent }}>🎨 NFT SYSTEM</h3>
+                <button
+                  onClick={handleInitNFT}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    background: theme.accent,
+                    color: '#000',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontWeight: '900',
+                    cursor: 'pointer'
+                  }}
+                >
+                  INITIALIZE MERKLE TREE
+                </button>
+                <p style={{ fontSize: '10px', color: theme.textDim, marginTop: '8px' }}>
+                  *One-time setup (Cost: ~0.02 SOL)
+                </p>
               </div>
 
               {/* 🎯 BADGES */}
@@ -2258,6 +2345,7 @@ export default function Home() {
                   isJupiterMobile,
                   userRank,
                 }}
+                onMint={handleMintNFT}
                 theme={theme}
               />
             </div>

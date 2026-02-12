@@ -10,7 +10,8 @@ export default function AchievementGallery({
     earnedAchievements = [],
     stats = {},
     context = {},
-    theme
+    theme,
+    onMint
 }) {
     const [selectedAchievement, setSelectedAchievement] = useState(null);
     const allAchievements = getAllAchievements();
@@ -186,16 +187,39 @@ export default function AchievementGallery({
                             {selectedAchievement.rarity.toUpperCase()}
                         </span>
                         {earnedAchievements.includes(selectedAchievement.id) && (
-                            <span style={{
-                                padding: '4px 8px',
-                                borderRadius: '4px',
-                                fontSize: '10px',
-                                fontWeight: '900',
-                                background: '#10B981',
-                                color: '#000',
-                            }}>
-                                ✓ UNLOCKED
-                            </span>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <span style={{
+                                    padding: '4px 8px',
+                                    borderRadius: '4px',
+                                    fontSize: '10px',
+                                    fontWeight: '900',
+                                    background: '#10B981',
+                                    color: '#000',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                }}>
+                                    ✓ UNLOCKED
+                                </span>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onMint && onMint(selectedAchievement);
+                                    }}
+                                    style={{
+                                        padding: '4px 12px',
+                                        borderRadius: '4px',
+                                        fontSize: '10px',
+                                        fontWeight: '900',
+                                        background: 'linear-gradient(45deg, #a855f7, #ec4899)',
+                                        color: '#fff',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                    }}
+                                >
+                                    MINT NFT
+                                </button>
+                            </div>
                         )}
                     </div>
                 </motion.div>
