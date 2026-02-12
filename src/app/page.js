@@ -1229,6 +1229,7 @@ export default function Home() {
 
   // 🖼️ NFT HANDLERS
   const handleInitNFT = async () => {
+    alert('Debug: Init Clicked'); // DEBUG
     if (!connected || !publicKey) return alert('Connect wallet first!');
     if (!confirm('This will create a Merkle Tree for Compressed NFTs (~0.02 SOL cost). Proceed?')) return;
 
@@ -1607,7 +1608,8 @@ export default function Home() {
               {/* 🛡️ JUPITER QUESTS (NEW) */}
               <div style={{ marginBottom: '20px', padding: '15px', background: theme.panel, border: `1px solid #00c2ff`, borderRadius: '4px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                  <Zap size={18} color="#00c2ff" fill="#00c2ff" />
+                  {/* REPLACED LOGO */}
+                  <img src="/demon-logo.jpg" alt="Demon" style={{ width: '18px', height: '18px', borderRadius: '50%' }} />
                   <h4 style={{ margin: 0, fontSize: '14px', color: '#00c2ff', fontWeight: '900', letterSpacing: '1px' }}>JUPITER QUESTS</h4>
                 </div>
                 {missions.map(m => {
@@ -2475,7 +2477,10 @@ export default function Home() {
         <AnimatePresence>
           {lootDrops.map(l => (
             <motion.div key={l.id} initial={{ opacity: 0, y: 0, scale: 0.5 }} animate={{ opacity: [0, 1, 0], y: -100, scale: 1.5 }} className="fixed top-1/2 left-1/2 transform -translate-x-1/2 z-[3000] pointer-events-none">
-              <div style={{ color: '#fbbf24', fontWeight: '900', fontSize: '24px', textShadow: '0 0 10px #fbbf24' }}><Zap fill="currentColor" /> {l.text}</div>
+              <div style={{ color: '#fbbf24', fontWeight: '900', fontSize: '24px', textShadow: '0 0 10px #fbbf24', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <img src="/demon-logo.jpg" alt="Demon" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
+                {l.text}
+              </div>
             </motion.div>
           ))}
         </AnimatePresence>
