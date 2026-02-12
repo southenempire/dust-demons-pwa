@@ -16,27 +16,26 @@ import { MERKLE_TREE_ADDRESS } from './config';
  * @returns {Promise<string>} Transaction signature
  */
 export async function mintAchievementNFT(connection, wallet, achievement) {
-    if (!wallet.publicKey) {
-        throw new Error('Wallet not connected');
+    if (!wallet.publicKey) throw new Error('Wallet not connected');
+
+    // 1. Get Tree Address (from Env or LocalStorage)
+    const treeAddressStr = process.env.NEXT_PUBLIC_MERKLE_TREE || localStorage.getItem('merkle_tree');
+    if (!treeAddressStr) {
+        throw new Error('Merkle tree not initialized. Please go to Settings > Initialize NFT System.');
     }
 
-    if (!MERKLE_TREE_ADDRESS) {
-        throw new Error('Merkle tree not initialized. Set NEXT_PUBLIC_MERKLE_TREE in .env.local');
-    }
-
-    if (!achievement.metadataUri) {
-        throw new Error(`Metadata URI not set for achievement: ${achievement.id}`);
-    }
+    // 2. Get Metadata URI (from API)
+    // We construct it dynamically to avoid needing config updates
+    const metadataUri = `https://dust-demons.vercel.app/api/nft/metadata/${achievement.id}`;
 
     try {
-        const treeAddress = new PublicKey(MERKLE_TREE_ADDRESS);
+        const treeAddress = new PublicKey(treeAddressStr);
         const leafOwner = wallet.publicKey;
 
-        // Create metadata
         const metadata = {
-            name: `${achievement.name} - ${achievement.title}`,
+            name: `${achievement.name}`,
             symbol: 'DUST',
-            uri: achievement.metadataUri,
+            uri: metadataUri,
             sellerFeeBasisPoints: 0,
             collection: null,
             creators: [
@@ -48,7 +47,6 @@ export async function mintAchievementNFT(connection, wallet, achievement) {
             ],
         };
 
-        // Build mint instruction
         const mintIx = createMintToCollectionV1Instruction(
             {
                 tree: treeAddress,
@@ -79,18 +77,14 @@ export async function mintAchievementNFT(connection, wallet, achievement) {
             }
         );
 
-        // Create and send transaction
         const transaction = new Transaction().add(mintIx);
         transaction.feePayer = leafOwner;
         transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
 
-        // Sign and send
         const signed = await wallet.signTransaction(transaction);
         const signature = await connection.sendRawTransaction(signed.serialize());
 
-        // Confirm
         await connection.confirmTransaction(signature, 'confirmed');
-
         console.log(`✅ Achievement NFT minted: ${achievement.name}`, signature);
         return signature;
 
