@@ -101,6 +101,8 @@ const mobileShare = async (text, url) => {
 export default function Home() {
   const { publicKey, signAllTransactions, connected, wallet, signTransaction } = useWallet();
   const { connection } = useConnection();
+  const [mounted, setMounted] = useState(false);
+  const [treeAddress, setTreeAddress] = useState(null); // 🌳 Merkle Tree
   const [isMounted, setIsMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -119,6 +121,11 @@ export default function Home() {
 
   const scrollRef = useRef(null);
   usePullToRefresh(scrollRef);
+
+  useEffect(() => {
+    setMounted(true);
+    setTreeAddress(localStorage.getItem('merkle_tree'));
+  }, []);
 
   // Real Data: Session History
   const [sessionHistory, setSessionHistory] = useState([]);
@@ -1245,6 +1252,7 @@ export default function Home() {
       await connection.confirmTransaction(sig, 'confirmed');
 
       localStorage.setItem('merkle_tree', treeAddress);
+      setTreeAddress(treeAddress); // Update UI
       triggerConfetti();
       playSynthesizedSound('success');
       alert(`NFT System Initialized! 🌳\nTree Address: ${treeAddress}`);
@@ -1472,24 +1480,54 @@ export default function Home() {
               {/* NFT SETUP (Admin/Dev) */}
               <div style={{ marginBottom: '20px', padding: '15px', border: `1px dashed ${theme.accent}`, borderRadius: '8px', background: 'rgba(0,0,0,0.2)' }}>
                 <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', color: theme.accent }}>🎨 NFT SYSTEM</h3>
-                <button
-                  onClick={handleInitNFT}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    background: theme.accent,
-                    color: '#000',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontWeight: '900',
-                    cursor: 'pointer'
-                  }}
-                >
-                  INITIALIZE MERKLE TREE
-                </button>
-                <p style={{ fontSize: '10px', color: theme.textDim, marginTop: '8px' }}>
-                  *One-time setup (Cost: ~0.02 SOL)
-                </p>
+
+                {!treeAddress ? (
+                  <>
+                    <button
+                      onClick={handleInitNFT}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        background: theme.accent,
+                        color: '#000',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontWeight: '900',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      INITIALIZE MERKLE TREE
+                    </button>
+                    <p style={{ fontSize: '10px', color: theme.textDim, marginTop: '8px' }}>
+                      *One-time setup (Cost: ~0.02 SOL)
+                    </p>
+                  </>
+                ) : (
+                  <div>
+                    <p style={{ fontSize: '10px', color: theme.textDim, marginBottom: '4px' }}>TREE ADDRESS (Give to Friend):</p>
+                    <div style={{
+                      background: '#000',
+                      padding: '8px',
+                      borderRadius: '4px',
+                      fontSize: '10px',
+                      fontFamily: 'monospace',
+                      wordBreak: 'break-all',
+                      border: `1px solid ${theme.border}`,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      {treeAddress}
+                      <button
+                        onClick={() => { navigator.clipboard.writeText(treeAddress); alert('Copied!'); }}
+                        style={{ background: 'none', border: 'none', color: theme.accent, cursor: 'pointer', marginLeft: '5px' }}
+                      >
+                        📋
+                      </button>
+                    </div>
+                    <p style={{ fontSize: '10px', color: '#10B981', marginTop: '4px' }}>✅ System Active</p>
+                  </div>
+                )}
               </div>
 
               {/* 🎯 BADGES */}
