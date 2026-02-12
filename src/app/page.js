@@ -1226,24 +1226,7 @@ export default function Home() {
     <WalletModalProvider>
       <SplashScreen />
 
-      {/* 📱 MOBILE WALLET PROMPT */}
-      {isMobile && !connected && !loading && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 9990,
-          background: 'rgba(0,0,0,0.95)',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          padding: '20px', textAlign: 'center'
-        }}>
-          <img src="/icon.jpg" alt="Dust Demons" style={{ width: '80px', height: '80px', borderRadius: '50%', marginBottom: '20px', boxShadow: '0 0 30px #00c2ff' }} />
-          <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#fff', marginBottom: '10px' }}>CONNECT WALLET</h2>
-          <p style={{ color: '#888', marginBottom: '30px', maxWidth: '300px' }}>
-            To play Dust Demons on mobile, please connect your Solana wallet.
-          </p>
-          <div style={{ transform: 'scale(1.2)' }}>
-            <WalletMultiButton />
-          </div>
-        </div>
-      )}
+
 
       <main style={{ height: '100dvh', width: '100vw', backgroundColor: theme.bg, color: theme.text, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: 'monospace' }}>
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: `linear-gradient(${theme.grid} 1px, transparent 1px), linear-gradient(90deg, ${theme.grid} 1px, transparent 1px)`, backgroundSize: '30px 30px' }} />

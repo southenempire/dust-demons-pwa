@@ -12,8 +12,8 @@ export const metadata = {
   authors: [{ name: 'Dust Demons Team' }],
   manifest: '/manifest.json',
   icons: {
-    icon: '/icon.jpg',
-    apple: '/icon.jpg',
+    icon: '/icon.jpg?v=2',
+    apple: '/icon.jpg?v=2',
   },
   metadataBase: new URL('https://dust-demons.vercel.app'),
 
