@@ -115,6 +115,9 @@ export default function Home() {
   const [swapTarget, setSwapTarget] = useState(null);
   const [swapOutput, setSwapOutput] = useState('So11111111111111111111111111111111111111112'); // Default SOL
 
+  const scrollRef = useRef(null);
+  usePullToRefresh(scrollRef);
+
   // Real Data: Session History
   const [sessionHistory, setSessionHistory] = useState([]);
 
@@ -1217,8 +1220,7 @@ export default function Home() {
 
   if (!isMounted) return <div style={{ background: theme.bg, height: '100dvh', width: '100vw' }} />;
 
-  const scrollRef = useRef(null);
-  usePullToRefresh(scrollRef);
+
 
   return (
     <WalletModalProvider>
