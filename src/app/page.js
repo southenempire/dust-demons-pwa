@@ -26,6 +26,7 @@ import { checkAchievements, getAllAchievements } from '@/lib/nft/achievementTrac
 import { detectReferralCode, trackReferralCompletion } from '@/lib/referrals';
 import PriceTicker from '@/components/PriceTicker';
 import SplashScreen from '@/components/SplashScreen';
+import usePullToRefresh from '@/hooks/usePullToRefresh';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 // ⚡ RPC CONFIGURATION (DAS API endpoint for asset fetching)
@@ -1216,9 +1217,32 @@ export default function Home() {
 
   if (!isMounted) return <div style={{ background: theme.bg, height: '100dvh', width: '100vw' }} />;
 
+  const scrollRef = useRef(null);
+  usePullToRefresh(scrollRef);
+
   return (
     <WalletModalProvider>
       <SplashScreen />
+
+      {/* 📱 MOBILE WALLET PROMPT */}
+      {isMobile && !connected && !loading && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9990,
+          background: 'rgba(0,0,0,0.95)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          padding: '20px', textAlign: 'center'
+        }}>
+          <img src="/icon.jpg" alt="Dust Demons" style={{ width: '80px', height: '80px', borderRadius: '50%', marginBottom: '20px', boxShadow: '0 0 30px #00c2ff' }} />
+          <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#fff', marginBottom: '10px' }}>CONNECT WALLET</h2>
+          <p style={{ color: '#888', marginBottom: '30px', maxWidth: '300px' }}>
+            To play Dust Demons on mobile, please connect your Solana wallet.
+          </p>
+          <div style={{ transform: 'scale(1.2)' }}>
+            <WalletMultiButton />
+          </div>
+        </div>
+      )}
+
       <main style={{ height: '100dvh', width: '100vw', backgroundColor: theme.bg, color: theme.text, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: 'monospace' }}>
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: `linear-gradient(${theme.grid} 1px, transparent 1px), linear-gradient(90deg, ${theme.grid} 1px, transparent 1px)`, backgroundSize: '30px 30px' }} />
         <div style={{ position: 'absolute', inset: 0, background: theme.vignette, zIndex: 1 }} />
@@ -1568,7 +1592,7 @@ export default function Home() {
 
         {/* MAIN CONTENT AREA */}
         <PriceTicker />
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', paddingBottom: 'calc(120px + env(safe-area-inset-bottom))', zIndex: 10 }}>
+        <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', paddingBottom: 'calc(120px + env(safe-area-inset-bottom))', zIndex: 10 }}>
 
           {/* VIEW 1: SCANNER */}
           {view === 'SCANNER' && !loading && (

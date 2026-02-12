@@ -11,6 +11,10 @@ export const metadata = {
   keywords: ['Solana', 'Jupiter', 'JupSOL', 'DeFi', 'Wallet Cleanup', 'Yield', 'Gaming', 'Mobile'],
   authors: [{ name: 'Dust Demons Team' }],
   manifest: '/manifest.json',
+  icons: {
+    icon: '/icon.jpg',
+    apple: '/icon.jpg',
+  },
   metadataBase: new URL('https://dust-demons.vercel.app'),
 
   openGraph: {
