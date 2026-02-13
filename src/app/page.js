@@ -2065,9 +2065,9 @@ export default function Home() {
                   </h2>
                   <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#7dd3fc', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     {jupsolAPY > 0 ? (
-                      <>
-                        <Zap size={10} fill="#7dd3fc" /> {jupsolAPY.toFixed(2)}% APY (Live)
-                      </>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#00c2ff', fontWeight: '700' }}>
+                        <img src="/demon-logo.jpg" alt="Demon" style={{ width: '12px', height: '12px', borderRadius: '50%' }} /> {jupsolAPY.toFixed(2)}% APY (Live)
+                      </div>
                     ) : (
                       <>Powered by JupSOL</>
                     )}
