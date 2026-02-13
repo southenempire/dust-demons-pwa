@@ -1114,6 +1114,7 @@ export default function Home() {
 
   async function executeExorcism() {
     closeModal(); setBurningId('MASS_BURN'); triggerHaptic([50, 50, 50]);
+    let failedIds = [];
     try {
       const { blockhash } = await connection.getLatestBlockhash('finalized');
       const txs = []; let burned = 0;
@@ -1124,13 +1125,24 @@ export default function Home() {
         const tx = new Transaction();
         tx.feePayer = publicKey; tx.recentBlockhash = blockhash;
 
+        // Valid instruction added flag
+        let addedConfig = false;
+
         for (const id of chunk) {
           const t = result.targets.find(x => x.id === id);
           if (!t) continue;
 
+          // Check Frozen
+          if (t.isFrozen) {
+            errorLog.push(`${t.name}: Token is Frozen`);
+            failedIds.push(id);
+            continue;
+          }
+
           // 🛡️ Security: Validate PublicKey before use
           if (!validatePublicKey(t.id)) {
-            errorLog.push('Invalid Addr: ' + t.id);
+            errorLog.push(`${t.name}: Invalid Address`);
+            failedIds.push(id);
             continue;
           }
 
@@ -1143,30 +1155,47 @@ export default function Home() {
             }
             tx.add(createCloseAccountInstruction(tokenAcc, publicKey, publicKey));
             burned++;
-          } catch { }
+            addedConfig = true;
+          } catch (e) {
+            errorLog.push(`${t.name}: Build Error`);
+            failedIds.push(id);
+          }
         }
 
         // 🛡️ Security: Simulate transaction before adding to batch
-        if (tx.instructions.length > 0) {
+        if (addedConfig && tx.instructions.length > 0) {
           try {
             const simulation = await connection.simulateTransaction(tx);
             if (simulation.value.err) {
-              errorLog.push('Sim Fail: ' + JSON.stringify(simulation.value.err));
+              console.error('Sim Error:', simulation.value.err);
+              errorLog.push(`Sim Failed: ${JSON.stringify(simulation.value.err)}`);
+              // If batch fails, assume all in chunk failed
+              failedIds.push(...chunk);
               continue;
             }
             txs.push(tx);
           } catch (simError) {
-            errorLog.push('Sim Error: ' + simError.message);
+            errorLog.push(`Sim Error: ${simError.message}`);
+            failedIds.push(...chunk);
           }
         }
       }
 
+      // Update UI to remove failed items
+      if (failedIds.length > 0) {
+        setResult(prev => ({
+          ...prev,
+          targets: prev.targets.filter(t => !failedIds.includes(t.id))
+        }));
+        setSelectedIds(prev => prev.filter(id => !failedIds.includes(id)));
+      }
+
       if (!txs.length) {
-          showModal('DANGER', 'BURN FAILED',
-             errorLog.length > 0 ? errorLog.join('\\n') : 'No valid targets found (Frozen or Closed).');
-         setBurningId(null);
-         return;
-}
+        showModal('DANGER', 'BURN FAILED',
+          errorLog.length > 0 ? errorLog.join('\n') : 'No valid targets found (Frozen or Closed).');
+        setBurningId(null);
+        return;
+      }
       const signed = await signAllTransactions(txs);
       setLoading(true);
 
