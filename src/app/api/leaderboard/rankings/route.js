@@ -12,18 +12,13 @@ export async function GET(request) {
         const wallet = searchParams.get('wallet');
         const limit = parseInt(searchParams.get('limit') || '100');
 
-        // DEBUG: Check connection
-        const { count: totalCount, error: countError } = await supabase.from('players').select('*', { count: 'exact', head: true });
-        console.log('Total players in DB:', totalCount, 'Error:', countError);
-
-        // DEBUG: Query with order
         const { data: topPlayers, error: playersError } = await supabase
             .from('players')
             .select('*')
-            .order('xp', { ascending: false });
-        // .limit(limit);
-
-        console.log('Top players query result:', topPlayers?.length, 'Error:', playersError);
+            .order('xp', { ascending: false })
+            .order('total_burned', { ascending: false })
+            .order('last_updated', { ascending: true })
+            .limit(limit > 0 ? limit : 100);
 
         if (playersError) {
             console.error('Supabase query error:', playersError);
