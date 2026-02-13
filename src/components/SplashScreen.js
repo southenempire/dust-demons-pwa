@@ -35,8 +35,8 @@ export default function SplashScreen() {
                         transition={{ duration: 0.5, delay: 0.2 }}
                         style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}
                     >
-                            <img src="/icon.jpg" alt="Dust Demons" style={{ width: '80px', height: '80px', borderRadius: '50%', boxShadow: '0 0 20px #00ff41' }} />
-                        </div>
+                        <img src="/icon.jpg" alt="Dust Demons" style={{ width: '80px', height: '80px', borderRadius: '50%', boxShadow: '0 0 20px #00ff41' }} />
+
 
                         <h1 style={{ fontSize: '24px', fontWeight: '900', color: '#fff', letterSpacing: '4px', textAlign: 'center' }}>
                             DUST DEMONS
@@ -57,8 +57,8 @@ export default function SplashScreen() {
                         style={{ height: '2px', background: 'linear-gradient(90deg, #00ff41, #00c2ff)', marginTop: '40px' }}
                     />
                 </motion.div>
-    )
-}
+            )
+            }
         </AnimatePresence >
     );
 }
