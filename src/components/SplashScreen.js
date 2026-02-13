@@ -50,10 +50,10 @@ export default function SplashScreen() {
                             DUST DEMONS
                         </h1>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}>
-                            <span style={{ color: '#666', fontSize: '12px' }}>POWERED BY</span>
-                            <span style={{ color: '#00c2ff', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                JUPITER MOBILE <img src="/demon-logo.jpg" alt="Demon" style={{ width: '14px', height: '14px', borderRadius: '50%' }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '25px' }}>
+                            <span style={{ color: '#666', fontSize: '12px', letterSpacing: '1px' }}>POWERED BY</span>
+                            <span style={{ color: '#00c2ff', fontWeight: '900', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                JUPITER MOBILE <img src="/demon-logo.jpg" alt="Demon" style={{ width: '24px', height: '24px', borderRadius: '50%', border: '1px solid #00c2ff' }} />
                             </span>
                         </div>
                     </motion.div>

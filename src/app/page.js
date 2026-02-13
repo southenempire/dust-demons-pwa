@@ -278,7 +278,10 @@ export default function Home() {
                 initialOutputMint: JUP_SOL_MINT,
               },
               containerStyles: { minHeight: '500px', height: '100%', width: '100%' },
-              onRequestConnectWallet: () => { document.querySelector('.wallet-adapter-button')?.click(); },
+              onRequestConnectWallet: () => {
+                // Trigger our hidden button
+                document.getElementById('hidden-wallet-trigger')?.querySelector('button')?.click();
+              },
               onSuccess: ({ txid }) => {
                 playSound('success');
                 triggerHaptic('success');
@@ -1302,7 +1305,10 @@ export default function Home() {
     <WalletModalProvider>
       <SplashScreen />
 
-
+      {/* Hidden Wallet Trigger for Jupiter */}
+      <div id="hidden-wallet-trigger" style={{ display: 'none' }}>
+        <WalletMultiButton />
+      </div>
 
       <main style={{ height: '100dvh', width: '100vw', backgroundColor: theme.bg, color: theme.text, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: 'monospace' }}>
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: `linear-gradient(${theme.grid} 1px, transparent 1px), linear-gradient(90deg, ${theme.grid} 1px, transparent 1px)`, backgroundSize: '30px 30px' }} />
