@@ -40,26 +40,35 @@ export async function GET(request) {
 
         // Get user rank if wallet provided
         let userRank = null;
+
+        // 1. Check if user is in the fetched top list (most accurate/consistent)
         if (wallet) {
-            const { data: playerData } = await supabase
-                .from('players')
-                .select('*')
-                .eq('wallet', wallet)
-                .single();
-
-            if (playerData) {
-                const { count } = await supabase
+            const userInList = formattedPlayers.find(p => p.wallet === wallet);
+            if (userInList) {
+                userRank = userInList;
+            } else {
+                // 2. Fallback: Query DB for users not in top list
+                const { data: playerData } = await supabase
                     .from('players')
-                    .select('*', { count: 'exact', head: true })
-                    .gt('xp', playerData.xp || 0);
+                    .select('*')
+                    .eq('wallet', wallet)
+                    .single();
 
-                userRank = {
-                    rank: (count || 0) + 1,
-                    wallet: playerData.wallet,
-                    xp: playerData.xp || 0,
-                    totalBurned: playerData.total_burned || 0,
-                    solReclaimed: parseFloat(playerData.sol_reclaimed) || 0
-                };
+                if (playerData) {
+                    // Approximate rank: Count players with strictly more XP
+                    const { count } = await supabase
+                        .from('players')
+                        .select('*', { count: 'exact', head: true })
+                        .gt('xp', playerData.xp || 0);
+
+                    userRank = {
+                        rank: (count || 0) + 1, // Note: Doesn't handle ties perfectly outside top 100
+                        wallet: playerData.wallet,
+                        xp: playerData.xp || 0,
+                        totalBurned: playerData.total_burned || 0,
+                        solReclaimed: parseFloat(playerData.sol_reclaimed) || 0
+                    };
+                }
             }
         }
 
