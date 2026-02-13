@@ -1163,7 +1163,7 @@ export default function Home() {
 
       if (!txs.length) {
           showModal('DANGER', 'BURN FAILED',
-             errorLog.length > 0 ? errorLog.join('\\n') : 'No valid targets found (Frozen or Closed).'\n);
+             errorLog.length > 0 ? errorLog.join('\\n') : 'No valid targets found (Frozen or Closed).');
          setBurningId(null);
          return;
 }
