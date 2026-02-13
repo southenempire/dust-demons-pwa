@@ -1058,11 +1058,11 @@ export default function Home() {
         const isEmpty = uiBalance === 0;
 
         // 🚀 LOGIC: 
-        // 1. Swap = Value > $0.10 (Show Blue - No upper limit!)
-        // 2. Dust = Value < $0.10 (Show Yellow)
+        // 1. Swap = Value > $1.00 (Show Blue - No upper limit!)
+        // 2. Dust = Value < $1.00 (Show Yellow) - BURN IT!
 
-        const isTradeable = value >= 0.10; // Anything worth > 10 cents is tradeable
-        const isDust = value < 0.10 && !isScam && !isEmpty && !isTradeable;
+        const isTradeable = value >= 1.00; // Anything worth > $1.00 is tradeable
+        const isDust = value < 1.00 && !isScam && !isEmpty && !isTradeable;
         const isRentClaimable = isEmpty;
 
         return {
@@ -1199,10 +1199,10 @@ export default function Home() {
       if (!txs.length) {
         if (failedIds.length > 0 && errorLog.length === 0) {
           showModal('SUCCESS', 'CLEANUP COMPLETE', 'Removed ghost assets (already closed).');
-      } else {
+        } else {
           showModal('DANGER', 'BURN FAILED',
-             errorLog.length > 0 ? errorLog.join('\n') : 'No valid targets found.');
-      }
+            errorLog.length > 0 ? errorLog.join('\n') : 'No valid targets found.');
+        }
         setBurningId(null);
         return;
       }
