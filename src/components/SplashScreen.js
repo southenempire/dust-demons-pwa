@@ -35,15 +35,7 @@ export default function SplashScreen() {
                         transition={{ duration: 0.5, delay: 0.2 }}
                         style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}
                     >
-                        <div style={{ position: 'relative' }}>
                             <img src="/icon.jpg" alt="Dust Demons" style={{ width: '80px', height: '80px', borderRadius: '50%', boxShadow: '0 0 20px #00ff41' }} />
-                            <motion.div
-                                animate={{ scale: [1, 1.1, 1], opacity: [0.5, 1, 0.5] }}
-                                transition={{ duration: 2, repeat: Infinity }}
-                                style={{ position: 'absolute', top: -5, right: -5 }}
-                            >
-                                <img src="/demon-logo.jpg" alt="Demon" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
-                            </motion.div>
                         </div>
 
                         <h1 style={{ fontSize: '24px', fontWeight: '900', color: '#fff', letterSpacing: '4px', textAlign: 'center' }}>
@@ -65,7 +57,8 @@ export default function SplashScreen() {
                         style={{ height: '2px', background: 'linear-gradient(90deg, #00ff41, #00c2ff)', marginTop: '40px' }}
                     />
                 </motion.div>
-            )}
-        </AnimatePresence>
+    )
+}
+        </AnimatePresence >
     );
 }
