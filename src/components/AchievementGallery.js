@@ -82,8 +82,8 @@ export default function AchievementGallery({
             {/* Achievement grid */}
             <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                gap: '20px',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+                gap: '30px',
             }}>
                 {allAchievements.map((achievement, index) => {
                     const isEarned = earnedAchievements.includes(achievement.id);

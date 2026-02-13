@@ -42,7 +42,7 @@ export default function SplashScreen() {
                                 transition={{ duration: 2, repeat: Infinity }}
                                 style={{ position: 'absolute', top: -10, right: -10 }}
                             >
-                                <Zap size={40} color="#00c2ff" fill="#00c2ff" />
+                                <img src="/demon-logo.jpg" alt="Demon" style={{ width: '40px', height: '40px', borderRadius: '50%' }} />
                             </motion.div>
                         </div>
 
@@ -53,7 +53,7 @@ export default function SplashScreen() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}>
                             <span style={{ color: '#666', fontSize: '12px' }}>POWERED BY</span>
                             <span style={{ color: '#00c2ff', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                JUPITER MOBILE <Zap size={14} fill="#00c2ff" />
+                                JUPITER MOBILE <img src="/demon-logo.jpg" alt="Demon" style={{ width: '14px', height: '14px', borderRadius: '50%' }} />
                             </span>
                         </div>
                     </motion.div>
