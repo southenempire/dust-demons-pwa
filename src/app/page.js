@@ -1076,6 +1076,7 @@ export default function Home() {
           isDust: isDust,
           isTradeable: isTradeable,
           isRentClaimable: isRentClaimable,
+          isFrozen: item.token_info?.frozen || false,
           decimals: decimals // Important for burn calc
         };
       }).filter(Boolean);
@@ -1116,6 +1117,7 @@ export default function Home() {
     try {
       const { blockhash } = await connection.getLatestBlockhash('finalized');
       const txs = []; let burned = 0;
+      let errorLog = [];
 
       for (let i = 0; i < selectedIds.length; i += 5) {
         const chunk = selectedIds.slice(i, i + 5);
@@ -1128,7 +1130,7 @@ export default function Home() {
 
           // 🛡️ Security: Validate PublicKey before use
           if (!validatePublicKey(t.id)) {
-            console.error('Invalid token address:', t.id);
+            errorLog.push('Invalid Addr: ' + t.id);
             continue;
           }
 
@@ -1149,17 +1151,22 @@ export default function Home() {
           try {
             const simulation = await connection.simulateTransaction(tx);
             if (simulation.value.err) {
-              console.error('Transaction simulation failed:', simulation.value.err);
+              errorLog.push('Sim Fail: ' + JSON.stringify(simulation.value.err));
               continue;
             }
             txs.push(tx);
           } catch (simError) {
-            console.error('Simulation error:', simError);
+            errorLog.push('Sim Error: ' + simError.message);
           }
         }
       }
 
-      if (!txs.length) { showModal('INFO', 'INVALID', 'No valid targets.'); setBurningId(null); return; }
+      if (!txs.length) {
+          showModal('DANGER', 'BURN FAILED',
+             errorLog.length > 0 ? errorLog.join('\\n') : 'No valid targets found (Frozen or Closed).'\n);
+         setBurningId(null);
+         return;
+}
       const signed = await signAllTransactions(txs);
       setLoading(true);
 
