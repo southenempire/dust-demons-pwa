@@ -1167,9 +1167,15 @@ export default function Home() {
           try {
             const simulation = await connection.simulateTransaction(tx);
             if (simulation.value.err) {
-              console.error('Sim Error:', simulation.value.err);
-              errorLog.push(`Sim Failed: ${JSON.stringify(simulation.value.err)}`);
-              // If batch fails, assume all in chunk failed
+              const simErrStr = JSON.stringify(simulation.value.err);
+              if (!simErrStr.includes('AccountNotFound')) {
+                console.error('Sim Error:', simulation.value.err);
+                errorLog.push(`Sim Failed: ${simErrStr}`);
+              } else {
+                // Ghost asset detected (AccountNotFound)
+                // We don't add to errorLog, so it doesn't trigger "BURN FAILED"
+              }
+              // If batch fails, assume all in chunk failed/processed
               failedIds.push(...chunk);
               continue;
             }
@@ -1191,8 +1197,12 @@ export default function Home() {
       }
 
       if (!txs.length) {
-        showModal('DANGER', 'BURN FAILED',
-          errorLog.length > 0 ? errorLog.join('\n') : 'No valid targets found (Frozen or Closed).');
+        if (failedIds.length > 0 && errorLog.length === 0) {
+          showModal('SUCCESS', 'CLEANUP COMPLETE', 'Removed ghost assets (already closed).');
+      } else {
+          showModal('DANGER', 'BURN FAILED',
+             errorLog.length > 0 ? errorLog.join('\n') : 'No valid targets found.');
+      }
         setBurningId(null);
         return;
       }
