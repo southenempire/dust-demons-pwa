@@ -12,16 +12,22 @@ export async function GET(request) {
         const wallet = searchParams.get('wallet');
         const limit = parseInt(searchParams.get('limit') || '100');
 
-        // Get top players ordered by XP
+        // DEBUG: Check connection
+        const { count: totalCount, error: countError } = await supabase.from('players').select('*', { count: 'exact', head: true });
+        console.log('Total players in DB:', totalCount, 'Error:', countError);
+
+        // DEBUG: Query with order
         const { data: topPlayers, error: playersError } = await supabase
             .from('players')
             .select('*')
-            .order('xp', { ascending: false })
-            .limit(limit);
+            .order('xp', { ascending: false });
+        // .limit(limit);
+
+        console.log('Top players query result:', topPlayers?.length, 'Error:', playersError);
 
         if (playersError) {
             console.error('Supabase query error:', playersError);
-            return NextResponse.json({ error: 'Database error' }, { status: 500 });
+            return NextResponse.json({ error: 'Database error', details: playersError }, { status: 500 });
         }
 
         // Format top players with ranks
