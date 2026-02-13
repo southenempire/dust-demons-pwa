@@ -1224,9 +1224,11 @@ export default function Home() {
       const signed = await signAllTransactions(txs);
       setLoading(true);
 
+      let lastSig = '';
       for (const tx of signed) {
         const sig = await connection.sendRawTransaction(tx.serialize());
         await connection.confirmTransaction(sig, 'confirmed');
+        lastSig = sig;
       }
 
       setShake(true); triggerHaptic([100, 50, 100]);
@@ -1275,7 +1277,8 @@ export default function Home() {
       }
 
       setTimeout(() => {
-        showModal('SUCCESS', 'EXORCISM COMPLETE', `You recovered ${rent} SOL. Share to recruit more Hunters?`, () => {
+        const txLink = lastSig ? `\nTX: ${lastSig.slice(0, 8)}...` : '';
+        showModal('SUCCESS', 'EXORCISM COMPLETE', `You recovered ${rent} SOL.${txLink}\nShare to recruit more Hunters?`, () => {
           handleShare('burn');
           closeModal();
         }, 'SHARE ON X');

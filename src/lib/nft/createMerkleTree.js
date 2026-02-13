@@ -17,6 +17,16 @@ import { TREE_CONFIG } from './config';
 export async function createMerkleTree(connection, wallet) {
     if (!wallet.publicKey) throw new Error("Wallet not connected");
 
+    // 🛡️ Safe Program ID Retrieval
+    const ACCOUNT_COMPRESSION_ID = SPL_ACCOUNT_COMPRESSION_PROGRAM_ID || new PublicKey('cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK');
+    const NOOP_ID = SPL_NOOP_PROGRAM_ID || new PublicKey('noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV');
+
+    console.log("Tree Init Debug:", {
+        wallet: wallet.publicKey.toBase58(),
+        compression: ACCOUNT_COMPRESSION_ID.toBase58(),
+        noop: NOOP_ID.toBase58()
+    });
+
     const treeKeypair = Keypair.generate();
     const space = getConcurrentMerkleTreeAccountSize(TREE_CONFIG.maxDepth, TREE_CONFIG.maxBufferSize, TREE_CONFIG.canopyDepth);
     const rent = await connection.getMinimumBalanceForRentExemption(space);
@@ -26,7 +36,7 @@ export async function createMerkleTree(connection, wallet) {
         newAccountPubkey: treeKeypair.publicKey,
         lamports: rent,
         space: space,
-        programId: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID
+        programId: ACCOUNT_COMPRESSION_ID
     });
 
     const [treeAuthority] = PublicKey.findProgramAddressSync(
@@ -41,8 +51,8 @@ export async function createMerkleTree(connection, wallet) {
             authority: wallet.publicKey,
             payer: wallet.publicKey,
             treeCreator: wallet.publicKey,
-            compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
-            logWrapper: SPL_NOOP_PROGRAM_ID,
+            compressionProgram: ACCOUNT_COMPRESSION_ID,
+            logWrapper: NOOP_ID,
             systemProgram: SystemProgram.programId,
         },
         {

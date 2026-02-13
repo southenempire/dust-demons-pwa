@@ -38,11 +38,11 @@ export default function SplashScreen() {
                         <div style={{ position: 'relative' }}>
                             <img src="/icon.jpg" alt="Dust Demons" style={{ width: '80px', height: '80px', borderRadius: '50%', boxShadow: '0 0 20px #00ff41' }} />
                             <motion.div
-                                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                                animate={{ scale: [1, 1.1, 1], opacity: [0.5, 1, 0.5] }}
                                 transition={{ duration: 2, repeat: Infinity }}
-                                style={{ position: 'absolute', top: -10, right: -10 }}
+                                style={{ position: 'absolute', top: -5, right: -5 }}
                             >
-                                <img src="/demon-logo.jpg" alt="Demon" style={{ width: '40px', height: '40px', borderRadius: '50%' }} />
+                                <img src="/demon-logo.jpg" alt="Demon" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
                             </motion.div>
                         </div>
 
@@ -52,8 +52,8 @@ export default function SplashScreen() {
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '25px' }}>
                             <span style={{ color: '#666', fontSize: '12px', letterSpacing: '1px' }}>POWERED BY</span>
-                            <span style={{ color: '#00c2ff', fontWeight: '900', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                JUPITER MOBILE <img src="/demon-logo.jpg" alt="Demon" style={{ width: '24px', height: '24px', borderRadius: '50%', border: '1px solid #00c2ff' }} />
+                            <span style={{ color: '#00c2ff', fontWeight: '900', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                JUPITER MOBILE <img src="/demon-logo.jpg" alt="Demon" style={{ width: '16px', height: '16px', borderRadius: '50%', border: '1px solid #00c2ff' }} />
                             </span>
                         </div>
                     </motion.div>
