@@ -983,34 +983,49 @@ export default function Home() {
 
   // 🛡️ HELIUS DAS API
   async function fetchAssets(owner) {
+    let page = 1;
+    let allAssets = [];
+    const limit = 1000; // Increased from 100
+
     try {
-      const response = await fetch(HELIUS_DAS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: 'my-id',
-          method: 'getAssetsByOwner',
-          params: {
-            ownerAddress: owner.toString(),
-            page: 1,
-            limit: 100,
-            displayOptions: { showFungible: true, showNativeBalance: true }
-          }
-        })
-      });
+      while (true) {
+        const response = await fetch(HELIUS_DAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: 'my-id',
+            method: 'getAssetsByOwner',
+            params: {
+              ownerAddress: owner.toString(),
+              page: page,
+              limit: limit,
+              displayOptions: { showFungible: true, showNativeBalance: true }
+            }
+          })
+        });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+          throw new Error(`RPC Error: ${data.error.message || JSON.stringify(data.error)}`);
+        }
+
+        const items = data.result?.items || [];
+        allAssets = [...allAssets, ...items];
+
+        // Break if we fetched fewer than limit (end of list) or safety cap (e.g. 5 pages)
+        if (items.length < limit || page >= 5) {
+          break;
+        }
+        page++;
       }
 
-      const data = await response.json();
-
-      if (data.error) {
-        throw new Error(`RPC Error: ${data.error.message || JSON.stringify(data.error)}`);
-      }
-
-      return data.result?.items || [];
+      return allAssets;
     } catch (e) {
       console.error("DAS API Error:", e);
       console.error("RPC URL:", HELIUS_DAS_URL);
