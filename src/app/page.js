@@ -38,6 +38,9 @@ import { usePredictions } from '@/hooks/usePredictions';
 import { useTheme } from '@/hooks/useTheme';
 import { useJupSOL } from '@/hooks/useJupSOL';
 import { useTransactions } from '@/hooks/useTransactions';
+import { useOGBurner } from '@/hooks/useOGBurner';
+import OGBurnerCelebration from '@/components/OGBurnerCelebration';
+import OGBurnerBadge from '@/components/OGBurnerBadge';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 // ⚡ RPC CONFIGURATION (DAS API endpoint for asset fetching)
@@ -179,6 +182,17 @@ export default function Home() {
     fetchBalance: fetchJupSOLBalance,
     calculateYield
   } = useJupSOL();
+
+  // 🔥 OG BURNER STATE
+  const {
+    ogStatus,
+    stats: ogStats,
+    claimOGStatus,
+    isOG,
+    ogNumber
+  } = useOGBurner();
+
+  const [showOGCelebration, setShowOGCelebration] = useState(false);
 
   // 🏆 ACHIEVEMENT STATE
   const [earnedAchievements, setEarnedAchievements] = useState([]);
@@ -850,6 +864,22 @@ export default function Home() {
       triggerScreenShake();
       triggerHaptic('strong');
 
+      // 🔥 OG BURNER: Claim status after burn
+      try {
+        const ogResult = await claimOGStatus(lastSig);
+        if (ogResult.eligible && !ogResult.alreadyClaimed) {
+          // New OG Burner! Show celebration
+          setTimeout(() => setShowOGCelebration(true), 1000);
+          trackEvent(AnalyticsEvents.OG_BURNER_CLAIMED, {
+            ogNumber: ogResult.ogNumber,
+            burnCount: burned
+          });
+        }
+      } catch (ogError) {
+        console.log('OG claim skipped:', ogError.message);
+        // Non-critical, don't show error to user
+      }
+
       // 🎁 Track referral completion (first burn)
       const isFirstBurn = stats.totalBurned === 0;
       if (isFirstBurn && wallet?.publicKey) {
@@ -1119,6 +1149,11 @@ export default function Home() {
                   <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text }}>{walletBalance.toFixed(3)} SOL</h2>
                 </div>
               </div>
+              {isOG && ogNumber && (
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <OGBurnerBadge ogNumber={ogNumber} size="small" />
+                </div>
+              )}
               <div style={{ background: theme.panel, border: `1px solid ${theme.border}`, padding: '4px 10px', borderRadius: '2px' }}>
                 <p style={{ margin: 0, fontSize: '8px', color: '#fbbf24', letterSpacing: '1px' }}>LOOT</p>
                 <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text }}>{stats.solReclaimed.toFixed(3)}</h2>
@@ -2226,4 +2261,13 @@ function BountyPoster({ data, selected, onSelect, onSwap, theme }) {
     </motion.div>
   );
 }
+
+{/* 🔥 OG BURNER CELEBRATION MODAL */ }
+<OGBurnerCelebration
+  isOpen={showOGCelebration}
+  onClose={() => setShowOGCelebration(false)}
+  ogNumber={ogNumber}
+  totalOGs={100}
+/>
+
 
