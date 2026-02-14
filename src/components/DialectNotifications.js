@@ -6,7 +6,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useEffect, useState } from 'react';
 import '@dialectlabs/react-ui/index.css';
 
-export default function DialectNotifications({ theme }) {
+export default function DialectNotificationsWrapper({ theme }) {
     const [mounted, setMounted] = useState(false);
     const wallet = useWallet();
 
