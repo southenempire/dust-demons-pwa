@@ -1501,7 +1501,7 @@ export default function Home() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => makePrediction('up')}
+                    onClick={() => makePredictionHook('up')}
                     style={{
                       flex: 1,
                       background: 'linear-gradient(180deg, rgba(0,255,65,0.1) 0%, rgba(0,255,65,0.05) 100%)',
@@ -1529,7 +1529,7 @@ export default function Home() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => makePrediction('down')}
+                    onClick={() => makePredictionHook('down')}
                     style={{
                       flex: 1,
                       background: 'linear-gradient(180deg, rgba(255,0,85,0.1) 0%, rgba(255,0,85,0.05) 100%)',
