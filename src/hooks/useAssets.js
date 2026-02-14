@@ -2,8 +2,8 @@
 // Manages asset fetching, filtering, and dust detection
 
 import { useState, useCallback } from 'react';
+import { fetchAssetsByOwner } from '@/services/helius';
 
-const HELIUS_DAS_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.helius-rpc.com/?api-key=19b096d1-dce5-49a3-ad44-5e7876db7661';
 const DUST_THRESHOLD_USD = 1.00; // $1.00 threshold
 
 export function useAssets() {
@@ -20,42 +20,11 @@ export function useAssets() {
 
         setLoading(true);
         try {
-            let allAssets = [];
-            let page = 1;
-            let hasMore = true;
-
-            // Fetch up to 1000 assets (pagination)
-            while (hasMore && page <= 10) {
-                const response = await fetch(HELIUS_DAS_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        jsonrpc: '2.0',
-                        id: `assets-page-${page}`,
-                        method: 'getAssetsByOwner',
-                        params: {
-                            ownerAddress: owner.toBase58(),
-                            page,
-                            limit: 100,
-                            displayOptions: { showFungible: true }
-                        }
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.error) {
-                    console.error('Helius API error:', data.error);
-                    break;
-                }
-
-                const pageAssets = data.result?.items || [];
-                allAssets = [...allAssets, ...pageAssets];
-
-                // Check if there are more pages
-                hasMore = pageAssets.length === 100;
-                page++;
-            }
+            // Use Helius service to fetch assets
+            const allAssets = await fetchAssetsByOwner(owner.toBase58(), {
+                limit: 100,
+                maxPages: 10
+            });
 
             // Filter and format assets
             const formattedAssets = allAssets
