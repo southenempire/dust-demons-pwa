@@ -2,6 +2,7 @@
 // Manages leaderboard data fetching and submission
 
 import { useState, useCallback } from 'react';
+import { fetchRankings, submitStats } from '@/services/leaderboard';
 
 export function useLeaderboard() {
     const [leaderboardData, setLeaderboardData] = useState([]);
@@ -12,22 +13,15 @@ export function useLeaderboard() {
     const fetchLeaderboard = useCallback(async (wallet = null) => {
         setLoading(true);
         try {
-            const url = wallet
-                ? `/api/leaderboard/rankings?wallet=${wallet.toBase58()}`
-                : '/api/leaderboard/rankings';
+            const walletAddress = wallet ? wallet.toBase58() : null;
+            const { topPlayers, userRank: rank } = await fetchRankings(walletAddress);
 
-            const response = await fetch(url);
-            const data = await response.json();
-
-            if (data.error) {
-                console.error('Leaderboard fetch error:', data.error);
-                return;
-            }
-
-            setLeaderboardData(data.topPlayers || []);
-            setUserRank(data.userRank || null);
+            setLeaderboardData(topPlayers);
+            setUserRank(rank);
         } catch (error) {
             console.error('Failed to fetch leaderboard:', error);
+            setLeaderboardData([]);
+            setUserRank(null);
         } finally {
             setLoading(false);
         }
@@ -38,25 +32,12 @@ export function useLeaderboard() {
         if (!wallet) return;
 
         try {
-            const response = await fetch('/api/leaderboard/submit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    wallet: wallet.toBase58(),
-                    xp: stats.xp || 0,
-                    totalBurned: stats.totalBurned || 0,
-                    solReclaimed: stats.solReclaimed || 0,
-                    level: stats.level || 1,
-                    rank: stats.rank || 'VOID STALKER',
-                    isMobile
-                })
-            });
+            const walletAddress = wallet.toBase58();
+            const result = await submitStats(walletAddress, stats, isMobile);
 
-            const data = await response.json();
-
-            if (data.success) {
-                setUserRank(data.rank || null);
-                console.log('✅ Leaderboard updated:', data);
+            if (result.success) {
+                setUserRank(result.rank);
+                console.log('✅ Leaderboard updated:', result);
             }
         } catch (error) {
             console.error('Failed to submit to leaderboard:', error);
