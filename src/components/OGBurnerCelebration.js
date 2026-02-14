@@ -134,7 +134,7 @@ export default function OGBurnerCelebration({ isOpen, onClose, ogNumber, totalOG
                                 marginBottom: '16px'
                             }}
                         >
-                            🔥 YOU'RE AN OG BURNER! 🔥
+                            🔥 YOU&apos;RE AN OG BURNER! 🔥
                         </motion.h1>
 
                         {/* OG Number */}
@@ -165,10 +165,11 @@ export default function OGBurnerCelebration({ isOpen, onClose, ogNumber, totalOG
                                 lineHeight: '1.6'
                             }}
                         >
-                            You're one of the first <strong>{totalOGs}</strong> users to burn dust!
+                            You&apos;re one of the first <strong>{totalOGs}</strong> users to burn dust!
                             <br />
                             Your exclusive OG Burner NFT is coming soon...
                         </motion.p>
+
 
                         {/* Flame animation */}
                         <motion.div
@@ -209,7 +210,7 @@ export default function OGBurnerCelebration({ isOpen, onClose, ogNumber, totalOG
                                 width: '100%'
                             }}
                         >
-                            LET'S GO! 🚀
+                            LET&apos;S GO! 🚀
                         </motion.button>
                     </motion.div>
                 </motion.div>

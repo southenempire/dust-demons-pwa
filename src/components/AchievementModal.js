@@ -5,6 +5,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect } from 'react';
 
 export default function AchievementModal({ achievement, isOpen, onClose }) {
+    // Auto-close after 5 seconds
+    useEffect(() => {
+        if (isOpen && achievement) {
+            const timer = setTimeout(onClose, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [isOpen, achievement, onClose]);
+
     if (!achievement) return null;
 
     const { name, title, description, rarity, emoji, id } = achievement;
@@ -18,14 +26,6 @@ export default function AchievementModal({ achievement, isOpen, onClose }) {
     };
 
     const rarityColor = rarityColors[rarity] || '#9CA3AF';
-
-    // Auto-close after 5 seconds
-    useEffect(() => {
-        if (isOpen) {
-            const timer = setTimeout(onClose, 5000);
-            return () => clearTimeout(timer);
-        }
-    }, [isOpen, onClose]);
 
     return (
         <AnimatePresence>
