@@ -626,52 +626,6 @@ export default function Home() {
     }
   };
 
-  // 💰 JUPSOL YIELD LOGIC
-  const JUPSOL_MINT = 'jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjx93v';
-
-  const fetchJupSOLBalance = async () => {
-    if (!publicKey || !connection) return;
-
-    try {
-      const jupsolMint = new PublicKey(JUPSOL_MINT);
-      const tokenAccounts = await connection.getParsedTokenAccountsByOwner(publicKey, {
-        mint: jupsolMint
-      });
-
-      if (tokenAccounts.value.length > 0) {
-        const balance = tokenAccounts.value[0].account.data.parsed.info.tokenAmount.uiAmount;
-        setJupsolBalance(balance || 0);
-
-        // Calculate USD value
-        if (currentSOLPrice > 0) {
-          const valueUSD = balance * currentSOLPrice;
-          setJupsolValueUSD(valueUSD);
-
-          // Calculate earnings estimates
-          const yearlyEarnings = (balance * jupsolAPY) / 100;
-          setEstimatedEarnings({
-            daily: yearlyEarnings / 365,
-            weekly: yearlyEarnings / 52,
-            monthly: yearlyEarnings / 12,
-            yearly: yearlyEarnings
-          });
-        }
-      } else {
-        setJupsolBalance(0);
-        setJupsolValueUSD(0);
-        setEstimatedEarnings({ daily: 0, weekly: 0, monthly: 0, yearly: 0 });
-      }
-    } catch (error) {
-      console.error('Failed to fetch JupSOL balance:', error);
-    }
-  };
-
-  // Fetch real JupSOL APY
-  const fetchRealAPY = async () => {
-    const apy = await fetchJupSOLAPY();
-    setJupsolAPY(apy);
-  };
-
   // 🛡️ SCAN LOGIC (PRECISION FILTERING)
   async function handleScan() {
     // Require wallet connection
