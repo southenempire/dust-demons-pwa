@@ -1641,7 +1641,7 @@ export default function Home() {
                   <div style={{ marginTop: '20px' }}>
                     {!dailyPrediction.result ? (
                       <button
-                        onClick={checkPredictionResult}
+                        onClick={() => checkPredictionResult(dailyPrediction, currentSOLPrice)}
                         style={{
                           width: '100%',
                           padding: '16px',
