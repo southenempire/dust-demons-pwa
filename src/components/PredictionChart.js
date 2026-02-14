@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { useMemo, useState, useEffect } from 'react';
 
-export default function PredictionChart({ startPrice, currentPrice, direction, theme }) {
+export default function PredictionChart({ startPrice = 0, currentPrice = 0, direction, theme }) {
     // ⚡ GENERATE FAKE VOLATILITY LINE
     // We want a line that starts at 'startPrice' and ends at 'currentPrice',
     // but has random jaggedness in between to look like a chart.

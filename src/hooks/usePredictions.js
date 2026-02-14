@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getSOLPrice } from '@/services/jupiter';
+import { sendJupiterNotification } from '@/utils/jupiter-mobile';
 
 export function usePredictions() {
     const [currentSOLPrice, setCurrentSOLPrice] = useState(0);
@@ -29,23 +30,22 @@ export function usePredictions() {
         }
     }, [currentSOLPrice]);
 
-    // Make a prediction
+    // Make a prediction (5-minute round)
     const makePrediction = useCallback((direction, currentPrice) => {
         const now = new Date();
-        const tomorrow = new Date(now);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        tomorrow.setHours(0, 0, 0, 0);
+        const expiresAt = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes from now
 
         const prediction = {
             date: now.toISOString(),
             prediction: direction,
             targetPrice: currentPrice,
-            expiresAt: tomorrow.toISOString(),
+            startPrice: currentPrice, // UI expects startPrice
+            expiresAt: expiresAt.toISOString(),
             result: null
         };
 
         setDailyPrediction(prediction);
-        setTimeUntilNextPrediction(tomorrow.getTime());
+        setTimeUntilNextPrediction(expiresAt.getTime());
 
         return prediction;
     }, []);
@@ -66,35 +66,51 @@ export function usePredictions() {
             priceChange
         };
 
-        setDailyPrediction(result);
-        setPredictionHistory(prev => [...prev, result]);
+        setDailyPrediction(null); // Clear active prediction
+        setPredictionHistory(prev => [result, ...prev]);
+
+        // 🔔 Send Jupiter Mobile Notification
+        if (wasCorrect) {
+            sendJupiterNotification(
+                'Prophecy Fulfiiled! 🔮',
+                `You won! SOL moved ${priceChange > 0 ? 'UP' : 'DOWN'} to $${newPrice.toFixed(2)}`
+            );
+        } else {
+            sendJupiterNotification(
+                'Prophecy Failed 💀',
+                `You lost. SOL moved ${priceChange > 0 ? 'UP' : 'DOWN'} to $${newPrice.toFixed(2)}`
+            );
+        }
 
         return result;
     }, []);
 
-    // Update timer
+    // Update timer & check result
     useEffect(() => {
-        if (!timeUntilNextPrediction) return;
+        if (!timeUntilNextPrediction || !dailyPrediction) return;
 
         const interval = setInterval(() => {
             const now = Date.now();
             const diff = timeUntilNextPrediction - now;
 
             if (diff <= 0) {
-                setTimeLeft('Ready!');
+                // Round ended! Check result if we have current price
+                if (currentSOLPrice > 0) {
+                    checkPredictionResult(dailyPrediction, currentSOLPrice);
+                }
+                setTimeLeft('Round Ended!');
                 setTimeUntilNextPrediction(null);
                 return;
             }
 
-            const hours = Math.floor(diff / (1000 * 60 * 60));
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-            setTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
+            setTimeLeft(`${minutes}m ${seconds}s`);
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [timeUntilNextPrediction]);
+    }, [timeUntilNextPrediction, dailyPrediction, currentSOLPrice, checkPredictionResult]);
 
     return {
         currentSOLPrice,

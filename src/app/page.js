@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from 'react';
 import { Skull, Ghost, Crosshair, Zap, Activity, Scan, Wallet, Terminal, Settings, Volume2, VolumeX, X, Target, ArrowRightLeft, ArrowLeft, HelpCircle, Loader2, Moon, Sun, Monitor, Share2, Users, Trophy, Crown, Image as ImageIcon, Smartphone, Calendar, CheckCircle, TrendingUp, TrendingDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
@@ -17,6 +17,8 @@ import { TokenSkeleton, BalanceSkeleton, StatsSkeleton } from '@/components/Load
 import { trackEvent, AnalyticsEvents, PerformanceMonitor, TransactionMonitor } from '@/utils/analytics';
 import { canBurn, canSwap, canScan, canPredict } from '@/utils/rate-limiter';
 import OnboardingTour from '@/components/OnboardingTour';
+import dynamic from 'next/dynamic';
+const DialectNotifications = dynamic(() => import('@/components/DialectNotifications'), { ssr: false });
 import LoadingSpinner from '@/components/LoadingSpinner';
 import AchievementModal from '@/components/AchievementModal';
 import AchievementGallery from '@/components/AchievementGallery';
@@ -1160,7 +1162,12 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div style={{ transform: 'scale(0.85)' }} className={!publicKey ? 'pulse-animation' : ''}><WalletMultiButton /></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div style={{ transform: 'scale(0.9)' }}>
+              <DialectNotifications theme={theme} />
+            </div>
+            <div style={{ transform: 'scale(0.85)' }} className={!publicKey ? 'pulse-animation' : ''}><WalletMultiButton /></div>
+          </div>
         </header>
 
         {/* MENU */}
@@ -1614,7 +1621,7 @@ export default function Home() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
                     <div style={{ background: theme.bg, padding: '10px', borderRadius: '8px' }}>
                       <span style={{ fontSize: '10px', color: theme.textDim }}>ENTRY PRICE</span>
-                      <div style={{ fontSize: '16px', fontWeight: '900', color: theme.text, fontFamily: 'monospace' }}>${dailyPrediction.startPrice.toFixed(2)}</div>
+                      <div style={{ fontSize: '16px', fontWeight: '900', color: theme.text, fontFamily: 'monospace' }}>${(dailyPrediction.startPrice || dailyPrediction.targetPrice || 0).toFixed(2)}</div>
                     </div>
                     <div style={{ background: theme.bg, padding: '10px', borderRadius: '8px' }}>
                       <span style={{ fontSize: '10px', color: theme.textDim }}>TARGET</span>

@@ -38,10 +38,17 @@ export async function getSOLPrice() {
         const price = solData.usdPrice || 0;
         const change24h = solData.priceChange24h || 0;
 
+        // Validation: Ensure we return a valid number
+        const finalPrice = parseFloat(price);
+
+        if (isNaN(finalPrice)) {
+            console.error('Invalid SOL price received:', price);
+            return { price: 0, direction: 'neutral' };
+        }
+
         return {
-            price,
-            change24h,
-            direction: change24h > 0 ? 'up' : 'down'
+            price: finalPrice, // Ensure it's a number
+            direction: change24h >= 0 ? 'up' : 'down'
         };
     } catch (error) {
         console.error('Failed to fetch SOL price from Jupiter:', error);
