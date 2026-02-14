@@ -1,18 +1,27 @@
 // src/services/jupiter.js
 // Jupiter API service for price data
-// Using Jupiter's Price API v2 for the hackathon challenge
+// Using Jupiter's Price API v3 for the hackathon challenge
 
-const JUPITER_PRICE_API = 'https://api.jup.ag/price/v2';
+const JUPITER_PRICE_API = 'https://api.jup.ag/price/v3';
 const SOL_MINT = 'So11111111111111111111111111111111111111112';
 
+// API key is optional for public use, but recommended for production
+const API_KEY = process.env.NEXT_PUBLIC_JUPITER_API_KEY || '';
+
 /**
- * Get current SOL price in USD using Jupiter Price API
+ * Get current SOL price in USD using Jupiter Price API v3
  * @returns {Promise<Object>} { price: number, change24h: number, direction: string }
  */
 export async function getSOLPrice() {
     try {
+        const headers = {};
+        if (API_KEY) {
+            headers['x-api-key'] = API_KEY;
+        }
+
         const response = await fetch(
-            `${JUPITER_PRICE_API}?ids=${SOL_MINT}`
+            `${JUPITER_PRICE_API}?ids=${SOL_MINT}`,
+            { headers }
         );
 
         if (!response.ok) {
@@ -20,14 +29,14 @@ export async function getSOLPrice() {
         }
 
         const data = await response.json();
-        const solData = data?.data?.[SOL_MINT];
+        const solData = data?.[SOL_MINT];
 
         if (!solData) {
             throw new Error('SOL price data not found in Jupiter response');
         }
 
-        const price = solData.price || 0;
-        const change24h = solData.extraInfo?.quotedPrice?.buyPrice24hChangePercent || 0;
+        const price = solData.usdPrice || 0;
+        const change24h = solData.priceChange24h || 0;
 
         return {
             price,
@@ -41,15 +50,21 @@ export async function getSOLPrice() {
 }
 
 /**
- * Get prices for multiple tokens using Jupiter Price API
+ * Get prices for multiple tokens using Jupiter Price API v3
  * @param {Array<string>} mints - Array of token mint addresses
  * @returns {Promise<Object>} Object mapping mint addresses to price data
  */
 export async function getTokenPrices(mints) {
     try {
+        const headers = {};
+        if (API_KEY) {
+            headers['x-api-key'] = API_KEY;
+        }
+
         const mintIds = mints.join(',');
         const response = await fetch(
-            `${JUPITER_PRICE_API}?ids=${mintIds}`
+            `${JUPITER_PRICE_API}?ids=${mintIds}`,
+            { headers }
         );
 
         if (!response.ok) {
@@ -58,12 +73,12 @@ export async function getTokenPrices(mints) {
 
         const data = await response.json();
 
-        // Transform to simpler format
+        // Transform to simpler format (v3 response is flatter)
         const prices = {};
-        for (const [mint, priceData] of Object.entries(data?.data || {})) {
+        for (const [mint, priceData] of Object.entries(data || {})) {
             prices[mint] = {
-                price: priceData.price || 0,
-                change24h: priceData.extraInfo?.quotedPrice?.buyPrice24hChangePercent || 0
+                price: priceData.usdPrice || 0,
+                change24h: priceData.priceChange24h || 0
             };
         }
 
