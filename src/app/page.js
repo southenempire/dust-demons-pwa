@@ -1530,7 +1530,7 @@ export default function Home() {
               </motion.div>
 
               {/* 🎮 GAMEPLAY AREA */}
-              {!dailyPrediction || dailyPrediction.date !== new Date().toDateString() ? (
+              {!dailyPrediction ? (
                 <div style={{ display: 'flex', gap: '12px', height: '180px' }}>
                   {/* BULLISH BUTTON */}
                   <motion.button
@@ -2257,17 +2257,14 @@ function BountyPoster({ data, selected, onSelect, onSwap, theme }) {
           </span>
         </div>
         <p style={{ margin: '6px 0 0 0', fontSize: '10px', color: theme.textDim, textAlign: 'center', fontFamily: 'monospace' }}>${data.value.toFixed(2)}</p>
+        {/* 🔥 OG BURNER CELEBRATION MODAL */}
+        <OGBurnerCelebration
+          isOpen={showOGCelebration}
+          onClose={() => setShowOGCelebration(false)}
+          ogNumber={ogNumber}
+          totalOGs={100}
+        />
       </div>
     </motion.div>
   );
 }
-
-{/* 🔥 OG BURNER CELEBRATION MODAL */ }
-<OGBurnerCelebration
-  isOpen={showOGCelebration}
-  onClose={() => setShowOGCelebration(false)}
-  ogNumber={ogNumber}
-  totalOGs={100}
-/>
-
-
