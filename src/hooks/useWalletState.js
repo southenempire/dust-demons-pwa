@@ -79,6 +79,7 @@ export function useWalletState() {
         publicKey,
         connected,
         walletBalance,
+        setWalletBalance,
         isJupiterMobile,
         isMobile
     };
