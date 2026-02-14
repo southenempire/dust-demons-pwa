@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Zap } from 'lucide-react';
-import { getTokenPrices } from '@/utils/jupiter-price';
+import { getTokenPrices } from '@/services/jupiter';
 
 const SOL_MINT = 'So11111111111111111111111111111111111111112';
 const JUP_SOL_MINT = 'jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjx93v';

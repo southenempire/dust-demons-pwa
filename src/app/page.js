@@ -10,7 +10,7 @@ import { createBurnInstruction, createCloseAccountInstruction, getAssociatedToke
 import confetti from 'canvas-confetti';
 import { playSynthesizedSound } from '@/utils/sound-effects'; // 🔊 Sound Synth
 import { fetchJupSOLAPY } from '@/utils/jupsol-apy';
-import { getTokenPrices } from '@/utils/jupiter-price';
+import { getTokenPrices, getSOLPrice } from '@/services/jupiter';
 import { verifyJupiterSwap, verifyTokenBurns } from '@/utils/on-chain-verification';
 import { sendJupiterNotification, setupDeepLinking, parseDeepLink } from '@/utils/jupiter-mobile';
 import { TokenSkeleton, BalanceSkeleton, StatsSkeleton } from '@/components/LoadingSkeleton';
