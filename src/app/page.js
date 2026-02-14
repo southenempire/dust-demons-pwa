@@ -374,7 +374,6 @@ export default function Home() {
   useEffect(() => {
     if (publicKey && connection && currentSOLPrice > 0) {
       fetchJupSOLBalance();
-      fetchRealAPY();
     }
   }, [publicKey, connection, currentSOLPrice]);
 
