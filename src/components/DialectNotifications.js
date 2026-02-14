@@ -1,7 +1,7 @@
 'use client';
 
 import { DialectSolanaSdk } from '@dialectlabs/react-sdk-blockchain-solana';
-import { DialectNoftifications, DialectThemeProvider } from '@dialectlabs/react-ui';
+import { DialectNotifications, DialectThemeProvider } from '@dialectlabs/react-ui';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useEffect, useState } from 'react';
 import '@dialectlabs/react-ui/index.css';
@@ -35,7 +35,7 @@ export default function DialectNotifications({ theme }) {
         <div style={{ position: 'relative', zIndex: 100 }}>
             <DialectSolanaSdk wallet={wallet}>
                 <DialectThemeProvider theme="dark" variables={dialectTheme.dark}>
-                    <DialectNoftifications />
+                    <DialectNotifications />
                 </DialectThemeProvider>
             </DialectSolanaSdk>
         </div>
