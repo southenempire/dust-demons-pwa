@@ -5,11 +5,12 @@
 // Using Jupiter's Price API v4 (Public) or fallback
 // Note: v3 requires an API key, v4/v1 are public but rate-limited
 
-const JUPITER_PRICE_API = 'https://api.jup.ag/price/v2'; // Trying v2 public endpoint
+// Using Jupiter's Price API v3 with User Provided Key
+const JUPITER_PRICE_API = 'https://api.jup.ag/price/v3';
 const SOL_MINT = 'So11111111111111111111111111111111111111112';
 
-// API key is optional for public use, but recommended for production
-const API_KEY = process.env.NEXT_PUBLIC_JUPITER_API_KEY || '';
+// API key from user (fallback if env var missing)
+const API_KEY = process.env.NEXT_PUBLIC_JUPITER_API_KEY || 'a338f239-2d73-4caa-a9a5-a691d51a54f2';
 
 /**
  * Get current SOL price in USD using Jupiter Price API v3
@@ -22,47 +23,46 @@ export async function getSOLPrice() {
             headers['x-api-key'] = API_KEY;
         }
 
+        // Try Jupiter V3 first
         const response = await fetch(
             `${JUPITER_PRICE_API}?ids=${SOL_MINT}`,
             { headers }
         );
 
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: Failed to fetch SOL price from Jupiter`);
+        if (response.ok) {
+            const data = await response.json();
+
+            // V3 Response often: { "Mint": { id, type, price: 123.45 } }
+            // Some versions: { data: { "Mint": ... } }
+            const solData = data?.[SOL_MINT] || data?.data?.[SOL_MINT];
+
+            if (solData) {
+                return {
+                    price: parseFloat(solData.price) || 0,
+                    direction: 'neutral' // V3 simple doesn't give direction, we need history for that
+                };
+            }
         }
 
-        const data = await response.json();
-
-        // V2 Response: { data: { "So11...": { id, type, price: "123.45" } } }
-        const solData = data?.data?.[SOL_MINT];
-
-        if (!solData) {
-            console.warn('SOL price data not found in Jupiter response, defaulting to 0');
-            return { price: 0, direction: 'neutral' };
-        }
-
-        const price = solData.price || 0;
-        // V2 simple endpoint might not have 24h change, so we'll look for it or default
-        const change24h = 0;
-
-        // Validation: Ensure we return a valid number
-        const finalPrice = parseFloat(price);
-
-        if (isNaN(finalPrice)) {
-            console.error('Invalid SOL price received:', price);
-            return { price: 0, direction: 'neutral' };
-        }
-
-        return {
-            price: finalPrice,
-            direction: 'neutral' // V2 simple endpoint doesn't give direction context easily
-        };
+        throw new Error('Jupiter API failed');
     } catch (error) {
-        console.error('Failed to fetch SOL price from Jupiter:', error);
-        // value 0 is better than crashing
-        return { price: 0, direction: 'neutral' };
+        console.warn('Jupiter API failed, trying CoinGecko fallback...');
+        try {
+            // Fallback to CoinGecko
+            const cgResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd&include_24hr_change=true');
+            const cgData = await cgResponse.json();
+
+            return {
+                price: cgData.solana.usd,
+                direction: cgData.solana.usd_24h_change >= 0 ? 'up' : 'down'
+            };
+        } catch (fallbackError) {
+            console.error('All price APIs failed:', fallbackError);
+            return { price: 0, direction: 'neutral' };
+        }
     }
 }
+
 
 /**
  * Get prices for multiple tokens using Jupiter Price API v3
@@ -76,37 +76,34 @@ export async function getTokenPrices(mints) {
             headers['x-api-key'] = API_KEY;
         }
 
-        const mintIds = mints.join(',');
         const response = await fetch(
-            `${JUPITER_PRICE_API}?ids=${mintIds}`,
+            `${JUPITER_PRICE_API}?ids=${mints.join(',')}`,
             { headers }
         );
 
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: Failed to fetch token prices from Jupiter`);
-        }
+        if (response.ok) {
+            // Jupiter Price API v3 structure: { "Mint": { price: ... } } (or nested in data)
+            const data = await response.json();
+            const prices = {};
+            const sourceData = data.data || data; // Handle both { data: ... } and direct map
 
-        const data = await response.json();
-
-        // Jupiter Price API v2 structure: { data: { "Mint": { id, mintSymbol, vsToken, startPrice, endPrice, price } } }
-        // Note: The structure might vary slightly, but usually it's nested under 'data'
-        const prices = {};
-
-        if (data && data.data) {
-            for (const [mint, priceData] of Object.entries(data.data)) {
-                if (priceData) {
-                    prices[mint] = {
-                        price: parseFloat(priceData.price) || 0,
-                        change24h: 0 // V2 might not provide 24h change in this endpoint, defaulting to 0
-                    };
+            if (sourceData) {
+                for (const [mint, priceData] of Object.entries(sourceData)) {
+                    if (priceData) {
+                        prices[mint] = {
+                            price: parseFloat(priceData.price) || 0,
+                            change24h: 0
+                        };
+                    }
                 }
             }
+            return prices;
         }
 
-        return prices;
+        throw new Error('Jupiter API failed');
     } catch (error) {
-        console.error('Failed to fetch token prices from Jupiter:', error);
-        // Return empty object instead of throwing to prevent app crash
+        console.warn('Jupiter token API failed:', error);
+        // Fallback or return empty to prevent crash
         return {};
     }
 }
