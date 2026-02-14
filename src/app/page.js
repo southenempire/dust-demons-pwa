@@ -29,6 +29,13 @@ import { detectReferralCode, trackReferralCompletion } from '@/lib/referrals';
 import PriceTicker from '@/components/PriceTicker';
 import SplashScreen from '@/components/SplashScreen';
 import usePullToRefresh from '@/hooks/usePullToRefresh';
+import { useWalletState } from '@/hooks/useWalletState';
+import { useAssets } from '@/hooks/useAssets';
+import { useLeaderboard } from '@/hooks/useLeaderboard';
+import { useModal } from '@/hooks/useModal';
+import { useAudio } from '@/hooks/useAudio';
+import { usePredictions } from '@/hooks/usePredictions';
+import { useTheme } from '@/hooks/useTheme';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 // ⚡ RPC CONFIGURATION (DAS API endpoint for asset fetching)
@@ -99,23 +106,31 @@ const mobileShare = async (text, url) => {
 };
 
 export default function Home() {
-  const { publicKey, signAllTransactions, connected, wallet, signTransaction } = useWallet();
+  const { signAllTransactions, wallet, signTransaction } = useWallet();
   const { connection } = useConnection();
+
+  // Custom Hooks
+  const { publicKey, connected, walletBalance, isJupiterMobile, isMobile } = useWalletState();
+  const { assets, loading: assetsLoading, selectedIds, fetchAssets, getDustAssets, getBurnableAssets, toggleSelection, clearSelection, selectAllDust } = useAssets();
+  const { leaderboardData, userRank, loading: leaderboardLoading, fetchLeaderboard, submitToLeaderboard } = useLeaderboard();
+  const { modal, showModal, closeModal } = useModal();
+  const { audioEnabled, loadAudio, playSound, toggleAudio, setAudioEnabled } = useAudio();
+  const { currentSOLPrice, previousSOLPrice, priceDirection, dailyPrediction, predictionHistory, timeLeft, fetchSOLPrice, makePrediction: makePredictionHook, checkPredictionResult } = usePredictions();
+  const { theme, themeMode, setThemeMode, toggleTheme } = useTheme();
+
+  // Local UI State
   const [mounted, setMounted] = useState(false);
   const [treeAddress, setTreeAddress] = useState(null); // 🌳 Merkle Tree
   const [isMounted, setIsMounted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [result, setResult] = useState(null);
   const [view, setView] = useState('SCANNER');
   const [burningId, setBurningId] = useState(null);
-  const [selectedIds, setSelectedIds] = useState([]);
   const [lootDrops, setLootDrops] = useState([]);
   const [shake, setShake] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showTour, setShowTour] = useState(false);
   const [tourStep, setTourStep] = useState(0);
-  const [walletBalance, setWalletBalance] = useState(0);
   const [swapTarget, setSwapTarget] = useState(null);
   const [swapOutput, setSwapOutput] = useState('So11111111111111111111111111111111111111112'); // Default SOL
 
@@ -131,11 +146,7 @@ export default function Home() {
   const [sessionHistory, setSessionHistory] = useState([]);
 
   // Settings
-  const [audioEnabled, setAudioEnabled] = useState(true);
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
-  const [themeMode, setThemeMode] = useState('dark');
-
-  const [isJupiterMobile, setIsJupiterMobile] = useState(false);
   const [jupiterInitialized, setJupiterInitialized] = useState(false);
 
   // Stats
@@ -150,16 +161,6 @@ export default function Home() {
 
   const [currentRank, setCurrentRank] = useState('VOID STALKER');
   const [rankColor, setRankColor] = useState('#00ff41');
-  const [modal, setModal] = useState({ isOpen: false, type: 'INFO', title: '', message: '', actionLabel: '', onConfirm: null });
-
-  // 🎲 PREDICTION MARKETS STATE
-  const [currentSOLPrice, setCurrentSOLPrice] = useState(0);
-  const [previousSOLPrice, setPreviousSOLPrice] = useState(0);
-  const [priceDirection, setPriceDirection] = useState(null); // 'up' or 'down'
-  const [dailyPrediction, setDailyPrediction] = useState(null); // { date, prediction: 'up'/'down', targetPrice, result: null/'correct'/'wrong' }
-  const [predictionHistory, setPredictionHistory] = useState([]);
-  const [timeUntilNextPrediction, setTimeUntilNextPrediction] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(''); // 🕒 Visual Timer
 
   // 💰 JUPSOL YIELD STATE
   const [jupsolBalance, setJupsolBalance] = useState(0);
@@ -173,13 +174,9 @@ export default function Home() {
   });
   const [calculatorAmount, setCalculatorAmount] = useState(''); // For custom yield calculator
 
-  // 🏆 LEADERBOARD STATE
-  const [leaderboardData, setLeaderboardData] = useState([]);
-
   // 🏆 ACHIEVEMENT STATE
   const [earnedAchievements, setEarnedAchievements] = useState([]);
   const [achievementToShow, setAchievementToShow] = useState(null);
-  const [userRank, setUserRank] = useState(null);
 
   // JupSOL Yield
   const [realtimeEarnings, setRealtimeEarnings] = useState(0);
@@ -205,23 +202,6 @@ export default function Home() {
   // Transaction states
   const [pendingTx, setPendingTx] = useState(null); // { type: 'burn' | 'swap' | 'prediction', message: string }
 
-  // 📱 DETECT MOBILE ENVIRONMENT
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setIsMobile(/Mobi|Android/i.test(navigator.userAgent));
-      setIsJupiterMobile(/Jupiter/i.test(navigator.userAgent) || window.jupiter);
-    }
-  }, []);
-
-  const getActiveTheme = () => {
-    if (themeMode === 'system') {
-      if (typeof window !== 'undefined' && window.matchMedia) return window.matchMedia('(prefers-color-scheme: dark)').matches ? THEMES.dark : THEMES.light;
-      return THEMES.dark;
-    }
-    return THEMES[themeMode] || THEMES.dark;
-  };
-  const theme = getActiveTheme();
-  const audioRefs = useRef({});
   const hasHydrated = useRef(false);
 
   // 🛡️ LOAD JUPITER PLUGIN
@@ -335,43 +315,15 @@ export default function Home() {
     if (savedStats) setStats(JSON.parse(savedStats));
     setTimeout(() => { hasHydrated.current = true; }, 500);
 
-    if (typeof navigator !== 'undefined') {
-      const ua = navigator.userAgent || '';
-      // Enhanced Jupiter Mobile Detection with multiple checks
-      const detectJupiterMobile = () => {
-        // Primary check: Jupiter-specific wallet properties
-        if (window?.solana?.isJupiter === true && window?.solana?.isPhantom === false) {
-          return true;
-        }
-
-        // Secondary check: Jupiter object presence
-        if (window?.Jupiter) {
-          return true;
-        }
-
-        // Tertiary check: User agent
-        const ua = navigator.userAgent || '';
-        if (ua.includes('Jupiter')) {
-          return true;
-        }
-
-        return false;
-      };
-
-      const isJupMobile = detectJupiterMobile();
-      setIsJupiterMobile(isJupMobile);
-      if (isJupMobile) {
-        trackEvent(AnalyticsEvents.JUPITER_MOBILE_DETECTED);
-      }
-    }
-
-    const loadAudio = (key, url) => {
-      if (typeof window === 'undefined') return;
-      const audio = new Audio(url);
-      audio.volume = 0.5;
-      audioRefs.current[key] = audio;
+    // Load audio files
+    const sfx = {
+      scan: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3',
+      burn: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3',
+      select: 'https://assets.mixkit.co/active_storage/sfx/2577/2577-preview.mp3',
+      error: 'https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3',
+      success: 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3',
+      alert: 'https://assets.mixkit.co/active_storage/sfx/2865/2865-preview.mp3'
     };
-    const sfx = { scan: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3', burn: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3', select: 'https://assets.mixkit.co/active_storage/sfx/2577/2577-preview.mp3', error: 'https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3', success: 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3', alert: 'https://assets.mixkit.co/active_storage/sfx/2865/2865-preview.mp3' };
     Object.entries(sfx).forEach(([k, v]) => loadAudio(k, v));
 
     // Setup deep linking for Jupiter Mobile
@@ -496,41 +448,6 @@ export default function Home() {
     }
   }, [isMounted, publicKey]);
 
-  // 📊 SUBMIT STATS TO LEADERBOARD AFTER ACTIONS
-  const submitToLeaderboard = async () => {
-    if (!publicKey) return;
-
-    try {
-      console.log('📊 Submitting to leaderboard:', {
-        wallet: publicKey.toString(),
-        xp: stats.xp,
-        totalBurned: stats.totalBurned,
-        solReclaimed: stats.solReclaimed,
-        level: stats.level,
-        rank: currentRank
-      });
-
-      const response = await fetch('/api/leaderboard/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          wallet: publicKey.toString(),
-          xp: stats.xp,
-          totalBurned: stats.totalBurned,
-          solReclaimed: stats.solReclaimed,
-          level: stats.level,
-          rank: currentRank,
-          isMobile: isJupiterMobile
-        })
-      });
-
-      const result = await response.json();
-      console.log('📊 Leaderboard submit result:', result);
-    } catch (error) {
-      console.error('Failed to submit to leaderboard:', error);
-    }
-  };
-
   // ⚡ LIVE EARNINGS COUNTER (ticks every second)
   useEffect(() => {
     if (jupsolBalance === 0) {
@@ -546,15 +463,6 @@ export default function Home() {
 
     return () => clearInterval(interval);
   }, [jupsolBalance, jupsolAPY]);
-
-  // 🔊 SOUND SYSTEM (Starts AudioContext on first interaction)
-  const playSound = (key) => {
-    if (audioEnabled) {
-      playSynthesizedSound(key);
-    }
-  };
-  const showModal = (type, title, message, onConfirm = null, actionLabel = 'OK') => { if (type !== 'SWAP_PROMPT') playSound('alert'); setModal({ isOpen: true, type, title, message, actionLabel, onConfirm }); };
-  const closeModal = () => setModal(prev => ({ ...prev, isOpen: false }));
 
   // Enhanced haptic feedback with patterns
   const triggerHaptic = (type = 'light') => {
@@ -772,138 +680,6 @@ export default function Home() {
     }
   };
 
-  // 🎲 PREDICTION MARKETS LOGIC
-  const fetchSOLPrice = async () => {
-    try {
-      const SOL_MINT = 'So11111111111111111111111111111111111111112';
-      const prices = await getTokenPrices([SOL_MINT]);
-      const price = prices[SOL_MINT]?.price || 0;
-
-      // Track price direction for animation
-      if (currentSOLPrice > 0 && price !== currentSOLPrice) {
-        setPreviousSOLPrice(currentSOLPrice);
-        setPriceDirection(price > currentSOLPrice ? 'up' : 'down');
-
-        // Reset direction after animation
-        setTimeout(() => setPriceDirection(null), 1000);
-      }
-
-      setCurrentSOLPrice(price);
-      return price;
-    } catch (error) {
-      console.error('Failed to fetch SOL price:', error);
-      return currentSOLPrice;
-    }
-  };
-
-  const makePrediction = (direction) => {
-    // 5-MINUTE PREDICTION (Hackathon Mode)
-    const duration = 5 * 60 * 1000;
-    const now = Date.now();
-
-    const prediction = {
-      date: new Date().toDateString(),
-      prediction: direction,
-      startPrice: currentSOLPrice,
-      targetPrice: direction === 'up' ? currentSOLPrice : currentSOLPrice, // Simple Up/Down
-      endTime: now + duration,
-      result: null,
-      timestamp: now
-    };
-
-    setDailyPrediction(prediction);
-    // Request Notification Permission on first prediction
-    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-    localStorage.setItem('dust_demons_prediction', JSON.stringify(prediction));
-    updateMission('predict', 1);
-
-    // Distinct sounds for Up/Down
-    if (direction === 'up') {
-      playSound('success'); // High pitch/happy
-    } else {
-      playSound('clack'); // Mechanical/heavy
-    }
-
-    triggerConfetti();
-
-    showModal('SUCCESS', 'PREDICTION LOCKED', `You predicted SOL will go ${direction.toUpperCase()}!\\nEntry: $${currentSOLPrice.toFixed(2)}\\nTime: 5 Minutes`, () => {
-      handleShare('prediction', prediction);
-      closeModal();
-    }, 'SHARE ON X');
-  };
-
-  const checkPredictionResult = async () => {
-    if (!dailyPrediction || dailyPrediction.result) return;
-
-    const now = Date.now();
-    const isExpired = now >= dailyPrediction.endTime;
-
-    // If time is not up, show countdown
-    if (!isExpired) {
-      const secondsRemaining = Math.ceil((dailyPrediction.endTime - now) / 1000);
-      const minutes = Math.floor(secondsRemaining / 60);
-      const seconds = secondsRemaining % 60;
-      showModal('INFO', 'PREDICTION LIVE', `Time remaining: ${minutes}m ${seconds}s\\n\\nEntry: $${dailyPrediction.startPrice.toFixed(2)}\\nCurrent: $${currentSOLPrice.toFixed(2)}`);
-      return;
-    }
-
-    // Time is up! Check result against current price
-    const finalPrice = await fetchSOLPrice();
-
-    // Determine winner (Simple Up/Down)
-    const isCorrect = dailyPrediction.prediction === 'up'
-      ? finalPrice >= dailyPrediction.startPrice
-      : finalPrice <= dailyPrediction.startPrice;
-
-    const result = isCorrect ? 'correct' : 'wrong';
-    const bonusXP = isCorrect ? 300 : 50;
-
-    // Visual feedback based on result
-    if (isCorrect) {
-      playSound('success');
-      triggerConfetti();
-    } else {
-      playSound('error');
-      triggerHaptic('heavy');
-    }
-
-    const updatedPrediction = { ...dailyPrediction, result, endPrice: finalPrice };
-    setDailyPrediction(updatedPrediction);
-    setPredictionHistory(prev => [updatedPrediction, ...prev.slice(0, 9)]);
-    localStorage.setItem('dust_demons_prediction', JSON.stringify(updatedPrediction));
-
-    // 🔔 SEND LOCAL NOTIFICATION
-    if (Notification.permission === 'granted') {
-      try {
-        new Notification(isCorrect ? '💰 PROFIT! Prediction Correct' : '💀 REKT! Prediction Wrong', {
-          body: isCorrect
-            ? `+${bonusXP} XP! You predicted correctly.`
-            : `+${bonusXP} XP (Consolation). Better luck next time.`,
-          icon: '/icon.jpg'
-        });
-      } catch (e) {
-        console.error('Notification failed', e);
-      }
-    }
-
-    if (isCorrect) {
-      setStats(s => ({ ...s, xp: s.xp + bonusXP }));
-      showModal('SUCCESS', '💰 PROFIT!', `Prediction CORRECT!\\nEntry: $${dailyPrediction.startPrice.toFixed(2)}\\nExit: $${finalPrice.toFixed(2)}\\n\\n+${bonusXP} XP`, () => {
-        handleShare('prediction', updatedPrediction);
-        closeModal();
-      }, 'SHARE WIN');
-    } else {
-      setStats(s => ({ ...s, xp: s.xp + bonusXP })); // Consolation XP
-      showModal('DANGER', 'REKT!', `Prediction WRONG.\\nEntry: $${dailyPrediction.startPrice.toFixed(2)}\\nExit: $${finalPrice.toFixed(2)}\\n\\n+${bonusXP} XP (Consolation)`, () => {
-        handleShare('prediction', updatedPrediction);
-        closeModal();
-      }, 'SHARE ON X');
-    }
-  };
-
-
   // 🕒 AUTO-CHECK PREDICTION & VISUAL TIMER
   useEffect(() => {
     if (!dailyPrediction || dailyPrediction.result) return;
@@ -980,58 +756,6 @@ export default function Home() {
     const apy = await fetchJupSOLAPY();
     setJupsolAPY(apy);
   };
-
-  // 🛡️ HELIUS DAS API
-  async function fetchAssets(owner) {
-    let page = 1;
-    let allAssets = [];
-    const limit = 1000; // Increased from 100
-
-    try {
-      while (true) {
-        const response = await fetch(HELIUS_DAS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jsonrpc: '2.0',
-            id: 'my-id',
-            method: 'getAssetsByOwner',
-            params: {
-              ownerAddress: owner.toString(),
-              page: page,
-              limit: limit,
-              displayOptions: { showFungible: true, showNativeBalance: true }
-            }
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-
-        if (data.error) {
-          throw new Error(`RPC Error: ${data.error.message || JSON.stringify(data.error)}`);
-        }
-
-        const items = data.result?.items || [];
-        allAssets = [...allAssets, ...items];
-
-        // Break if we fetched fewer than limit (end of list) or safety cap (e.g. 5 pages)
-        if (items.length < limit || page >= 5) {
-          break;
-        }
-        page++;
-      }
-
-      return allAssets;
-    } catch (e) {
-      console.error("DAS API Error:", e);
-      console.error("RPC URL:", HELIUS_DAS_URL);
-      throw new Error(`Failed to scan: ${e.message}`);
-    }
-  }
 
   // 🛡️ SCAN LOGIC (PRECISION FILTERING)
   async function handleScan() {
