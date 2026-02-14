@@ -36,6 +36,8 @@ import { useModal } from '@/hooks/useModal';
 import { useAudio } from '@/hooks/useAudio';
 import { usePredictions } from '@/hooks/usePredictions';
 import { useTheme } from '@/hooks/useTheme';
+import { useJupSOL } from '@/hooks/useJupSOL';
+import { useTransactions } from '@/hooks/useTransactions';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 // ⚡ RPC CONFIGURATION (DAS API endpoint for asset fetching)
@@ -162,45 +164,34 @@ export default function Home() {
   const [currentRank, setCurrentRank] = useState('VOID STALKER');
   const [rankColor, setRankColor] = useState('#00ff41');
 
-  // 💰 JUPSOL YIELD STATE
-  const [jupsolBalance, setJupsolBalance] = useState(0);
-
-  const [jupsolValueUSD, setJupsolValueUSD] = useState(0);
-  const [estimatedEarnings, setEstimatedEarnings] = useState({
-    daily: 0,
-    weekly: 0,
-    monthly: 0,
-    yearly: 0
-  });
-  const [calculatorAmount, setCalculatorAmount] = useState(''); // For custom yield calculator
+  // 💰 JUPSOL YIELD (using hook)
+  const {
+    jupsolBalance,
+    jupsolValueUSD,
+    jupsolAPY,
+    realtimeEarnings,
+    estimatedEarnings,
+    calculatorAmount,
+    setJupsolBalance,
+    setJupsolValueUSD,
+    setRealtimeEarnings,
+    setCalculatorAmount,
+    fetchBalance: fetchJupSOLBalance,
+    calculateYield
+  } = useJupSOL();
 
   // 🏆 ACHIEVEMENT STATE
   const [earnedAchievements, setEarnedAchievements] = useState([]);
   const [achievementToShow, setAchievementToShow] = useState(null);
 
-  // JupSOL Yield
-  const [realtimeEarnings, setRealtimeEarnings] = useState(0);
-  const [jupsolAPY, setJupsolAPY] = useState(0); // Fetch from Sanctum
-
-  // Fetch real APY from Sanctum
-  useEffect(() => {
-    const fetchAPY = async () => {
-      try {
-        const response = await fetch('/api/apy/jupsol');
-        const data = await response.json();
-        if (data && data.apy) {
-          setJupsolAPY(data.apy * 100); // Sanctum returns decimal (0.10), we want percentage (10.0)
-        }
-      } catch (e) {
-        console.error('Failed to fetch JupSOL APY:', e);
-        setJupsolAPY(0); // Fallback to 0 or hide it
-      }
-    };
-    fetchAPY();
-  }, []);
-
-  // Transaction states
-  const [pendingTx, setPendingTx] = useState(null); // { type: 'burn' | 'swap' | 'prediction', message: string }
+  // 📊 TRANSACTION STATE (using hook)
+  const {
+    pendingTx,
+    sessionHistory,
+    addTransaction,
+    setPending,
+    clearPending
+  } = useTransactions();
 
   const hasHydrated = useRef(false);
 
