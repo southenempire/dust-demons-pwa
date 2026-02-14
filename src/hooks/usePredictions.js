@@ -2,6 +2,7 @@
 // Manages prediction market state and logic
 
 import { useState, useEffect, useCallback } from 'react';
+import { getSOLPrice } from '@/services/coingecko';
 
 export function usePredictions() {
     const [currentSOLPrice, setCurrentSOLPrice] = useState(0);
@@ -15,21 +16,16 @@ export function usePredictions() {
     // Fetch SOL price from CoinGecko
     const fetchSOLPrice = useCallback(async () => {
         try {
-            const response = await fetch(
-                'https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd&include_24hr_change=true'
-            );
-            const data = await response.json();
-            const price = data?.solana?.usd || 0;
-            const change24h = data?.solana?.usd_24h_change || 0;
+            const { price, direction } = await getSOLPrice();
 
             setPreviousSOLPrice(currentSOLPrice || price);
             setCurrentSOLPrice(price);
-            setPriceDirection(change24h > 0 ? 'up' : 'down');
+            setPriceDirection(direction);
 
             return price;
         } catch (error) {
             console.error('Failed to fetch SOL price:', error);
-            return 0;
+            return currentSOLPrice || 0;
         }
     }, [currentSOLPrice]);
 
