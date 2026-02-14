@@ -1962,7 +1962,7 @@ export default function Home() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <h1 style={{ margin: 0, fontSize: '32px', fontWeight: '900', color: '#fbbf24', fontFamily: 'monospace' }}>
-                        #{userRank}
+                        #{userRank?.rank || userRank}
                       </h1>
                       <p style={{ margin: '5px 0 0 0', fontSize: '11px', color: theme.text }}>
                         {stats.xp.toLocaleString()} XP • {currentRank}
