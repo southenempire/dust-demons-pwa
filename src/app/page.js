@@ -387,66 +387,21 @@ export default function Home() {
     }
   }, [publicKey, connection, currentSOLPrice]);
 
-  // 🎲 LOAD PREDICTION DATA & FETCH SOL PRICE
+  // 🎲 FETCH SOL PRICE ON MOUNT
   useEffect(() => {
     if (isMounted) {
-      // Load saved prediction
-      const saved = localStorage.getItem('dust_demons_prediction');
-      if (saved) {
-        try {
-          const prediction = JSON.parse(saved);
-          setDailyPrediction(prediction);
-        } catch (e) { }
-      }
-
-      // Fetch current SOL price
       fetchSOLPrice();
-
-      // Refresh price every 60 seconds
       const interval = setInterval(fetchSOLPrice, 60000);
       return () => clearInterval(interval);
     }
-  }, [isMounted]);
+  }, [isMounted, fetchSOLPrice]);
 
-  // 🏆 FETCH REAL LEADERBOARD DATA FROM BACKEND
+  // 🏆 FETCH LEADERBOARD ON MOUNT
   useEffect(() => {
-    const fetchLeaderboard = async () => {
-      try {
-        const wallet = publicKey?.toString();
-        const timestamp = Date.now(); // Cache buster
-        const url = wallet
-          ? `/api/leaderboard/rankings?wallet=${wallet}&limit=100&t=${timestamp}`
-          : `/api/leaderboard/rankings?limit=100&t=${timestamp}`;
-
-        const response = await fetch(url, {
-          cache: 'no-store',
-          headers: { 'Cache-Control': 'no-cache' }
-        });
-        if (!response.ok) throw new Error('Failed to fetch leaderboard');
-
-        const data = await response.json();
-
-        console.log('📊 Leaderboard data:', data);
-        console.log('📊 Top players count:', data.topPlayers?.length || 0);
-
-        setLeaderboardData(data.topPlayers || []);
-        if (data.userRank) {
-          setUserRank(data.userRank.rank);
-        }
-      } catch (error) {
-        console.error('Leaderboard fetch error:', error);
-        // Fallback to empty if API fails
-        setLeaderboardData([]);
-      }
-    };
-
-    if (isMounted) {
-      fetchLeaderboard();
-      // Poll every 2 minutes for live updates (respects free tier limits)
-      const interval = setInterval(fetchLeaderboard, 120000);
-      return () => clearInterval(interval);
+    if (isMounted && publicKey) {
+      fetchLeaderboard(publicKey);
     }
-  }, [isMounted, publicKey]);
+  }, [isMounted, publicKey, fetchLeaderboard]);
 
   // ⚡ LIVE EARNINGS COUNTER (ticks every second)
   useEffect(() => {
@@ -679,37 +634,6 @@ export default function Home() {
       trackEvent(AnalyticsEvents.ERROR_OCCURRED, { type: 'verification', error: error.message });
     }
   };
-
-  // 🕒 AUTO-CHECK PREDICTION & VISUAL TIMER
-  useEffect(() => {
-    if (!dailyPrediction || dailyPrediction.result) return;
-
-    const updateTimer = () => {
-      // 🛡️ CORRUPTION CHECK
-      if (!dailyPrediction.endTime || isNaN(dailyPrediction.endTime)) {
-        setDailyPrediction(null); // Reset invalid state
-        setTimeLeft('');
-        return;
-      }
-
-      const now = Date.now();
-      const remaining = dailyPrediction.endTime - now;
-
-      if (remaining <= 0) {
-        checkPredictionResult();
-        setTimeLeft('Checking...');
-      } else {
-        const m = Math.floor(remaining / 60000);
-        const s = Math.floor((remaining % 60000) / 1000);
-        setTimeLeft(`${m}m ${s}s`);
-      }
-    };
-
-    updateTimer(); // Initial call
-    const timer = setInterval(updateTimer, 1000);
-
-    return () => clearInterval(timer);
-  }, [dailyPrediction]);
 
   // 💰 JUPSOL YIELD LOGIC
   const JUPSOL_MINT = 'jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjx93v';
