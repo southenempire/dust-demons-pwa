@@ -2,7 +2,7 @@
 // Manages prediction market state and logic
 
 import { useState, useEffect, useCallback } from 'react';
-import { getSOLPrice } from '@/services/coingecko';
+import { getSOLPrice } from '@/services/jupiter';
 
 export function usePredictions() {
     const [currentSOLPrice, setCurrentSOLPrice] = useState(0);
