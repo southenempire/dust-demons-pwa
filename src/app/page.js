@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Skull, Ghost, Crosshair, Zap, Activity, Scan, Wallet, Terminal, Settings, Volume2, VolumeX, X, Target, ArrowRightLeft, ArrowLeft, HelpCircle, Loader2, Moon, Sun, Monitor, Share2, Users, Trophy, Crown, Image as ImageIcon, Smartphone, Calendar, CheckCircle, TrendingUp, TrendingDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
