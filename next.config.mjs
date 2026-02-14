@@ -1,23 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  
+
   // 1. Force Webpack to ensure Solana polyfills work
-  // This fixes the "Turbopack with webpack config" error
-  experimental: {
-    turbopack: false,
-  },
 
   webpack: (config) => {
     // 2. Fix the "BigInt" and "Module not found" errors
     config.externals.push('pino-pretty', 'lokijs', 'encoding');
-    
+
     // 3. Allow the Jupiter fallback image from GitHub
     config.resolve.fallback = { fs: false, net: false, tls: false };
-    
+
     return config;
   },
-  
+
   // 4. Fix the "Image Host" error for the fallback logos
   images: {
     remotePatterns: [
