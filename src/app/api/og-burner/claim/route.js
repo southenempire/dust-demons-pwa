@@ -5,17 +5,18 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Connection, PublicKey } from '@solana/web3.js';
 
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-);
-
-const connection = new Connection(process.env.NEXT_PUBLIC_RPC_URL);
-
 const MAX_OG_BURNERS = 100;
 
 export async function POST(request) {
     try {
+        // Initialize clients inside handler to prevent build-time errors
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
+
+        const connection = new Connection(process.env.NEXT_PUBLIC_RPC_URL);
+
         const { walletAddress, burnTxSignature } = await request.json();
 
         // Validate input
@@ -146,6 +147,11 @@ export async function POST(request) {
 // GET endpoint to check OG status
 export async function GET(request) {
     try {
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
+
         const { searchParams } = new URL(request.url);
         const walletAddress = searchParams.get('wallet');
 
