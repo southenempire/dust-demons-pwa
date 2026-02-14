@@ -39,6 +39,11 @@ export async function createMerkleTree(connection, wallet) {
         programId: ACCOUNT_COMPRESSION_ID
     });
 
+    // Validate keypair was created successfully
+    if (!treeKeypair || !treeKeypair.publicKey) {
+        throw new Error('Failed to generate tree keypair');
+    }
+
     const [treeAuthority] = PublicKey.findProgramAddressSync(
         [treeKeypair.publicKey.toBuffer()],
         BUBBLEGUM_PROGRAM_ID
