@@ -117,7 +117,7 @@ export default function Home() {
   const { connection } = useConnection();
 
   // Custom Hooks
-  const { publicKey, connected, walletBalance, isJupiterMobile, isMobile } = useWalletState();
+  const { publicKey, connected, walletBalance, setWalletBalance, isJupiterMobile, isMobile } = useWalletState();
   const { assets, loading: assetsLoading, selectedIds, fetchAssets, getDustAssets, getBurnableAssets, toggleSelection, clearSelection, selectAllDust } = useAssets();
   const { leaderboardData, userRank, loading: leaderboardLoading, fetchLeaderboard, submitToLeaderboard } = useLeaderboard();
   const { modal, showModal, closeModal } = useModal();
