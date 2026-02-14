@@ -68,8 +68,25 @@ export default function ReferralLeaderboard({ wallet, theme }) {
                                     {getRankIcon(index)}
                                 </div>
                                 <div style={{ flex: 1, marginLeft: '10px' }}>
-                                    <div style={{ fontSize: '12px', fontWeight: 'bold', color: isMe ? theme.accent : theme.text, fontFamily: 'monospace' }}>
+                                    <div style={{ fontSize: '12px', fontWeight: 'bold', color: isMe ? theme.accent : theme.text, fontFamily: 'monospace', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                         {isMe ? 'YOU' : `${leader.referrer_wallet.slice(0, 4)}...${leader.referrer_wallet.slice(-4)}`}
+                                        {/* OG Burner Badge */}
+                                        {leader.og_number && (
+                                            <div style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '3px',
+                                                background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                                                borderRadius: '4px',
+                                                padding: '2px 6px',
+                                                fontSize: '9px',
+                                                fontWeight: '900',
+                                                color: '#000',
+                                                boxShadow: '0 0 10px rgba(255, 215, 0, 0.3)'
+                                            }}>
+                                                🔥 #{leader.og_number}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
