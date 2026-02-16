@@ -23,20 +23,22 @@ export async function getSOLPrice() {
             headers['x-api-key'] = API_KEY;
         }
 
-        // Try Jupiter V2 (Public)
+        // Try Jupiter V3 (Standard)
         const response = await fetch(
-            `https://api.jup.ag/price/v2?ids=${SOL_MINT}`
+            `${JUPITER_PRICE_API}?ids=${SOL_MINT}`,
+            { headers }
         );
 
         if (response.ok) {
             const data = await response.json();
-            // V2 Response: { data: { "Mint": { id, type, price: "123.45" } } }
-            const solData = data?.data?.[SOL_MINT];
+            // V3 Response: { "Mint": { id, type, price: 123.45 } }
+            // Some versions: { data: { "Mint": ... } }
+            const solData = data?.[SOL_MINT] || data?.data?.[SOL_MINT];
 
             if (solData) {
                 return {
                     price: parseFloat(solData.price) || 0,
-                    direction: 'neutral' // V2 doesn't give direction
+                    direction: 'neutral' // V3 simple doesn't give direction
                 };
             }
         }
@@ -74,14 +76,15 @@ export async function getTokenPrices(mints) {
         }
 
         const response = await fetch(
-            `https://api.jup.ag/price/v2?ids=${mints.join(',')}`
+            `${JUPITER_PRICE_API}?ids=${mints.join(',')}`,
+            { headers }
         );
 
         if (response.ok) {
-            // Jupiter Price API v2 structure: { data: { "Mint": { price: ... } } }
+            // Jupiter Price API v3: { "Mint": { price: ... } } (or nested in data)
             const data = await response.json();
             const prices = {};
-            const sourceData = data.data;
+            const sourceData = data.data || data; // Handle both { data: ... } and direct map
 
             if (sourceData) {
                 for (const [mint, priceData] of Object.entries(sourceData)) {
