@@ -702,7 +702,8 @@ export default function Home() {
           isTradeable: isTradeable,
           isRentClaimable: isRentClaimable,
           isFrozen: item.isFrozen || false,
-          decimals: item.decimals // Important for burn calc
+          decimals: item.decimals, // Important for burn calc
+          rawBalance: item.rawBalance // ⚡ PRECISE BURN AMOUNT
         };
       }).filter(Boolean);
 
@@ -776,7 +777,8 @@ export default function Home() {
             const tokenAcc = await getAssociatedTokenAddress(mint, publicKey);
 
             if (!t.isNFT && t.uiBalance > 0) {
-              tx.add(createBurnInstruction(tokenAcc, mint, publicKey, BigInt(Math.floor(t.uiBalance * Math.pow(10, t.decimals)))));
+              // ⚡ USE RAW BALANCE - NO MATH.POW ROUNDING ERRORS
+              tx.add(createBurnInstruction(tokenAcc, mint, publicKey, BigInt(t.rawBalance)));
             }
             tx.add(createCloseAccountInstruction(tokenAcc, publicKey, publicKey));
             burned++;

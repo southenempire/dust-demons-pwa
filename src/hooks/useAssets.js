@@ -51,6 +51,7 @@ export function useAssets() {
                         symbol: asset.content?.metadata?.symbol || '???',
                         image: asset.content?.links?.image || asset.content?.files?.[0]?.uri || '/placeholder.png',
                         balance: actualBalance,
+                        rawBalance: balance, // ⚡ RAW INTEGER BALANCE FOR BURNING
                         decimals,
                         valueUSD,
                         priceUSD,
