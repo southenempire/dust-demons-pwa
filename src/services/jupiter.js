@@ -75,6 +75,9 @@ export async function getTokenPrices(mints) {
             headers['x-api-key'] = API_KEY;
         }
 
+        // Debug Log
+        console.log(`Jupiter V3 Fetch: ${mints.length} mints using Key: ${API_KEY?.substring(0, 4)}...`);
+
         const response = await fetch(
             `${JUPITER_PRICE_API}?ids=${mints.join(',')}`,
             { headers }

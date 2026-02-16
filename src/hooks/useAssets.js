@@ -104,13 +104,47 @@ export function useAssets() {
                     };
                 });
 
-            // Merge: Prefer Helius data, but add empty accounts if not present
-            const existingIds = new Set(formattedAssets.map(a => a.id));
+            // 3. Fallback Price Fetch (Jupiter V3)
+            // Identify assets with 0 price but non-zero price should exist (not rent exempt empty ones)
+            // We'll just check all tradeable/valid assets that have 0 value
+            const missingPriceMints = formattedAssets
+                .filter(a => a.priceUSD === 0 && !a.isClosed)
+                .map(a => a.id);
+
+            let jupPrices = {};
+            if (missingPriceMints.length > 0) {
+                try {
+                    // Import dynamically or assume it's imported at top
+                    const { getTokenPrices } = await import('@/services/jupiter');
+                    jupPrices = await getTokenPrices(missingPriceMints);
+                } catch (e) {
+                    console.error('Jupiter Price Fallback Failed:', e);
+                }
+            }
+
+            // Merge Prices
+            const finalAssets = formattedAssets.map(asset => {
+                if (jupPrices[asset.id]) {
+                    const price = jupPrices[asset.id].price;
+                    return {
+                        ...asset,
+                        priceUSD: price,
+                        valueUSD: asset.balance * price,
+                        isDust: (asset.balance * price) < DUST_THRESHOLD_USD && (asset.balance * price) > 0
+                    };
+                }
+                return asset;
+            });
+
+            // Merge: Prefer Helius data (now updated), but add empty accounts
+            const existingIds = new Set(finalAssets.map(a => a.id));
             const uniqueEmpty = emptyAccounts.filter(a => !existingIds.has(a.id));
 
-            setAssets([...formattedAssets, ...uniqueEmpty].sort((a, b) => b.valueUSD - a.valueUSD));
+            const merged = [...finalAssets, ...uniqueEmpty].sort((a, b) => b.valueUSD - a.valueUSD);
+
+            setAssets(merged);
             setLoading(false);
-            return formattedAssets;
+            return merged;
 
         } catch (error) {
             console.error('Failed to fetch assets:', error);
