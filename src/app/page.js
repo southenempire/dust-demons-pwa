@@ -1451,7 +1451,7 @@ export default function Home() {
           {/* VIEW 2: INVENTORY */}
           {view === 'INVENTORY' && !loading && result && (
             <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px', padding: '16px', background: 'rgba(10, 10, 18, 0.95)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: `1px solid ${selectedIds.length > 0 ? rankColor : theme.border}`, position: 'sticky', top: 0, zIndex: 20, borderRadius: '4px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px', padding: '16px', background: 'rgba(10, 10, 18, 0.95)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: `1px solid ${selectedIds.length > 0 ? rankColor : theme.border}`, position: 'sticky', top: 0, zIndex: 200, borderRadius: '4px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <h3 style={{ margin: 0, color: rankColor, fontSize: '12px', fontWeight: '900', letterSpacing: '1px' }}>TARGETS: {selectedIds.length}</h3>
                   <button onClick={handleToggleSelectAll} className="glass-button" style={{ padding: '6px 12px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px', color: '#fbbf24' }}>{selectedIds.length === result.targets.length ? 'DESELECT ALL' : 'SELECT ALL'}</button>

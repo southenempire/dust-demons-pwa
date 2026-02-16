@@ -20,22 +20,65 @@ export function useAssets() {
 
         setLoading(true);
         try {
-            // Use Helius service to fetch assets
-            const allAssets = await fetchAssetsByOwner(owner.toBase58(), {
+            // 1. Fetch Helius Assets (Compressed + Standard)
+            const heliusPromise = fetchAssetsByOwner(owner.toBase58(), {
                 limit: 100,
                 maxPages: 10
             });
 
-            // Filter and format assets
+            // 2. Fetch Legacy Empty Accounts (via RPC)
+            // Helius DAS often skips 0-balance accounts, but we need them for Rent Reclaiming!
+            const rpcPromise = fetch('/api/rpc', {
+                method: 'POST',
+                body: JSON.stringify({
+                    method: 'getTokenAccountsByOwner',
+                    params: [
+                        owner.toBase58(),
+                        { programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' },
+                        { encoding: 'jsonParsed' }
+                    ]
+                })
+            }).then(r => r.json()).catch(() => ({ result: { value: [] } }));
+
+            // We use the Helius service URL directly via a helper or just rely on the existing connection if available
+            // But since we are in a hook, we can use the Helius fetching we already have or just add a direct RPC fallback.
+            // For simplicity/speed, let's assume fetchAssetsByOwner does the heavy lifting for metadata.
+            // But for EMPTY accounts, we don't need metadata.
+
+            const [allAssets, rpcResponse] = await Promise.all([
+                heliusPromise,
+                rpcPromise
+            ]);
+
+            // Process RPC Empty Accounts
+            const emptyAccounts = (rpcResponse?.result?.value || [])
+                .filter(item => item.account.data.parsed.info.tokenAmount.uiAmount === 0)
+                .map(item => ({
+                    id: item.pubkey, // The account address, not mint
+                    mint: item.account.data.parsed.info.mint,
+                    name: 'Empty Account',
+                    symbol: 'RENT',
+                    image: null,
+                    balance: 0,
+                    rawBalance: 0,
+                    decimals: item.account.data.parsed.info.tokenAmount.decimals,
+                    valueUSD: 0,
+                    priceUSD: 0,
+                    isDust: false,
+                    isFrozen: false,
+                    isClosed: true,
+                    // Special flag to identify these as strictly empty token accounts
+                    isEmptyTokenAccount: true
+                }));
+
+            // Filter and format Helius assets
             const formattedAssets = allAssets
                 .filter(asset => {
                     // Exclude SOL and JupSOL
                     if (asset.id === 'So11111111111111111111111111111111111111112') return false;
                     if (asset.id === 'jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjx93v') return false;
-
                     // Must have token info
                     if (!asset.token_info) return false;
-
                     return true;
                 })
                 .map(asset => {
@@ -59,10 +102,13 @@ export function useAssets() {
                         isFrozen: asset.ownership?.frozen || false,
                         isClosed: balance === 0
                     };
-                })
-                .sort((a, b) => b.valueUSD - a.valueUSD); // Sort by value descending
+                });
 
-            setAssets(formattedAssets);
+            // Merge: Prefer Helius data, but add empty accounts if not present
+            const existingIds = new Set(formattedAssets.map(a => a.id));
+            const uniqueEmpty = emptyAccounts.filter(a => !existingIds.has(a.id));
+
+            setAssets([...formattedAssets, ...uniqueEmpty].sort((a, b) => b.valueUSD - a.valueUSD));
             setLoading(false);
             return formattedAssets;
 
