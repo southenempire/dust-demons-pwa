@@ -11,7 +11,7 @@ export function trackEvent(eventName, properties = {}) {
 
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
-        console.log(`📊 Event: ${eventName}`, properties);
+
     }
 
     // Send to analytics provider (GA, Mixpanel, etc)
@@ -92,7 +92,7 @@ export class PerformanceMonitor {
         this.marks.delete(label);
 
         if (logToConsole) {
-            console.log(`⚡ ${label}: ${duration.toFixed(2)}ms`);
+
         }
 
         // Track slow operations

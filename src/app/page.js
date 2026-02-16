@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from 'react';
-import { Skull, Ghost, Crosshair, Zap, Activity, Wallet, Terminal, Settings, Volume2, X, Target, ArrowRightLeft, ArrowLeft, Loader2, Moon, Sun, Share2, Users, Trophy, Crown, Smartphone, TrendingUp, TrendingDown, HelpCircle } from 'lucide-react';
+import { Skull, Ghost, Crosshair, Zap, Activity, Wallet, Terminal, Settings, Volume2, X, Target, ArrowRightLeft, ArrowLeft, Loader2, Moon, Sun, Share2, Users, Trophy, Crown, Smartphone, TrendingUp, TrendingDown, HelpCircle, Image as ImageIcon, Scan } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { WalletMultiButton, WalletModalProvider } from '@solana/wallet-adapter-react-ui';
@@ -880,7 +880,7 @@ export default function Home() {
           });
         }
       } catch (ogError) {
-        console.log('OG claim skipped:', ogError.message);
+
         // Non-critical, don't show error to user
       }
 
@@ -927,7 +927,7 @@ export default function Home() {
     if (!confirm('This will create a Merkle Tree for Compressed NFTs (~0.02 SOL cost). Proceed?')) return;
 
     try {
-      console.log("Initializing Tree...");
+
       // Construct wallet object expected by helper
       const walletObj = { publicKey, signTransaction, signAllTransactions };
 
@@ -966,7 +966,7 @@ export default function Home() {
       const savedTree = localStorage.getItem('merkle_tree') || process.env.NEXT_PUBLIC_MERKLE_TREE;
       if (!savedTree) return alert('NFT System not initialized! Go to Settings > Initialize NFT System.');
 
-      console.log("Minting...", achievement.name);
+      // Minting achievement...
 
       // Construct wallet object
       const walletObj = { publicKey, signTransaction, signAllTransactions };
@@ -2109,7 +2109,7 @@ export default function Home() {
                 }}
                 onShare={(platform) => {
                   triggerHaptic('medium');
-                  console.log('Shared on:', platform);
+
                 }}
               />
             </div>
@@ -2248,9 +2248,9 @@ function BountyPoster({ data, selected, onSelect, onSwap, theme }) {
       {/* 🛡️ RARE HOLO EFFECT */}
       <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, transparent 40%, ${mainColor}20 50%, transparent 60%)`, opacity: 0.3, pointerEvents: 'none' }} />
 
-      {selected && <div style={{ position: 'absolute', inset: 0, border: `2px solid ${mainColor}`, zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)' }}><Scan size={40} color={mainColor} strokeWidth={2} /></div>}
+      {selected && <div style={{ position: 'absolute', inset: 0, border: `2px solid ${mainColor}`, zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', pointerEvents: 'none' }}><Scan size={40} color={mainColor} strokeWidth={2} /></div>}
 
-      {isRentClaimable && !selected && <div style={{ position: 'absolute', inset: 0, border: '2px solid #00ff41', opacity: 0.5, animation: 'pulse 2s infinite' }} />}
+      {isRentClaimable && !selected && <div style={{ position: 'absolute', inset: 0, border: '2px solid #00ff41', opacity: 0.5, animation: 'pulse 2s infinite', pointerEvents: 'none' }} />}
 
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(180deg, ${mainColor}15 0%, transparent 100%)`, position: 'relative' }}>
         <div style={{ position: 'absolute', top: 8, right: 8 }}>{isTradeable ? <ArrowRightLeft size={16} color="#00c2ff" /> : (isScam ? <Skull size={16} color="#ff0055" /> : (isNFT ? <ImageIcon size={16} color="#a855f7" /> : <Target size={16} color="#fbbf24" />))}</div>
