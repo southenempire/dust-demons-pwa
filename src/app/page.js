@@ -518,13 +518,13 @@ export default function Home() {
 
   const handleShare = async (action = 'general', data = null) => {
     let text = "I'm cleaning up my Solana wallet with Dust Demons! 🧹💀";
-    if (action === 'burn') text = `I just incinerated ${stats.totalBurned} dust tokens and reclaimed ${stats.solReclaimed.toFixed(3)} SOL on Dust Demons! 🔥`;
+    if (action === 'burn') text = `I just incinerated ${stats.totalBurned} dust tokens and reclaimed ${(stats.solReclaimed || 0).toFixed(3)} SOL on Dust Demons! 🔥`;
     if (action === 'swap') text = `I just turned my dust into Yield-Bearing JupSOL on Dust Demons! 🪐`;
     if (action === 'prediction' && data) {
       const result = data.result === 'correct' ? '🎯 CORRECT' : '❌ MISSED';
       text = `${result}! I predicted SOL will go ${data.prediction.toUpperCase()} on Dust Demons! 🔮\n\nCurrent Rank: ${currentRank}\nTotal XP: ${stats.xp}`;
     }
-    if (action === 'rank') text = `I just reached ${currentRank} rank on Dust Demons! 💀\n\nTotal XP: ${stats.xp}\nSOL Reclaimed: ${stats.solReclaimed.toFixed(3)}`;
+    if (action === 'rank') text = `I just reached ${currentRank} rank on Dust Demons! 💀\n\nTotal XP: ${stats.xp}\nSOL Reclaimed: ${(stats.solReclaimed || 0).toFixed(3)}`;
 
     const refLink = publicKey ? `https://dust-demons.vercel.app/?ref=${publicKey.toString()}` : 'https://dust-demons.vercel.app/';
     const tweetText = encodeURIComponent(text);
@@ -1150,7 +1150,7 @@ export default function Home() {
                 <Wallet size={12} color={theme.accent} />
                 <div>
                   <p style={{ margin: 0, fontSize: '8px', color: theme.textDim }}>BALANCE</p>
-                  <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text }}>{walletBalance.toFixed(3)} SOL</h2>
+                  <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text }}>{(walletBalance || 0).toFixed(3)} SOL</h2>
                 </div>
               </div>
               {isOG && ogNumber && (
@@ -1160,7 +1160,7 @@ export default function Home() {
               )}
               <div style={{ background: theme.panel, border: `1px solid ${theme.border}`, padding: '4px 10px', borderRadius: '2px' }}>
                 <p style={{ margin: 0, fontSize: '8px', color: '#fbbf24', letterSpacing: '1px' }}>LOOT</p>
-                <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text }}>{stats.solReclaimed.toFixed(3)}</h2>
+                <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text }}>{(stats.solReclaimed || 0).toFixed(3)}</h2>
               </div>
             </div>
           </div>
@@ -1513,13 +1513,13 @@ export default function Home() {
                   <p style={{ margin: 0, fontSize: '10px', color: '#9333ea', letterSpacing: '2px', fontWeight: 'bold', textTransform: 'uppercase' }}>SOL/USD ORACLE PRICE</p>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
                     <h1 style={{ margin: '5px 0', fontSize: '42px', fontWeight: '900', fontFamily: 'monospace', color: '#fff', textShadow: '0 0 20px rgba(255,255,255,0.3)' }}>
-                      ${currentSOLPrice.toFixed(2)}
+                      {(currentSOLPrice || 0).toFixed(2)}
                     </h1>
                   </div>
                   {previousSOLPrice > 0 && currentSOLPrice !== previousSOLPrice && (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                       <span style={{ fontSize: '12px', fontWeight: 'bold', color: currentSOLPrice > previousSOLPrice ? '#00ff41' : '#ff0055' }}>
-                        {currentSOLPrice > previousSOLPrice ? '▲' : '▼'} ${(Math.abs(currentSOLPrice - previousSOLPrice)).toFixed(2)}
+                        {currentSOLPrice > previousSOLPrice ? '▲' : '▼'} {(Math.abs((currentSOLPrice || 0) - (previousSOLPrice || 0))).toFixed(2)}
                       </span>
                       <span style={{ fontSize: '10px', color: theme.textDim }}>last tick</span>
                     </div>
@@ -1620,7 +1620,7 @@ export default function Home() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
                     <div style={{ background: theme.bg, padding: '10px', borderRadius: '8px' }}>
                       <span style={{ fontSize: '10px', color: theme.textDim }}>ENTRY PRICE</span>
-                      <div style={{ fontSize: '16px', fontWeight: '900', color: theme.text, fontFamily: 'monospace' }}>${(dailyPrediction.startPrice || dailyPrediction.targetPrice || 0).toFixed(2)}</div>
+                      <div style={{ fontSize: '16px', fontWeight: '900', color: theme.text, fontFamily: 'monospace' }}>${(dailyPrediction?.startPrice || dailyPrediction?.targetPrice || 0).toFixed(2)}</div>
                     </div>
                     <div style={{ background: theme.bg, padding: '10px', borderRadius: '8px' }}>
                       <span style={{ fontSize: '10px', color: theme.textDim }}>TARGET</span>
@@ -1769,7 +1769,7 @@ export default function Home() {
                   <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#7dd3fc', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     {jupsolAPY > 0 ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#00c2ff', fontWeight: '700' }}>
-                        <img src="/demon-logo.jpg" alt="Demon" style={{ width: '12px', height: '12px', borderRadius: '50%' }} /> {jupsolAPY.toFixed(2)}% APY (Live)
+                        <img src="/demon-logo.jpg" alt="Demon" style={{ width: '12px', height: '12px', borderRadius: '50%' }} /> {(jupsolAPY || 0).toFixed(2)}% APY (Live)
                       </div>
                     ) : (
                       <>Powered by JupSOL</>
@@ -1802,7 +1802,7 @@ export default function Home() {
                 />
                 {calculatorAmount && currentSOLPrice > 0 && (
                   <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: '#7dd3fc', textAlign: 'center' }}>
-                    ≈ ${(parseFloat(calculatorAmount || 0) * currentSOLPrice).toFixed(2)} USD
+                    ≈ ${(parseFloat(calculatorAmount || 0) * (currentSOLPrice || 0)).toFixed(2)} USD
                   </p>
                 )}
               </div>
@@ -1817,19 +1817,19 @@ export default function Home() {
                   <div style={{ background: 'rgba(0, 194, 255, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(0, 194, 255, 0.3)' }}>
                     <p style={{ margin: 0, fontSize: '9px', color: theme.textDim }}>Daily</p>
                     <p style={{ margin: '3px 0 0 0', fontSize: '13px', fontWeight: '900', color: '#00c2ff' }}>
-                      {((parseFloat(calculatorAmount) * jupsolAPY / 100) / 365).toFixed(4)}
+                      {((parseFloat(calculatorAmount || 0) * (jupsolAPY || 0) / 100) / 365).toFixed(4)}
                     </p>
                     <p style={{ margin: '2px 0 0 0', fontSize: '8px', color: '#7dd3fc' }}>
-                      ${((parseFloat(calculatorAmount) * jupsolAPY / 100 / 365) * currentSOLPrice).toFixed(2)}
+                      ${((parseFloat(calculatorAmount || 0) * (jupsolAPY || 0) / 100 / 365) * (currentSOLPrice || 0)).toFixed(2)}
                     </p>
                   </div>
                   <div style={{ background: 'rgba(0, 194, 255, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(0, 194, 255, 0.3)' }}>
                     <p style={{ margin: 0, fontSize: '9px', color: theme.textDim }}>Monthly</p>
                     <p style={{ margin: '3px 0 0 0', fontSize: '13px', fontWeight: '900', color: '#00c2ff' }}>
-                      {((parseFloat(calculatorAmount) * jupsolAPY / 100) / 12).toFixed(4)}
+                      {((parseFloat(calculatorAmount || 0) * (jupsolAPY || 0) / 100) / 12).toFixed(4)}
                     </p>
                     <p style={{ margin: '2px 0 0 0', fontSize: '8px', color: '#7dd3fc' }}>
-                      ${((parseFloat(calculatorAmount) * jupsolAPY / 100 / 12) * currentSOLPrice).toFixed(2)}
+                      ${((parseFloat(calculatorAmount || 0) * (jupsolAPY || 0) / 100 / 12) * (currentSOLPrice || 0)).toFixed(2)}
                     </p>
                   </div>
                   <div style={{ background: 'rgba(0, 255, 136, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(0, 255, 136, 0.3)', gridColumn: '1 / -1' }}>
@@ -1837,10 +1837,10 @@ export default function Home() {
                       <span style={{ fontSize: '10px', color: theme.textDim }}>Yearly Earnings</span>
                       <div style={{ textAlign: 'right' }}>
                         <p style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#00ff88' }}>
-                          {(parseFloat(calculatorAmount) * jupsolAPY / 100).toFixed(4)} SOL
+                          {(parseFloat(calculatorAmount || 0) * (jupsolAPY || 0) / 100).toFixed(4)} SOL
                         </p>
                         <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#7dd3fc' }}>
-                          ${((parseFloat(calculatorAmount) * jupsolAPY / 100) * currentSOLPrice).toFixed(2)} USD
+                          ${((parseFloat(calculatorAmount || 0) * (jupsolAPY || 0) / 100) * (currentSOLPrice || 0)).toFixed(2)} USD
                         </p>
                       </div>
                     </div>
@@ -1869,11 +1869,11 @@ export default function Home() {
                   </p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                     <span style={{ fontSize: '11px', color: theme.text }}>Balance</span>
-                    <span style={{ fontSize: '14px', fontWeight: '900', color: '#00c2ff' }}>{jupsolBalance.toFixed(4)} JupSOL</span>
+                    <span style={{ fontSize: '14px', fontWeight: '900', color: '#00c2ff' }}>{(jupsolBalance || 0).toFixed(4)} JupSOL</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '11px', color: theme.text }}>Yearly</span>
-                    <span style={{ fontSize: '12px', fontWeight: '900', color: '#00ff88' }}>{estimatedEarnings.yearly.toFixed(4)} SOL</span>
+                    <span style={{ fontSize: '12px', fontWeight: '900', color: '#00ff88' }}>{(estimatedEarnings?.yearly || 0).toFixed(4)} SOL</span>
                   </div>
                 </div>
               )}
@@ -2268,7 +2268,7 @@ function BountyPoster({ data, selected, onSelect, onSwap, theme }) {
             {isTradeable ? 'YIELD FARM' : (isScam ? 'THREAT' : (isNFT ? 'NFT DUST' : 'TARGET'))}
           </span>
         </div>
-        <p style={{ margin: '6px 0 0 0', fontSize: '10px', color: theme.textDim, textAlign: 'center', fontFamily: 'monospace' }}>${data.value.toFixed(2)}</p>
+        <p style={{ margin: '6px 0 0 0', fontSize: '10px', color: theme.textDim, textAlign: 'center', fontFamily: 'monospace' }}>${(data.value || 0).toFixed(2)}</p>
       </div>
 
       {/* 🖱️ CLICK MASK: Guaranteed Touch Target */}

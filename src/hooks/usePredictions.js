@@ -73,12 +73,12 @@ export function usePredictions() {
         if (wasCorrect) {
             sendJupiterNotification(
                 'Prophecy Fulfiiled! 🔮',
-                `You won! SOL moved ${priceChange > 0 ? 'UP' : 'DOWN'} to $${newPrice.toFixed(2)}`
+                `You won! SOL moved ${priceChange > 0 ? 'UP' : 'DOWN'} to $${(newPrice || 0).toFixed(2)}`
             );
         } else {
             sendJupiterNotification(
                 'Prophecy Failed 💀',
-                `You lost. SOL moved ${priceChange > 0 ? 'UP' : 'DOWN'} to $${newPrice.toFixed(2)}`
+                `You lost. SOL moved ${priceChange > 0 ? 'UP' : 'DOWN'} to $${(newPrice || 0).toFixed(2)}`
             );
         }
 
