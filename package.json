@@ -14,9 +14,6 @@
     "npm": ">=9.0.0"
   },
   "dependencies": {
-    "@dialectlabs/react-sdk-blockchain-solana": "^3.0.0-beta.7",
-    "@dialectlabs/react-ui": "^3.0.0-beta.7",
-    "@dialectlabs/sdk": "^2.0.0-beta.7",
     "@metaplex-foundation/mpl-bubblegum": "^5.0.2",
     "@metaplex-foundation/umi": "^1.5.1",
     "@metaplex-foundation/umi-options": "^1.5.1",

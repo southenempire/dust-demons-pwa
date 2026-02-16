@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from 'react';
-import { Skull, Ghost, Crosshair, Zap, Activity, Wallet, Terminal, Settings, Volume2, X, Target, ArrowRightLeft, ArrowLeft, Loader2, Moon, Sun, Share2, Users, Trophy, Crown, Smartphone, TrendingUp, TrendingDown } from 'lucide-react';
+import { Skull, Ghost, Crosshair, Zap, Activity, Wallet, Terminal, Settings, Volume2, X, Target, ArrowRightLeft, ArrowLeft, Loader2, Moon, Sun, Share2, Users, Trophy, Crown, Smartphone, TrendingUp, TrendingDown, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { WalletMultiButton, WalletModalProvider } from '@solana/wallet-adapter-react-ui';
@@ -17,8 +17,7 @@ import { TokenSkeleton, BalanceSkeleton, StatsSkeleton } from '@/components/Load
 import { trackEvent, AnalyticsEvents, PerformanceMonitor, TransactionMonitor } from '@/utils/analytics';
 import { canBurn, canSwap, canScan, canPredict } from '@/utils/rate-limiter';
 import OnboardingTour from '@/components/OnboardingTour';
-import dynamic from 'next/dynamic';
-const DialectNotifications = dynamic(() => import('@/components/DialectNotifications'), { ssr: false });
+
 import LoadingSpinner from '@/components/LoadingSpinner';
 import AchievementModal from '@/components/AchievementModal';
 import AchievementGallery from '@/components/AchievementGallery';
@@ -1163,9 +1162,6 @@ export default function Home() {
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            {/* <div style={{ transform: 'scale(0.9)' }}>
-              <DialectNotifications theme={theme} />
-            </div> */}
             <div style={{ transform: 'scale(0.85)' }} className={!publicKey ? 'pulse-animation' : ''}><WalletMultiButton /></div>
           </div>
         </header>
