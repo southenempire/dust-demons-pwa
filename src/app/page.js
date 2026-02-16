@@ -149,9 +149,6 @@ export default function Home() {
   }, []);
 
   // Real Data: Session History
-
-  // Real Data: Session History
-  const [sessionHistory, setSessionHistory] = useState([]);
   // Settings
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
   const [jupiterInitialized, setJupiterInitialized] = useState(false);
@@ -275,12 +272,11 @@ export default function Home() {
                 triggerConfetti();
                 updateMission('swap', 1);
                 sendJupiterNotification('🪐 Swap Complete!', 'Successfully converted dust → JupSOL');
-                setSessionHistory(prev => [{
-                  id: Date.now(),
+                addTransaction({
                   action: `Swapped ${swapTarget.name}`,
                   value: '+500 XP',
                   time: new Date().toLocaleTimeString()
-                }, ...prev]);
+                });
                 setTimeout(() => {
                   showModal('SUCCESS', 'YIELD SECURED', 'Target converted to JupSOL. Earning APY now.', () => {
                     handleShare('swap');
@@ -859,12 +855,12 @@ export default function Home() {
       setTimeout(submitToLeaderboard, 500);
 
       // Update Session Log
-      setSessionHistory(prev => [{
-        id: Date.now(),
+      // Update Session Log
+      addTransaction({
         action: `Incinerated ${burned} Assets`,
         value: `+${rent} SOL`,
         time: new Date().toLocaleTimeString()
-      }, ...prev]);
+      });
 
       // 🎉 GAME FEEL: Confetti + Shake + Haptic
       triggerConfetti('burn');
