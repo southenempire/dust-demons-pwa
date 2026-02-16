@@ -2272,12 +2272,24 @@ function BountyPoster({ data, selected, onSelect, onSwap, theme }) {
       </div>
 
       {/* 🖱️ CLICK MASK: Guaranteed Touch Target */}
-      <div
+      <button
         onClick={(e) => {
           e.stopPropagation();
           isTradeable ? onSwap() : onSelect();
         }}
-        style={{ position: 'absolute', inset: 0, zIndex: 100, cursor: 'pointer' }}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          zIndex: 100,
+          cursor: 'pointer',
+          background: 'transparent',
+          border: 'none',
+          padding: 0,
+          margin: 0,
+          touchAction: 'manipulation',
+          WebkitTapHighlightColor: 'transparent'
+        }}
+        aria-label={`Select ${data.name}`}
       />
     </motion.div>
   );
