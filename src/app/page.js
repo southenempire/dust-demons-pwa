@@ -596,7 +596,7 @@ export default function Home() {
       return;
     }
 
-    setPendingTx({ type: 'verification', message: 'Verifying on-chain activity...' });
+    setPending({ type: 'verification', message: 'Verifying on-chain activity...' });
 
     try {
       // Verify Jupiter swaps
@@ -627,11 +627,11 @@ export default function Home() {
         }
       }
 
-      setPendingTx(null);
+      setPending(null);
       showModal('SUCCESS', 'Verification Complete', `Verified:\n${swapResult.verified ? '✅ Jupiter Swaps' : '❌ No Swaps'}\n${burnResult.verified ? `✅ ${burnResult.count} Burns` : '❌ No Burns'}`);
     } catch (error) {
       console.error('Verification error:', error);
-      setPendingTx(null);
+      setPending(null);
       showModal('ERROR', 'Verification Failed', 'Could not verify on-chain activity. Please try again.');
       trackEvent(AnalyticsEvents.ERROR_OCCURRED, { type: 'verification', error: error.message });
     }
@@ -1363,7 +1363,10 @@ export default function Home() {
 
                 {/* SWAP TO JUPSOL ACTION */}
                 <button
-                  onClick={() => setView('SWAP_STATION')}
+                  onClick={() => {
+                    setSwapTarget({ id: 'So11111111111111111111111111111111111111112', name: 'SOL' });
+                    setView('SWAP_STATION');
+                  }}
                   style={{ width: '100%', marginTop: '15px', padding: '10px', background: 'linear-gradient(90deg, #00c2ff 0%, #007aff 100%)', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px', fontWeight: '900', cursor: 'pointer', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}
                 >
                   🌊 SWAP SOL → JUPSOL
