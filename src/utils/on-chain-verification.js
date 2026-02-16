@@ -17,6 +17,8 @@ export async function verifyJupiterSwap(connection, publicKey, limit = 20) {
             { limit }
         );
 
+        console.log(`Verifying Jupiter Swap: Found ${signatures.length} recent txs for ${publicKey.toString()}`);
+
         for (const sig of signatures) {
             const tx = await connection.getParsedTransaction(
                 sig.signature,
@@ -30,7 +32,10 @@ export async function verifyJupiterSwap(connection, publicKey, limit = 20) {
                 typeof k === 'string' ? k : k.pubkey.toString()
             );
 
+            // console.log('Tx Accounts:', accountKeys); // Verbose logging
+
             if (accountKeys.includes(JUPITER_PROGRAM_ID)) {
+                console.log('Jupiter Swap Verified!', sig.signature);
                 return {
                     verified: true,
                     signature: sig.signature,
@@ -39,6 +44,7 @@ export async function verifyJupiterSwap(connection, publicKey, limit = 20) {
             }
         }
 
+        console.warn('Jupiter Swap Verification Failed: No matching V6 program ID found.');
         return { verified: false };
     } catch (error) {
         console.error('Failed to verify Jupiter swap:', error);

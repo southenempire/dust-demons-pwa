@@ -600,7 +600,7 @@ export default function Home() {
 
     try {
       // Verify Jupiter swaps
-      const swapResult = await verifyJupiterSwap(connection, publicKey, 20);
+      const swapResult = await verifyJupiterSwap(connection, publicKey, 50);
       if (swapResult.verified) {
         setMissions(prev => prev.map(m =>
           m.id === 'swap' ? { ...m, progress: m.target, completed: true } : m
@@ -612,7 +612,7 @@ export default function Home() {
       }
 
       // Verify token burns
-      const burnResult = await verifyTokenBurns(connection, publicKey, 20);
+      const burnResult = await verifyTokenBurns(connection, publicKey, 50);
       if (burnResult.verified && burnResult.count > 0) {
         const burnMission = missions.find(m => m.id === 'burn');
         if (burnMission && !burnMission.completed) {
@@ -1204,36 +1204,35 @@ export default function Home() {
         </AnimatePresence>
 
         {/* HEADER */}
-        <header style={{ zIndex: 100, padding: '16px', display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid ${theme.border}`, background: 'rgba(5,5,5,0.2)', backdropFilter: 'blur(10px)' }}>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <img src="/demon-logo.jpg" style={{ width: '36px', height: '36px', borderRadius: '4px', border: `1px solid ${theme.border}`, objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
-              <div style={{ background: theme.panel, border: `1px solid ${rankColor}`, padding: '4px 10px', borderRadius: '2px' }}>
-                <p style={{ margin: 0, fontSize: '8px', color: rankColor, fontWeight: 'bold', letterSpacing: '1px' }}>RANK</p>
-                <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px', color: theme.text }}>{currentRank}</h2>
+        <header style={{ zIndex: 100, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${theme.border}`, background: 'rgba(5,5,5,0.8)', backdropFilter: 'blur(10px)' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', overflow: 'hidden' }}>
+            {/* LOGO & RANK */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+              <img src="/demon-logo.jpg" style={{ width: '32px', height: '32px', borderRadius: '4px', border: `1px solid ${theme.border}`, objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
+              <div className="mobile-hide-label" style={{ background: theme.panel, border: `1px solid ${rankColor}`, padding: '4px 8px', borderRadius: '4px' }}>
+                <p style={{ margin: 0, fontSize: '8px', color: rankColor, fontWeight: 'bold', letterSpacing: '1px', display: 'none', '@media (min-width: 400px)': { display: 'block' } }}>RANK</p>
+                <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text, whiteSpace: 'nowrap' }}>{currentRank.split(' ')[0]}</h2>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <div style={{ background: theme.panel, border: `1px solid ${theme.border}`, padding: '4px 10px', borderRadius: '2px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <Wallet size={12} color={theme.accent} />
-                <div>
-                  <p style={{ margin: 0, fontSize: '8px', color: theme.textDim }}>BALANCE</p>
-                  <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text }}>{(walletBalance || 0).toFixed(3)} SOL</h2>
-                </div>
+
+            {/* BALANCE & LOOT */}
+            <div style={{ display: 'flex', gap: '6px', overflow: 'hidden' }}>
+              <div style={{ background: theme.panel, border: `1px solid ${theme.border}`, padding: '4px 8px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Wallet size={10} color={theme.accent} />
+                <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text, whiteSpace: 'nowrap' }}>{(walletBalance || 0).toFixed(2)}</h2>
               </div>
+
+              {/* OG BADGE (Compact) */}
               {isOG && ogNumber && (
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                   <OGBurnerBadge ogNumber={ogNumber} size="small" />
                 </div>
               )}
-              <div style={{ background: theme.panel, border: `1px solid ${theme.border}`, padding: '4px 10px', borderRadius: '2px' }}>
-                <p style={{ margin: 0, fontSize: '8px', color: '#fbbf24', letterSpacing: '1px' }}>LOOT</p>
-                <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text }}>{(stats.solReclaimed || 0).toFixed(3)}</h2>
-              </div>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <div style={{ transform: 'scale(0.85)' }} className={!publicKey ? 'pulse-animation' : ''}><WalletMultiButton /></div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+            <WalletMultiButton style={{ height: '32px', padding: '0 12px', fontSize: '12px' }} />
           </div>
         </header>
 
@@ -1364,7 +1363,7 @@ export default function Home() {
 
                 {/* SWAP TO JUPSOL ACTION */}
                 <button
-                  onClick={() => setView('YIELD')}
+                  onClick={() => setView('SWAP_STATION')}
                   style={{ width: '100%', marginTop: '15px', padding: '10px', background: 'linear-gradient(90deg, #00c2ff 0%, #007aff 100%)', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px', fontWeight: '900', cursor: 'pointer', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}
                 >
                   🌊 SWAP SOL → JUPSOL
