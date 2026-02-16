@@ -759,26 +759,45 @@ export default function Home() {
             continue;
           }
 
-          // 🛡️ Security: Validate PublicKey before use
-          if (!validatePublicKey(t.id)) {
+          // 🛡️ Security: Validate PublicKey
+          // For standard assets, t.id is MINT. For Empty Accounts, t.id is ACCOUNT.
+          // We need to be careful here.
+          let mintStr = t.id;
+          if (t.isEmptyTokenAccount && t.mint) {
+            mintStr = t.mint;
+          }
+
+          if (!validatePublicKey(mintStr)) {
             errorLog.push(`${t.name}: Invalid Address`);
             failedIds.push(id);
             continue;
           }
 
           try {
-            const mint = new PublicKey(t.id);
-            const tokenAcc = await getAssociatedTokenAddress(mint, publicKey);
+            const mint = new PublicKey(mintStr);
+            let tokenAcc;
+
+            if (t.isEmptyTokenAccount) {
+              // For empty accounts, t.id IS the token account address
+              tokenAcc = new PublicKey(t.id);
+            } else {
+              // For standard assets, t.id is the MINT, we derive the ATA
+              tokenAcc = await getAssociatedTokenAddress(mint, publicKey);
+            }
 
             if (!t.isNFT && t.uiBalance > 0) {
               // ⚡ USE RAW BALANCE - NO MATH.POW ROUNDING ERRORS
               tx.add(createBurnInstruction(tokenAcc, mint, publicKey, BigInt(t.rawBalance)));
             }
+
+            // Close the account to reclaim rent
             tx.add(createCloseAccountInstruction(tokenAcc, publicKey, publicKey));
+
             burned++;
             addedConfig = true;
           } catch (e) {
-            errorLog.push(`${t.name}: Build Error`);
+            console.error(e);
+            errorLog.push(`${t.name}: Build Error ${e.message}`);
             failedIds.push(id);
           }
         }

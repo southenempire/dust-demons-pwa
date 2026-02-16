@@ -85,7 +85,31 @@ export function usePredictions() {
         return result;
     }, []);
 
-    // Update timer & check result
+    // Initial Fetch & Interval
+    useEffect(() => {
+        let mounted = true;
+
+        const loadPrice = async () => {
+            const price = await fetchSOLPrice();
+            if (mounted && price > 0) {
+                // Ensure state is updated if it was stuck at 0
+                setCurrentSOLPrice(prev => (prev === 0 ? price : prev));
+            }
+        };
+
+        // Immediate fetch on mount
+        loadPrice();
+
+        // Poll every 30 seconds for price updates
+        const interval = setInterval(loadPrice, 30000);
+
+        return () => {
+            mounted = false;
+            clearInterval(interval);
+        };
+    }, [fetchSOLPrice]);
+
+    // Timer Logic
     useEffect(() => {
         if (!timeUntilNextPrediction || !dailyPrediction) return;
 
@@ -94,7 +118,7 @@ export function usePredictions() {
             const diff = timeUntilNextPrediction - now;
 
             if (diff <= 0) {
-                // Round ended! Check result if we have current price
+                // Round ended! Check result
                 if (currentSOLPrice > 0) {
                     checkPredictionResult(dailyPrediction, currentSOLPrice);
                 }
