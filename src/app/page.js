@@ -1163,9 +1163,9 @@ export default function Home() {
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <div style={{ transform: 'scale(0.9)' }}>
+            {/* <div style={{ transform: 'scale(0.9)' }}>
               <DialectNotifications theme={theme} />
-            </div>
+            </div> */}
             <div style={{ transform: 'scale(0.85)' }} className={!publicKey ? 'pulse-animation' : ''}><WalletMultiButton /></div>
           </div>
         </header>
