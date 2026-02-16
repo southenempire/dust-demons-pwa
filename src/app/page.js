@@ -2228,7 +2228,6 @@ function BountyPoster({ data, selected, onSelect, onSwap, theme }) {
 
   return (
     <motion.div
-      onClick={isTradeable ? onSwap : onSelect}
       whileHover={{ scale: 1.05, boxShadow: `0 0 25px ${mainColor}40` }}
       whileTap={{ scale: 0.95 }}
       style={{
@@ -2236,7 +2235,6 @@ function BountyPoster({ data, selected, onSelect, onSwap, theme }) {
         border: `1px solid ${mainColor}60`,
         borderRadius: '6px',
         overflow: 'hidden',
-        cursor: 'pointer',
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
@@ -2272,6 +2270,15 @@ function BountyPoster({ data, selected, onSelect, onSwap, theme }) {
         </div>
         <p style={{ margin: '6px 0 0 0', fontSize: '10px', color: theme.textDim, textAlign: 'center', fontFamily: 'monospace' }}>${data.value.toFixed(2)}</p>
       </div>
+
+      {/* 🖱️ CLICK MASK: Guaranteed Touch Target */}
+      <div
+        onClick={(e) => {
+          e.stopPropagation();
+          isTradeable ? onSwap() : onSelect();
+        }}
+        style={{ position: 'absolute', inset: 0, zIndex: 100, cursor: 'pointer' }}
+      />
     </motion.div>
   );
 }
