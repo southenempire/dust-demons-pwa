@@ -11,23 +11,28 @@ Dust Demons transforms the mundane task of wallet cleanup into a thrilling game 
 
 ---
 
-## 🎯 The Problem
+> **Turn wallet dust into yield-bearing JupSOL through an addictive, competitive gaming experience.**
+
+Dust Demons transforms the mundane task of wallet cleanup into a thrilling game where players compete on a live leaderboard, complete daily missions, and earn real economic rewards—all powered by Jupiter's infrastructure.
+
+---
+
+## 🎯 The Mission
 
 Solana wallets accumulate "dust"—worthless tokens, closed accounts, and NFT spam—that clutter the interface and waste rent. Cleaning this manually is:
-- ❌ Tedious and time-consuming
-- ❌ No incentive to do it
-- ❌ Difficult to track progress
-- ❌ Boring and unrewarding
+- ❌ Boring
+- ❌ Takes forever
+- ❌ Zero reward
 
-## 💡 The Solution
+## 💡 The Fix
 
-**Dust Demons** gamifies wallet cleanup with:
-- ✅ **XP & Progression System** - Earn points, level up, unlock ranks
-- ✅ **Real-time Competitive Leaderboard** - Compete globally with live rankings
-- ✅ **Daily Missions** - Complete challenges for bonus rewards
-- ✅ **Economic Incentives** - Reclaim SOL rent + swap to yield-bearing JupSOL
-- ✅ **On-Chain Verification** - Prove your achievements with blockchain data
-- ✅ **Mobile-First Design** - Optimized for Jupiter Mobile with haptics & notifications
+**Dust Demons** turns cleanup into a sport:
+- ✅ **Rank Up** - Grind XP and climbing the ranks.
+- ✅ **Global Leaderboard** - Compete for the top spot.
+- ✅ **Daily Missions** - Keep your streak alive.
+- ✅ **Real Yield** - Reclaim SOL rent + swap to JupSOL.
+- ✅ **On-Chain Proof** - Verify everything.
+- ✅ **Mobile First** - Optimized for Jupiter Mobile.
 
 ---
 

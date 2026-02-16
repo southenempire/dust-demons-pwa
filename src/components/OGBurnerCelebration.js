@@ -134,7 +134,7 @@ export default function OGBurnerCelebration({ isOpen, onClose, ogNumber, totalOG
                                 marginBottom: '16px'
                             }}
                         >
-                            🔥 YOU&apos;RE AN OG BURNER! 🔥
+                            🔥 LEGENDARY STATUS UNLOCKED! 🔥
                         </motion.h1>
 
                         {/* OG Number */}
@@ -165,9 +165,9 @@ export default function OGBurnerCelebration({ isOpen, onClose, ogNumber, totalOG
                                 lineHeight: '1.6'
                             }}
                         >
-                            You&apos;re one of the first <strong>{totalOGs}</strong> users to burn dust!
+                            You secured a spot in the <strong>Founders 101</strong>.
                             <br />
-                            Your exclusive OG Burner NFT is coming soon...
+                            Flex your badge and keep the blockchain clean.
                         </motion.p>
 
 
@@ -223,9 +223,9 @@ export default function OGBurnerCelebration({ isOpen, onClose, ogNumber, totalOG
                                 {isMinting ? (
                                     <>Claiming...</>
                                 ) : isMinted ? (
-                                    <>✅ CLAIMED</>
+                                    <>✅ SECURED</>
                                 ) : (
-                                    <>🔥 CLAIM OG BADGE</>
+                                    <>🔥 CLAIM FOUNDER BADGE</>
                                 )}
                             </motion.button>
 

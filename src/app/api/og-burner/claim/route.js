@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Connection, PublicKey } from '@solana/web3.js';
 
-const MAX_OG_BURNERS = 100;
+const MAX_OG_BURNERS = 101;
 
 export async function POST(request) {
     try {
