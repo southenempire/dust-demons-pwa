@@ -8,7 +8,7 @@ import { X, Flame, Trophy } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useEffect } from 'react';
 
-export default function OGBurnerCelebration({ isOpen, onClose, ogNumber, totalOGs = 100 }) {
+export default function OGBurnerCelebration({ isOpen, onClose, ogNumber, totalOGs = 100, onMint, isMinting, isMinted }) {
     useEffect(() => {
         if (isOpen) {
             // Fire confetti
@@ -190,28 +190,68 @@ export default function OGBurnerCelebration({ isOpen, onClose, ogNumber, totalOG
                             <Flame size={48} color="#ff0055" style={{ margin: '0 auto' }} />
                         </motion.div>
 
-                        {/* Close button */}
-                        <motion.button
-                            initial={{ y: 20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.6 }}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={onClose}
-                            style={{
-                                background: 'linear-gradient(135deg, #9d4edd 0%, #00ff41 100%)',
-                                border: 'none',
-                                borderRadius: '12px',
-                                padding: '12px 32px',
-                                fontSize: '16px',
-                                fontWeight: 'bold',
-                                color: 'white',
-                                cursor: 'pointer',
-                                width: '100%'
-                            }}
-                        >
-                            LET&apos;S GO! 🚀
-                        </motion.button>
+                        {/* Buttons Container */}
+                        <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+                            {/* Mint Button */}
+                            <motion.button
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.6 }}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={onMint}
+                                disabled={isMinting || isMinted}
+                                style={{
+                                    background: isMinted
+                                        ? 'rgba(0, 255, 65, 0.2)'
+                                        : 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', // Gold/Amber for Premium Feel
+                                    border: isMinted ? '1px solid #00ff41' : 'none',
+                                    borderRadius: '12px',
+                                    padding: '12px 20px',
+                                    fontSize: '14px',
+                                    fontWeight: '900',
+                                    color: isMinted ? '#00ff41' : (isMinting ? 'rgba(0,0,0,0.5)' : 'black'),
+                                    cursor: (isMinting || isMinted) ? 'default' : 'pointer',
+                                    flex: 1,
+                                    boxShadow: isMinted ? 'none' : '0 4px 15px rgba(251, 191, 36, 0.4)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '8px'
+                                }}
+                            >
+                                {isMinting ? (
+                                    <>Claiming...</>
+                                ) : isMinted ? (
+                                    <>✅ CLAIMED</>
+                                ) : (
+                                    <>🔥 CLAIM OG BADGE</>
+                                )}
+                            </motion.button>
+
+                            {/* Close Button */}
+                            <motion.button
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.7 }}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={onClose}
+                                style={{
+                                    background: 'rgba(255, 255, 255, 0.1)',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: '12px',
+                                    padding: '12px 20px',
+                                    fontSize: '14px',
+                                    fontWeight: 'bold',
+                                    color: 'white',
+                                    cursor: 'pointer',
+                                    flex: 1
+                                }}
+                            >
+                                CLOSE
+                            </motion.button>
+                        </div>
                     </motion.div>
                 </motion.div>
             )}

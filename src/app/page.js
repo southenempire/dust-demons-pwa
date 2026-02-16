@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from 'react';
-import { Skull, Ghost, Crosshair, Zap, Activity, Wallet, Terminal, Settings, Volume2, X, Target, ArrowRightLeft, ArrowLeft, Loader2, Moon, Sun, Share2, Users, Trophy, Crown, Smartphone, TrendingUp, TrendingDown, HelpCircle } from 'lucide-react';
+import { Skull, Ghost, Crosshair, Zap, Activity, Wallet, Terminal, Settings, Volume2, VolumeX, X, Target, ArrowRightLeft, ArrowLeft, Loader2, Moon, Sun, Share2, Users, Trophy, Crown, Smartphone, TrendingUp, TrendingDown, HelpCircle, Monitor } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { WalletMultiButton, WalletModalProvider } from '@solana/wallet-adapter-react-ui';
@@ -1002,6 +1002,50 @@ export default function Home() {
     }
   };
 
+  // 🔥 HANDLE OG MINTING (Special Case)
+  const handleMintOG = async () => {
+    if (!isOG || !ogNumber) return;
+    if (ogStatus?.nftMinted) return alert('Already claimed!');
+
+    setLoading(true); // Re-use main loading or local state
+    try {
+      // Construct specific OG Achievement
+      const ogAchievement = {
+        id: 'og_burner',
+        name: `OG Burner #${ogNumber}`,
+        description: `One of the first 100 hunters to burn dust on Dust Demons.`
+      };
+
+      // 1. SKIP ON-CHAIN MINTING (Whitelist Mode)
+      // const walletObj = { publicKey, signTransaction, signAllTransactions };
+      // const sig = await mintAchievementNFT(connection, walletObj, ogAchievement);
+
+      // 2. Update DB to mark as minted (Shadow Claim)
+      await fetch('/api/og-burner/update-mint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletAddress: publicKey.toString() })
+      });
+
+      // 3. Update Local State
+      triggerConfetti();
+      playSynthesizedSound('success');
+
+      alert(`OG Burner #${ogNumber} Badge Claimed! 🔥\nVerified internally as a Whitelisted OG.`);
+      setShowOGCelebration(false);
+
+      // Force refresh or update local state so UI updates
+      window.location.reload();
+
+    } catch (err) {
+      console.error("OG Claim Error:", err);
+      playSynthesizedSound('error');
+      alert('Claim Failed: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!isMounted) return <div style={{ background: theme.bg, height: '100dvh', width: '100vw' }} />;
 
 
@@ -1482,11 +1526,17 @@ export default function Home() {
 
               <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '16px', paddingBottom: '40px' }}>
                 <AnimatePresence>
-                  {result.targets.map((t, i) => (
+                  {result.targets.filter(t => !t.isTradeable).map((t, i) => (
                     <motion.div key={t.id} variants={itemVariants} layout>
                       <BountyPoster data={t} theme={theme} selected={selectedIds.includes(t.id)} onSelect={() => toggleSelect(t)} onSwap={() => handleSwap(t)} />
                     </motion.div>
                   ))}
+                  {/* Show hidden count if tradeables exist */}
+                  {result.targets.some(t => t.isTradeable) && (
+                    <div style={{ gridColumn: '1 / -1', padding: '10px', textAlign: 'center', opacity: 0.5, fontSize: '10px', color: theme.textDim }}>
+                      {result.targets.filter(t => t.isTradeable).length} valuable assets hidden for safety.
+                    </div>
+                  )}
                 </AnimatePresence>
               </motion.div>
             </div>
@@ -1781,7 +1831,7 @@ export default function Home() {
                   <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: '#00c2ff', letterSpacing: '1px' }}>
                     YIELD CALCULATOR
                   </h2>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#7dd3fc', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#7dd3fc', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     {jupsolAPY > 0 ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#00c2ff', fontWeight: '700' }}>
                         <img src="/demon-logo.jpg" alt="Demon" style={{ width: '12px', height: '12px', borderRadius: '50%' }} /> {(jupsolAPY || 0).toFixed(2)}% APY (Live)
@@ -1789,7 +1839,7 @@ export default function Home() {
                     ) : (
                       <>Powered by JupSOL</>
                     )}
-                  </p>
+                  </div>
                 </div>
               </div>
 
@@ -2225,6 +2275,9 @@ export default function Home() {
           onClose={() => setShowOGCelebration(false)}
           ogNumber={ogNumber}
           totalOGs={100}
+          onMint={handleMintOG}
+          isMinting={loading}
+          isMinted={ogStatus?.nftMinted}
         />
       </main>
     </WalletModalProvider>

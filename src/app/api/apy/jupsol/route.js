@@ -18,7 +18,7 @@ export async function GET() {
         return NextResponse.json(data);
 
     } catch (error) {
-        console.error('Failed to fetch JupSOL APY:', error);
+        console.warn('⚠️ Sanctum API unreachable (JupSOL APY), using fallback (10%)');
         return NextResponse.json({ apy: 0.10 }, { status: 200 }); // Fallback to ~10% if fails
     }
 }
