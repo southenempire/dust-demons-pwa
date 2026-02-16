@@ -10,7 +10,7 @@ const JUPITER_PRICE_API = 'https://api.jup.ag/price/v3';
 const SOL_MINT = 'So11111111111111111111111111111111111111112';
 
 // API key from user (fallback if env var missing)
-const API_KEY = process.env.NEXT_PUBLIC_JUPITER_API_KEY || 'a338f239-2d73-4caa-a9a5-a691d51a54f2';
+const API_KEY = process.env.NEXT_PUBLIC_JUPITER_API_KEY || '168af430-77b6-4fe0-b528-b12b28dfc728';
 
 /**
  * Get current SOL price in USD using Jupiter Price API v3
