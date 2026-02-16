@@ -1257,6 +1257,8 @@ export default function Home() {
                     <p style={{ fontSize: '12px', color: theme.textDim, fontWeight: 'bold' }}>NFT PROTOCOL LOADING...</p>
                     <p style={{ fontSize: '10px', color: theme.textDim, marginTop: '5px' }}>Top 101 Burners get OG status.</p>
                     <button disabled style={{ marginTop: '10px', padding: '8px 16px', background: 'rgba(255, 255, 255, 0.1)', border: 'none', borderRadius: '4px', color: theme.textDim, fontSize: '10px', fontWeight: 'bold', cursor: 'not-allowed' }}>COMING SOON</button>
+                    {/* DEBUG: Allow manual trigger for screenshot */}
+                    <button onClick={() => setShowOGCelebration(true)} style={{ marginTop: '10px', marginLeft: '10px', padding: '8px 16px', background: 'rgba(0, 255, 65, 0.1)', border: '1px solid #00ff41', borderRadius: '4px', color: '#00ff41', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>📸 TEST CELEBRATION</button>
                   </div>
                 ) : (
                   <div>
@@ -1796,8 +1798,8 @@ export default function Home() {
           {/* VIEW 4: SWAP STATION (JUPITER PLUGIN) */}
           {view === 'SWAP_STATION' && (
             <div style={{
-              position: 'fixed', inset: 0, zIndex: 9999, background: theme.bg,
-              display: 'flex', flexDirection: 'column'
+              position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 9999, background: theme.bg,
+              display: 'flex', flexDirection: 'column', overscrollBehavior: 'none'
             }}>
               <div style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: `1px solid ${theme.border}` }}>
                 <button onClick={() => { setView('INVENTORY'); if (window.Jupiter) window.Jupiter.close(); setJupiterInitialized(false); }} style={{ background: theme.panel, border: `1px solid ${theme.border}`, color: theme.text, padding: '8px', borderRadius: '4px' }}>
