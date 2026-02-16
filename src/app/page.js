@@ -117,7 +117,7 @@ export default function Home() {
 
   // Custom Hooks
   const { publicKey, connected, walletBalance, setWalletBalance, isJupiterMobile, isMobile } = useWalletState();
-  const { assets, loading: assetsLoading, selectedIds, fetchAssets, getDustAssets, getBurnableAssets, toggleSelection, clearSelection, selectAllDust } = useAssets();
+  const { assets, loading: assetsLoading, selectedIds, setSelectedIds, fetchAssets, getDustAssets, getBurnableAssets, toggleSelection, clearSelection, selectAllDust } = useAssets();
   const { leaderboardData, userRank, loading: leaderboardLoading, fetchLeaderboard, submitToLeaderboard } = useLeaderboard();
   const { modal, showModal, closeModal } = useModal();
   const { audioEnabled, loadAudio, playSound, toggleAudio, setAudioEnabled } = useAudio();
@@ -725,7 +725,7 @@ export default function Home() {
   const toggleSelect = (target) => {
     if (target.isTradeable) { handleSwap(target); }
     else {
-      setSelectedIds(prev => prev.includes(target.id) ? prev.filter(i => i !== target.id) : [...prev, target.id]);
+      toggleSelection(target.id);
     }
   };
 
@@ -733,8 +733,8 @@ export default function Home() {
     if (!result?.targets) return;
     const burnable = result.targets.filter(t => !t.isTradeable).map(t => t.id); // Select only burnable
     const allSelected = burnable.every(id => selectedIds.includes(id));
-    if (allSelected) setSelectedIds([]);
-    else setSelectedIds(burnable);
+    if (allSelected) clearSelection();
+    else selectAllDust();
   };
 
   async function executeExorcism() {

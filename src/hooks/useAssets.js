@@ -115,6 +115,7 @@ export function useAssets() {
         getBurnableAssets,
         toggleSelection,
         clearSelection,
-        selectAllDust
+        selectAllDust,
+        setSelectedIds
     };
 }
