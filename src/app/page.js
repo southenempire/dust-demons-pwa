@@ -2204,6 +2204,14 @@ export default function Home() {
           isOpen={!!achievementToShow}
           onClose={() => setAchievementToShow(null)}
         />
+
+        {/* 🔥 OG BURNER CELEBRATION MODAL */}
+        <OGBurnerCelebration
+          isOpen={showOGCelebration}
+          onClose={() => setShowOGCelebration(false)}
+          ogNumber={ogNumber}
+          totalOGs={100}
+        />
       </main>
     </WalletModalProvider>
   );
@@ -2264,13 +2272,6 @@ function BountyPoster({ data, selected, onSelect, onSwap, theme }) {
           </span>
         </div>
         <p style={{ margin: '6px 0 0 0', fontSize: '10px', color: theme.textDim, textAlign: 'center', fontFamily: 'monospace' }}>${data.value.toFixed(2)}</p>
-        {/* 🔥 OG BURNER CELEBRATION MODAL */}
-        <OGBurnerCelebration
-          isOpen={showOGCelebration}
-          onClose={() => setShowOGCelebration(false)}
-          ogNumber={ogNumber}
-          totalOGs={100}
-        />
       </div>
     </motion.div>
   );
