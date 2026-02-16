@@ -675,17 +675,14 @@ export default function Home() {
         // 🛑 MARK SCAM / SPAM
         if (isScam) return { ...item, isScam: true };
 
-        // 🛑 FILTER: KEEP ONLY DUST OR TARGETS
-        // For now, we return everything that isn't empty, unless filtered by useAssets
-        if (isEmpty) return null;
-
         // 🚀 LOGIC: 
         // 1. Swap = Value > $1.00 (Show Blue - No upper limit!)
         // 2. Dust = Value < $1.00 (Show Yellow) - BURN IT!
+        // 3. Rent = Balance 0 (Show Green) - CLAIM IT!
 
         const isTradeable = value >= 1.00; // Anything worth > $1.00 is tradeable
-        const isDust = value < 1.00 && !isScam && !isEmpty && !isTradeable;
-        const isRentClaimable = isEmpty;
+        const isRentClaimable = isEmpty; // Balance is 0, so we can close strict
+        const isDust = !isRentClaimable && value < 1.00 && !isScam && !isTradeable;
 
         return {
           id: item.id,
@@ -2220,7 +2217,7 @@ function BountyPoster({ data, selected, onSelect, onSwap, theme }) {
   const { isScam, isRentClaimable, isEmpty, isSafe, isHighValue, isNFT, isTradeable } = data;
 
   // 🛡️ GAMIFIED COLOR LOGIC
-  const mainColor = isTradeable ? '#00c2ff' : (isScam ? '#ff0055' : (isNFT ? '#a855f7' : '#fbbf24'));
+  const mainColor = isTradeable ? '#00c2ff' : (isRentClaimable ? '#00ff41' : (isScam ? '#ff0055' : (isNFT ? '#a855f7' : '#fbbf24')));
   const glow = selected ? `0 0 15px ${mainColor}` : 'none';
   const bgStyle = selected ? `rgba(0,194,255,0.1)` : theme.panel;
   const [imgError, setImgError] = useState(false);
@@ -2264,10 +2261,12 @@ function BountyPoster({ data, selected, onSelect, onSwap, theme }) {
             background: isTradeable ? 'rgba(0,194,255,0.15)' : 'rgba(251,191,36,0.1)',
             color: mainColor, fontWeight: '900', border: `1px solid ${mainColor}40`, textTransform: 'uppercase', letterSpacing: '1px'
           }}>
-            {isTradeable ? 'YIELD FARM' : (isScam ? 'THREAT' : (isNFT ? 'NFT DUST' : 'TARGET'))}
+            {isTradeable ? 'YIELD FARM' : (isRentClaimable ? 'CLAIM RENT' : (isScam ? 'THREAT' : (isNFT ? 'NFT DUST' : 'TARGET')))}
           </span>
         </div>
-        <p style={{ margin: '6px 0 0 0', fontSize: '10px', color: theme.textDim, textAlign: 'center', fontFamily: 'monospace' }}>${(data.value || 0).toFixed(2)}</p>
+        <p style={{ margin: '6px 0 0 0', fontSize: '10px', color: theme.textDim, textAlign: 'center', fontFamily: 'monospace' }}>
+          {isRentClaimable ? '0.002 SOL' : `$${(data.value || 0).toFixed(2)}`}
+        </p>
       </div>
 
       {/* 🖱️ CLICK MASK: Guaranteed Touch Target */}
