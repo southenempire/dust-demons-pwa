@@ -10,10 +10,12 @@ const MAX_OG_BURNERS = 100;
 export async function POST(request) {
     try {
         // Initialize clients inside handler to prevent build-time errors
+        console.log('🔥 API: Claiming OG status...');
         const supabase = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL,
             process.env.SUPABASE_SERVICE_ROLE_KEY
         );
+        console.log('🔥 API: Supabase initialized');
 
         const connection = new Connection(process.env.NEXT_PUBLIC_RPC_URL);
 
@@ -28,6 +30,7 @@ export async function POST(request) {
         }
 
         // Verify transaction exists on-chain
+        console.log('🔥 API: Verifying tx:', burnTxSignature);
         try {
             const tx = await connection.getTransaction(burnTxSignature, {
                 maxSupportedTransactionVersion: 0
@@ -55,7 +58,7 @@ export async function POST(request) {
         } catch (error) {
             console.error('Transaction verification failed:', error);
             return NextResponse.json(
-                { error: 'Failed to verify transaction' },
+                { error: 'Failed to verify transaction', details: error.message },
                 { status: 500 }
             );
         }
@@ -138,7 +141,7 @@ export async function POST(request) {
     } catch (error) {
         console.error('OG Burner claim error:', error);
         return NextResponse.json(
-            { error: 'Internal server error' },
+            { error: `Internal server error: ${error.message}` },
             { status: 500 }
         );
     }

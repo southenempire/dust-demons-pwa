@@ -732,7 +732,7 @@ export default function Home() {
     const burnable = result.targets.filter(t => !t.isTradeable).map(t => t.id); // Select only burnable
     const allSelected = burnable.every(id => selectedIds.includes(id));
     if (allSelected) clearSelection();
-    else selectAllDust();
+    else setSelectedIds(burnable);
   };
 
   async function executeExorcism() {
