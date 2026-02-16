@@ -785,13 +785,21 @@ export default function Home() {
               tokenAcc = await getAssociatedTokenAddress(mint, publicKey);
             }
 
+            // ⚡ Determine correct Token Program (default to Standard)
+            const TOKEN_2022_PROGRAM_ID = new PublicKey('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb');
+            const tokenProgramId = t.programId ? new PublicKey(t.programId) : new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+
+            // Override for Empty Accounts (Legacy usually standard, but check)
+            // Empty accounts from RPC don't have programId stored, but usually are standard.
+            // If we want to be safe we'd need to check owner, but standard is safe default for legacy empty.
+
             if (!t.isNFT && t.uiBalance > 0) {
               // ⚡ USE RAW BALANCE - NO MATH.POW ROUNDING ERRORS
-              tx.add(createBurnInstruction(tokenAcc, mint, publicKey, BigInt(t.rawBalance)));
+              tx.add(createBurnInstruction(tokenAcc, mint, publicKey, BigInt(t.rawBalance), [], tokenProgramId));
             }
 
             // Close the account to reclaim rent
-            tx.add(createCloseAccountInstruction(tokenAcc, publicKey, publicKey));
+            tx.add(createCloseAccountInstruction(tokenAcc, publicKey, publicKey, [], tokenProgramId));
 
             burned++;
             addedConfig = true;

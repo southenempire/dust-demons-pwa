@@ -58,6 +58,7 @@ export function useOGBurner() {
             setIsLoading(true);
             setError(null);
 
+            console.log('Fetching URL:', '/api/og-burner/claim');
             const response = await fetch('/api/og-burner/claim', {
                 method: 'POST',
                 headers: {

@@ -33,7 +33,8 @@ export async function POST(request) {
         console.log('🔥 API: Verifying tx:', burnTxSignature);
         try {
             const tx = await connection.getTransaction(burnTxSignature, {
-                maxSupportedTransactionVersion: 0
+                maxSupportedTransactionVersion: 0,
+                commitment: 'confirmed'
             });
 
             if (!tx) {

@@ -100,7 +100,8 @@ export function useAssets() {
                         priceUSD,
                         isDust: valueUSD < DUST_THRESHOLD_USD && valueUSD > 0,
                         isFrozen: asset.ownership?.frozen || false,
-                        isClosed: balance === 0
+                        isClosed: balance === 0,
+                        programId: asset.token_info?.token_program // ⚡ Capture Program ID (Token vs Token-2022)
                     };
                 });
 
