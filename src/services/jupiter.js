@@ -2,15 +2,21 @@ const JUPITER_PRICE_API = 'https://api.jup.ag/price/v3';
 // API key from user (fallback if env var missing)
 const API_KEY = process.env.NEXT_PUBLIC_JUPITER_API_KEY || '168af430-77b6-4fe0-b528-b12b28dfc728';
 
+const JUPITER_PRICE_API_V2 = 'https://api.jup.ag/price/v2';
+
 export async function getSOLPrice() {
     try {
         const SOL_MINT = 'So11111111111111111111111111111111111111112';
-        // V2 Public Endpoint (Confirmed Working)
-        const url = `https://api.jup.ag/price/v2?ids=${SOL_MINT}`;
+        const url = `${JUPITER_PRICE_API_V2}?ids=${SOL_MINT}`;
 
-        // console.log('Fetching SOL price from:', url);
+        // console.log('Fetching SOL price V2 with Key...');
 
-        const response = await fetch(url);
+        const headers = {};
+        if (API_KEY) {
+            headers['x-api-key'] = API_KEY;
+        }
+
+        const response = await fetch(url, { headers });
         if (!response.ok) throw new Error(`Jupiter API Error: ${response.status}`);
 
         const data = await response.json();
@@ -37,9 +43,14 @@ export async function getTokenPrices(mints) {
 
     try {
         const ids = Array.isArray(mints) ? mints.join(',') : mints;
-        const url = `https://api.jup.ag/price/v2?ids=${ids}`;
+        const url = `${JUPITER_PRICE_API_V2}?ids=${ids}`;
 
-        const response = await fetch(url);
+        const headers = {};
+        if (API_KEY) {
+            headers['x-api-key'] = API_KEY;
+        }
+
+        const response = await fetch(url, { headers });
         if (!response.ok) throw new Error(`Jupiter API Error: ${response.status}`);
 
         const data = await response.json();
@@ -57,7 +68,7 @@ export async function getTokenPrices(mints) {
 
         return prices;
     } catch (error) {
-        console.error('getTokenPrices failed:', error);
+        // console.error('getTokenPrices failed:', error);
         return {};
     }
 }
