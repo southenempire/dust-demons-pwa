@@ -150,7 +150,8 @@ export default function Home() {
 
   // Real Data: Session History
 
-
+  // Real Data: Session History
+  const [sessionHistory, setSessionHistory] = useState([]);
   // Settings
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
   const [jupiterInitialized, setJupiterInitialized] = useState(false);
