@@ -1,0 +1,57 @@
+
+> dust-demons-pwa@1.0.0 dev
+> next dev
+
+  ▲ Next.js 14.2.3
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 3.4s
+ ○ Compiling / ...
+ ✓ Compiled / in 9.7s (11308 modules)
+bigint: Failed to load bindings, pure JS will be used (try npm run rebuild?)
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+(node:66840) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ GET / 200 in 13482ms
+ ○ Compiling /_not-found ...
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename '/Users/southen_/Desktop/dust-demons-pwa/.next/cache/webpack/server-development/3.pack.gz_' -> '/Users/southen_/Desktop/dust-demons-pwa/.next/cache/webpack/server-development/3.pack.gz'
+ ✓ Compiled /api/og-burner/claim in 6s (11365 modules)
+ ✓ Compiled (11484 modules)
+ ⚠ Unsupported metadata viewport is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /index.iife.min.js.map. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /icon.jpg?8620acaad0d0fdb5 200 in 7538ms
+ GET /icon.jpg 200 in 3730ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 8389ms
+ GET /index.iife.min.js.map 404 in 3721ms
+ ○ Compiling /api/leaderboard/rankings ...
+ GET /api/og-burner/claim?wallet=AUpmAvbCTQQ7meNKZBFxUMSoupE5GLrtVhMXbDaBmfyW 200 in 4227ms
+⚠️ Sanctum API unreachable (JupSOL APY), using fallback (10%)
+ GET /api/apy/jupsol 200 in 5454ms
+ ✓ Compiled /api/leaderboard/rankings in 1752ms (5917 modules)
+ ✓ Compiled in 1ms (5920 modules)
+ ✓ Compiled in 4ms (5920 modules)
+ ✓ Compiled in 0ms (5920 modules)
+ GET /icon.jpg?8620acaad0d0fdb5 200 in 2961ms
+ GET /api/og-burner/stats 200 in 3206ms
+ GET /api/leaderboard/rankings?wallet=AUpmAvbCTQQ7meNKZBFxUMSoupE5GLrtVhMXbDaBmfyW&limit=100&t=1771253598076 200 in 3516ms
+⚠️ Sanctum API unreachable (JupSOL APY), using fallback (10%)
+ GET /api/apy/jupsol 200 in 2397ms
+ ○ Compiling /icon.jpg ...
+ ✓ Compiled /icon.jpg in 753ms (5768 modules)
+ ✓ Compiled (5795 modules)
+[RPC Proxy] Forwarding to: https://mainnet.helius-rpc.com/?api-key=19b096d1-dce5-49a3-ad44-5e7876db7661 | Method: getTokenAccountsByOwner
+ GET /icon.jpg?8620acaad0d0fdb5 200 in 1447ms
+ POST /api/rpc 200 in 2128ms
+[RPC Proxy] Forwarding to: https://mainnet.helius-rpc.com/?api-key=19b096d1-dce5-49a3-ad44-5e7876db7661 | Method: getTokenAccountsByOwner
+ POST /api/rpc 200 in 339ms
+ ○ Compiling /api/og-burner/claim ...
+ ✓ Compiled /api/og-burner/claim in 843ms (5887 modules)
+🔥 API: Claiming OG status...
+🔥 API: Supabase initialized
+🔥 API: Verifying tx: 2aGHw4rqMYn44HkD99VrsQ9hhQ7duekTNMCiaUAQuYDzhRJBLRGz3LMJUJhBGBhhdPG8PSq7eQj8cwV6sSTtct8Q
+ POST /api/og-burner/claim 404 in 1774ms

@@ -810,6 +810,7 @@ export default function Home() {
               const simErrStr = JSON.stringify(simulation.value.err);
               if (!simErrStr.includes('AccountNotFound')) {
                 console.error('Sim Error:', simulation.value.err);
+                console.error('Sim Logs:', simulation.value.logs); // Add logs
                 errorLog.push(`Sim Failed: ${simErrStr}`);
               } else {
                 // Ghost asset detected (AccountNotFound)
