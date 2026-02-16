@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from 'react';
-import { Skull, Ghost, Crosshair, Zap, Activity, Scan, Wallet, Terminal, Settings, Volume2, VolumeX, X, Target, ArrowRightLeft, ArrowLeft, HelpCircle, Loader2, Moon, Sun, Monitor, Share2, Users, Trophy, Crown, Image as ImageIcon, Smartphone, Calendar, CheckCircle, TrendingUp, TrendingDown } from 'lucide-react';
+import { Skull, Ghost, Crosshair, Zap, Activity, Wallet, Terminal, Settings, Volume2, X, Target, ArrowRightLeft, ArrowLeft, Loader2, Moon, Sun, Share2, Users, Trophy, Crown, Smartphone, TrendingUp, TrendingDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { WalletMultiButton, WalletModalProvider } from '@solana/wallet-adapter-react-ui';
@@ -690,7 +690,7 @@ export default function Home() {
 
         return {
           id: item.id,
-          name: item.content?.metadata?.name || item.content?.metadata?.symbol || 'Unknown',
+          name: String(item.content?.metadata?.name || item.content?.metadata?.symbol || 'Unknown'),
           image: item.content?.links?.image || item.content?.files?.[0]?.uri,
           uiBalance: isNFT ? 1 : uiBalance,
           value: value,
@@ -1948,7 +1948,7 @@ export default function Home() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <h1 style={{ margin: 0, fontSize: '32px', fontWeight: '900', color: '#fbbf24', fontFamily: 'monospace' }}>
-                        #{userRank?.rank || ''}
+                        #{String(userRank?.rank || '')}
                       </h1>
                       <p style={{ margin: '5px 0 0 0', fontSize: '11px', color: theme.text }}>
                         {stats.xp.toLocaleString()} XP • {currentRank}
