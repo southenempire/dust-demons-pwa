@@ -664,20 +664,23 @@ export default function Home() {
       const assets = await fetchAssets(publicKey);
 
       const targets = assets.map((item, i) => {
-        // 🛑 FILTER: HIDE COMPRESSED NFTS (Cannot burn safely via SPL)
-        if (item.compression?.compressed) return null;
+        // 🛑 FILTER: HIDE COMPRESSED NFTS (Check if preserved or already filtered)
+        // Note: useAssets might not preserve compression info, but for now we assume standard SPL tokens are fine.
 
-        const isFungible = item.interface === 'FungibleToken' || item.interface === 'FungibleAsset';
-        const isNFT = !isFungible;
-        const balance = item.token_info?.balance || 0;
-        const decimals = item.token_info?.decimals || 0;
-        const uiBalance = balance / Math.pow(10, decimals);
-        const price = item.token_info?.price_info?.price_per_token || 0;
-        const value = uiBalance * price;
+        const isFungible = true; // formatted assets are simplified
+        const uiBalance = item.balance || 0;
+        const value = item.valueUSD || 0;
 
-        const nameLower = (item.content?.metadata?.name || 'Unknown').toLowerCase();
+        const nameLower = (item.name || 'Unknown').toLowerCase();
         const isScam = nameLower.includes('visit') || nameLower.includes('.com') || nameLower.includes('reward');
         const isEmpty = uiBalance === 0;
+
+        // 🛑 MARK SCAM / SPAM
+        if (isScam) return { ...item, isScam: true };
+
+        // 🛑 FILTER: KEEP ONLY DUST OR TARGETS
+        // For now, we return everything that isn't empty, unless filtered by useAssets
+        if (isEmpty) return null;
 
         // 🚀 LOGIC: 
         // 1. Swap = Value > $1.00 (Show Blue - No upper limit!)
@@ -689,17 +692,17 @@ export default function Home() {
 
         return {
           id: item.id,
-          name: String(item.content?.metadata?.name || item.content?.metadata?.symbol || 'Unknown'),
-          image: item.content?.links?.image || item.content?.files?.[0]?.uri,
-          uiBalance: isNFT ? 1 : uiBalance,
+          name: item.name,
+          image: item.image,
+          uiBalance: item.isNFT ? 1 : uiBalance,
           value: value,
-          isNFT: isNFT,
+          isNFT: item.isNFT,
           isScam: isScam,
           isDust: isDust,
           isTradeable: isTradeable,
           isRentClaimable: isRentClaimable,
-          isFrozen: item.token_info?.frozen || false,
-          decimals: decimals // Important for burn calc
+          isFrozen: item.isFrozen || false,
+          decimals: item.decimals // Important for burn calc
         };
       }).filter(Boolean);
 
