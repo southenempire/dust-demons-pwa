@@ -244,12 +244,7 @@ export default function Home() {
     }
   }, [isMounted, publicKey, isJupiterMobile]);
 
-  // 🐞 DEBUG: Force Overlay Test
-  useEffect(() => {
-    console.log('🐞 DEBUG: Forcing overlay for 3s test...');
-    setPending({ type: 'verification' });
-    setTimeout(() => setPending(null), 3000);
-  }, []);
+
 
   // 🐞 DEBUG: Log View Changes
   useEffect(() => {
@@ -606,23 +601,23 @@ export default function Home() {
 
   // 🔗 ON-CHAIN VERIFICATION
   const verifyMissionsOnChain = async () => {
-    console.log('🔗 VERIFY ON-CHAIN CLICKED');
     if (!publicKey || !connection) {
-      console.log('🔗 Wallet not connected');
       showModal('ERROR', 'Wallet Not Connected', 'Please connect your wallet to verify missions.');
       return;
     }
 
-    console.log('🔗 Setting pending state...');
     setPending({ type: 'verification', message: 'Verifying on-chain activity...' });
 
-    // Add a small delay to ensure React renders the pending state
-    await new Promise(r => setTimeout(r, 100));
+    // Ensure overlay stays visible for at least 2 seconds (UX)
+    const minTimePromise = new Promise(r => setTimeout(r, 2000));
 
     try {
-      console.log('🔗 Starting verification process...');
-      // Verify Jupiter swaps
-      const swapResult = await verifyJupiterSwap(connection, publicKey, 50);
+      // Verify Jupiter swaps and burns in parallel with min time
+      const [swapResult, burnResult] = await Promise.all([
+        verifyJupiterSwap(connection, publicKey, 50),
+        verifyTokenBurns(connection, publicKey, 50),
+        minTimePromise
+      ]);
       if (swapResult.verified) {
         setMissions(prev => prev.map(m =>
           m.id === 'swap' ? { ...m, progress: m.target, completed: true } : m
@@ -633,8 +628,7 @@ export default function Home() {
         }
       }
 
-      // Verify token burns
-      const burnResult = await verifyTokenBurns(connection, publicKey, 50);
+      // Verify token burns (result from parallel execution)
       if (burnResult.verified && burnResult.count > 0) {
         const burnMission = missions.find(m => m.id === 'burn');
         if (burnMission && !burnMission.completed) {
@@ -1574,7 +1568,7 @@ export default function Home() {
 
               <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '16px', paddingBottom: '40px' }}>
                 <AnimatePresence>
-                  {result.targets.filter(t => !t.isTradeable).map((t, i) => (
+                  {result.targets.filter(t => !t.isTradeable && !t.isEmpty).map((t, i) => (
                     <motion.div key={t.id} variants={itemVariants} layout>
                       <BountyPoster data={t} theme={theme} selected={selectedIds.includes(t.id)} onSelect={() => toggleSelect(t)} onSwap={() => handleSwap(t)} />
                     </motion.div>
