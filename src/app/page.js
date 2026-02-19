@@ -1226,29 +1226,7 @@ export default function Home() {
           )}
         </AnimatePresence>
 
-        {/* VIEW 4: SWAP STATION (JUPITER PLUGIN) */}
-        {/* MOVED TO ROOT LEVEL FOR Z-INDEX FIX */}
-        {view === 'SWAP_STATION' && (
-          <div style={{
-            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 99999, background: '#000000',
-            display: 'flex', flexDirection: 'column', overscrollBehavior: 'none'
-          }}>
-            <div style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: `1px solid ${theme.border}` }}>
-              <button onClick={() => { setView('INVENTORY'); if (window.Jupiter) window.Jupiter.close(); setJupiterInitialized(false); }} style={{ background: theme.panel, border: `1px solid ${theme.border}`, color: theme.text, padding: '8px', borderRadius: '4px' }}>
-                <ArrowLeft size={20} />
-              </button>
-              <h2 style={{ fontSize: '16px', fontWeight: '900', color: '#00c2ff' }}>YIELD GENERATOR (JupSOL)</h2>
-            </div>
-            {/* JUPITER PLUGIN CONTAINER */}
-            <div id="integrated-terminal" style={{ flex: 1, width: '100%', height: '100%', position: 'relative' }}>
-              {!jupiterInitialized && (
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: theme.textDim }}>
-                  <Loader2 className="animate-spin" size={24} /> INITIALIZING...
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+
 
         {/* LOOT DROPS (FLOATING TEXT) */}
         {/* HEADER */}
@@ -2348,6 +2326,31 @@ export default function Home() {
 
 {/* 🛡️ VERIFICATION OVERLAY */ }
 <VerificationOverlay isOpen={pendingTx?.type === 'verification'} />
+{/* VIEW 4: SWAP STATION (JUPITER PLUGIN) */ }
+{/* MOVED TO ROOT LEVEL FOR Z-INDEX FIX */ }
+{
+  view === 'SWAP_STATION' && (
+    <div style={{
+      position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 99999, background: '#000000',
+      display: 'flex', flexDirection: 'column', overscrollBehavior: 'none'
+    }}>
+      <div style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: `1px solid ${theme.border}` }}>
+        <button onClick={() => { setView('INVENTORY'); if (window.Jupiter) window.Jupiter.close(); setJupiterInitialized(false); }} style={{ background: theme.panel, border: `1px solid ${theme.border}`, color: theme.text, padding: '8px', borderRadius: '4px' }}>
+          <ArrowLeft size={20} />
+        </button>
+        <h2 style={{ fontSize: '16px', fontWeight: '900', color: '#00c2ff' }}>YIELD GENERATOR (JupSOL)</h2>
+      </div>
+      {/* JUPITER PLUGIN CONTAINER */}
+      <div id="integrated-terminal" style={{ flex: 1, width: '100%', height: '100%', position: 'relative' }}>
+        {!jupiterInitialized && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: theme.textDim }}>
+            <Loader2 className="animate-spin" size={24} /> INITIALIZING...
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
       </main >
     </WalletModalProvider >
   );
