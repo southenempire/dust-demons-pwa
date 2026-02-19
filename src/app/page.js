@@ -244,6 +244,19 @@ export default function Home() {
     }
   }, [isMounted, publicKey, isJupiterMobile]);
 
+  // 🐞 DEBUG: Force Overlay Test
+  useEffect(() => {
+    console.log('🐞 DEBUG: Forcing overlay for 3s test...');
+    setPending({ type: 'verification' });
+    setTimeout(() => setPending(null), 3000);
+  }, []);
+
+  // 🐞 DEBUG: Log View Changes
+  useEffect(() => {
+    console.log('👀 VIEW CHANGED TO:', view);
+    console.log('👀 Swap Target:', swapTarget);
+  }, [view, swapTarget]);
+
   // 🛡️ INIT JUPITER PLUGIN
   useEffect(() => {
     if (view === 'SWAP_STATION' && swapTarget && typeof window !== 'undefined') {
@@ -593,14 +606,21 @@ export default function Home() {
 
   // 🔗 ON-CHAIN VERIFICATION
   const verifyMissionsOnChain = async () => {
+    console.log('🔗 VERIFY ON-CHAIN CLICKED');
     if (!publicKey || !connection) {
+      console.log('🔗 Wallet not connected');
       showModal('ERROR', 'Wallet Not Connected', 'Please connect your wallet to verify missions.');
       return;
     }
 
+    console.log('🔗 Setting pending state...');
     setPending({ type: 'verification', message: 'Verifying on-chain activity...' });
 
+    // Add a small delay to ensure React renders the pending state
+    await new Promise(r => setTimeout(r, 100));
+
     try {
+      console.log('🔗 Starting verification process...');
       // Verify Jupiter swaps
       const swapResult = await verifyJupiterSwap(connection, publicKey, 50);
       if (swapResult.verified) {
@@ -1376,9 +1396,11 @@ export default function Home() {
                 {/* SWAP TO JUPSOL ACTION */}
                 <button
                   onClick={() => {
+                    console.log('🌊 TACTICAL SWAP CLICKED');
                     const target = { id: 'So11111111111111111111111111111111111111112', name: 'SOL' };
                     setSwapTarget(target);
                     setView('SWAP_STATION');
+                    console.log('🌊 View set to SWAP_STATION');
                   }}
                   style={{ width: '100%', marginTop: '15px', padding: '10px', background: 'linear-gradient(90deg, #00c2ff 0%, #007aff 100%)', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px', fontWeight: '900', cursor: 'pointer', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}
                 >
