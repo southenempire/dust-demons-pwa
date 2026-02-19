@@ -153,6 +153,12 @@ export default function Home() {
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
   const [jupiterInitialized, setJupiterInitialized] = useState(false);
 
+  // 🐞 DEBUG: Force View Reset on Mount
+  useEffect(() => {
+    console.log('🔄 APP MOUNTED - FORCING VIEW RESET');
+    // Only if we suspect stuck state
+  }, []);
+
   // Stats
   const [stats, setStats] = useState({ totalBurned: 0, solReclaimed: 0.0, xp: 0, level: 1, streak: 0, lastLogin: '' });
   const [missions, setMissions] = useState([
