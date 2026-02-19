@@ -46,7 +46,7 @@ const tourSteps = [
     }
 ];
 
-export default function OnboardingTour({ show, currentStep, onNext, onSkip, theme }) {
+export default function OnboardingTour({ show, currentStep, onNext, onBack, onSkip, theme }) {
     if (!show) return null;
 
     const step = tourSteps[currentStep];
@@ -80,18 +80,17 @@ export default function OnboardingTour({ show, currentStep, onNext, onSkip, them
                         style={{
                             position: 'fixed',
                             top: '50%',
-                            left: '16px',
-                            right: '16px',
-                            transform: 'translateY(-50%)',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
                             zIndex: 9999,
-                            maxWidth: '340px',
-                            margin: '0 auto',
-                            background: 'linear-gradient(135deg, rgba(5, 5, 5, 0.98) 0%, rgba(15, 15, 15, 0.98) 100%)',
-                            backdropFilter: 'blur(20px)',
-                            border: `1.5px solid ${theme.accent}`,
-                            borderRadius: '14px',
-                            padding: '20px 18px',
-                            boxShadow: `0 20px 60px rgba(0, 0, 0, 0.9), 0 0 0 1px ${theme.accent}15, inset 0 1px 0 rgba(255, 255, 255, 0.04)`
+                            width: '90%',
+                            maxWidth: '360px',
+                            background: 'rgba(12, 12, 14, 0.95)',
+                            backdropFilter: 'blur(24px)',
+                            border: `1px solid ${theme.accent}40`,
+                            borderRadius: '20px',
+                            padding: '24px',
+                            boxShadow: `0 25px 50px -12px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255,255,255,0.05)`
                         }}
                     >
                         {/* Close Button */}
@@ -184,38 +183,57 @@ export default function OnboardingTour({ show, currentStep, onNext, onSkip, them
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
-                            paddingTop: '14px',
-                            borderTop: '1px solid rgba(255, 255, 255, 0.05)'
+                            paddingTop: '16px',
+                            borderTop: '1px solid rgba(255, 255, 255, 0.08)'
                         }}>
-                            <span style={{
-                                fontSize: '10px',
-                                color: theme.textDim,
-                                fontWeight: '600',
-                                letterSpacing: '0.5px'
-                            }}>
-                                {currentStep + 1} / {tourSteps.length}
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                {/* Back Button */}
+                                {currentStep > 0 && (
+                                    <button
+                                        onClick={onBack}
+                                        style={{
+                                            padding: '8px',
+                                            borderRadius: '8px',
+                                            background: 'rgba(255,255,255,0.05)',
+                                            border: 'none',
+                                            color: theme.textDim,
+                                            cursor: 'pointer',
+                                            transition: '0.2s'
+                                        }}
+                                    >
+                                        <ChevronRight size={16} style={{ transform: 'rotate(180deg)' }} />
+                                    </button>
+                                )}
+                                <span style={{
+                                    fontSize: '11px',
+                                    color: theme.textDim,
+                                    fontWeight: '500',
+                                    fontFamily: 'monospace'
+                                }}>
+                                    {currentStep + 1} / {tourSteps.length}
+                                </span>
+                            </div>
+
                             <button
-                                onClick={onNext}
+                                onClick={() => onNext(true)}
                                 style={{
-                                    padding: '12px 24px',
-                                    borderRadius: '12px',
-                                    fontSize: '14px',
+                                    padding: '10px 20px',
+                                    borderRadius: '10px',
+                                    fontSize: '13px',
                                     fontWeight: '800',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '8px',
+                                    gap: '6px',
                                     color: '#000',
                                     background: `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent}dd 100%)`,
-                                    border: 'none',
-                                    boxShadow: `0 6px 20px ${theme.accent}50, 0 0 30px ${theme.accent}30, inset 0 1px 0 rgba(255,255,255,0.3)`,
+                                    border: '1px solid rgba(255,255,255,0.2)',
+                                    boxShadow: `0 4px 12px ${theme.accent}40`,
                                     transition: 'all 0.2s',
                                     cursor: 'pointer',
-                                    letterSpacing: '0.5px',
-                                    textTransform: 'uppercase'
+                                    letterSpacing: '0.5px'
                                 }}
                             >
-                                {isLastStep ? '🚀 START' : 'NEXT ➜'}
+                                {isLastStep ? '🚀 LAUNCH' : 'NEXT'} <ChevronRight size={14} />
                             </button>
                         </div>
                     </motion.div>

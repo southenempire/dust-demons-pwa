@@ -1253,6 +1253,15 @@ export default function Home() {
                 <button onClick={() => setShowMenu(false)} style={{ background: 'none', border: 'none', color: theme.text, cursor: 'pointer', transition: 'opacity 0.2s' }} onMouseEnter={(e) => e.target.style.opacity = '0.7'} onMouseLeave={(e) => e.target.style.opacity = '1'}><X size={24} /></button>
               </div>
 
+              {/* REPLAY TOUR */}
+              <div style={{ marginBottom: '20px', padding: '15px', border: `1px solid ${theme.border}`, borderRadius: '8px', background: theme.panel, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '14px', color: theme.text }}>🎓 Replay Tutorial</h3>
+                  <p style={{ margin: '4px 0 0 0', fontSize: '10px', color: theme.textDim }}>Learn how to play.</p>
+                </div>
+                <button onClick={() => { setShowTour(true); setTourStep(0); setShowMenu(false); }} style={{ padding: '8px 16px', borderRadius: '6px', background: 'rgba(255,255,255,0.1)', border: 'none', color: theme.text, fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>START</button>
+              </div>
+
               {/* NFT SETUP (Admin/Dev) */}
               <div style={{ marginBottom: '20px', padding: '15px', border: `1px dashed ${theme.accent}`, borderRadius: '8px', background: 'rgba(0,0,0,0.2)' }}>
                 <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', color: theme.accent }}>🎨 NFT SYSTEM</h3>
@@ -1262,8 +1271,6 @@ export default function Home() {
                     <p style={{ fontSize: '12px', color: theme.textDim, fontWeight: 'bold' }}>NFT PROTOCOL LOADING...</p>
                     <p style={{ fontSize: '10px', color: theme.textDim, marginTop: '5px' }}>Top 101 Burners get OG status.</p>
                     <button disabled style={{ marginTop: '10px', padding: '8px 16px', background: 'rgba(255, 255, 255, 0.1)', border: 'none', borderRadius: '4px', color: theme.textDim, fontSize: '10px', fontWeight: 'bold', cursor: 'not-allowed' }}>COMING SOON</button>
-                    {/* DEBUG: Allow manual trigger for screenshot */}
-                    <button onClick={() => setShowOGCelebration(true)} style={{ marginTop: '10px', marginLeft: '10px', padding: '8px 16px', background: 'rgba(0, 255, 65, 0.1)', border: '1px solid #00ff41', borderRadius: '4px', color: '#00ff41', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>📸 TEST CELEBRATION</button>
                   </div>
                 ) : (
                   <div>
@@ -1436,7 +1443,14 @@ export default function Home() {
                       transition: '0.2s'
                     }}
                   >
-                    {pendingTx?.type === 'verification' ? '⏳ VERIFYING...' : '🔗 VERIFY ON-CHAIN'}
+                    {pendingTx?.type === 'verification' ? (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        <Loader2 className="animate-spin" size={16} />
+                        VERIFYING...
+                      </div>
+                    ) : (
+                      '🔗 VERIFY ON-CHAIN'
+                    )}
                   </button>
                 )}
                 <p style={{ fontSize: '10px', color: theme.textDim, marginTop: '8px', textAlign: 'center' }}>Streak: {stats.streak} Days 🔥</p>
@@ -2276,6 +2290,7 @@ export default function Home() {
           show={showTour}
           currentStep={tourStep}
           onNext={handleTourNext}
+          onBack={() => { if (tourStep > 0) setTourStep(s => s - 1); }}
           onSkip={handleTourSkip}
           theme={theme}
         />
