@@ -1401,10 +1401,15 @@ export default function Home() {
                 <button
                   onClick={() => {
                     console.log('🌊 TACTICAL SWAP CLICKED');
-                    const target = { id: 'So11111111111111111111111111111111111111112', name: 'SOL' };
-                    setSwapTarget(target);
-                    setView('SWAP_STATION');
-                    console.log('🌊 View set to SWAP_STATION');
+                    // Use a mock token object for SOL to trigger the swap flow correctly
+                    const solToken = {
+                      id: 'So11111111111111111111111111111111111111112',
+                      name: 'SOL',
+                      symbol: 'SOL',
+                      decimals: 9,
+                      logoURI: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png'
+                    };
+                    handleSwap(solToken);
                   }}
                   style={{ width: '100%', marginTop: '15px', padding: '10px', background: 'linear-gradient(90deg, #00c2ff 0%, #007aff 100%)', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px', fontWeight: '900', cursor: 'pointer', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}
                 >
