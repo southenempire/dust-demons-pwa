@@ -303,6 +303,17 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
   <img src="media/mobile_showcase_1.png" alt="Mobile Dashboard" width="200" />
+  <img src="media/IMG_7477 2.PNG" alt="App Scan" width="200" />
+  <img src="media/IMG_7479.PNG" alt="Details" width="200" />
+  <img src="media/IMG_7481.PNG" alt="Dashboard" width="200" />
+  <img src="media/IMG_7482.PNG" alt="Stats" width="200" />
+  <img src="media/IMG_7484.PNG" alt="Leaderboard" width="200" />
+  <img src="media/IMG_7485.PNG" alt="Profile" width="200" />
+  <img src="media/IMG_7486.PNG" alt="Settings" width="200" />
+  <img src="media/IMG_7488.PNG" alt="Menu" width="200" />
+  <img src="media/IMG_7491.PNG" alt="Wallet" width="200" />
+  <img src="media/IMG_7492.PNG" alt="History" width="200" />
+  <img src="media/IMG_7493.PNG" alt="Swap" width="200" />
 </div>
 
 > **Coming Soon** - Full walkthrough showcasing all features
