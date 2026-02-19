@@ -711,6 +711,7 @@ export default function Home() {
           isDust: isDust,
           isTradeable: isTradeable,
           isRentClaimable: isRentClaimable,
+          isEmpty: isEmpty, // ⚡ ADDED FOR FILTERING
           isFrozen: item.isFrozen || false,
           decimals: item.decimals, // Important for burn calc
           rawBalance: item.rawBalance // ⚡ PRECISE BURN AMOUNT
