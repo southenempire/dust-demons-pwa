@@ -247,12 +247,17 @@ export default function Home() {
   // 🛡️ INIT JUPITER PLUGIN
   useEffect(() => {
     if (view === 'SWAP_STATION' && swapTarget && typeof window !== 'undefined') {
+      console.log('🪐 SWAP_STATION detected. Init Jupiter...');
       let intervalId;
       const initJupiter = () => {
         if (window.Jupiter) {
+          console.log('🪐 Window.Jupiter found. Init...');
           clearInterval(intervalId);
           try {
-            if (jupiterInitialized) window.Jupiter.close();
+            if (jupiterInitialized) {
+              console.log('🪐 Closing existing instance...');
+              window.Jupiter.close();
+            }
             window.Jupiter.init({
               displayMode: 'integrated',
               integratedTargetId: 'integrated-terminal',
@@ -1364,10 +1369,15 @@ export default function Home() {
                 </ul>
 
                 {/* SWAP TO JUPSOL ACTION */}
+                {/* SWAP TO JUPSOL ACTION */}
                 <button
                   onClick={() => {
-                    setSwapTarget({ id: 'So11111111111111111111111111111111111111112', name: 'SOL' });
+                    console.log('🌊 Swap Button Clicked');
+                    const target = { id: 'So11111111111111111111111111111111111111112', name: 'SOL' };
+                    setSwapTarget(target);
+                    console.log('🌊 Swap Target Set:', target);
                     setView('SWAP_STATION');
+                    console.log('🌊 View set to SWAP_STATION');
                   }}
                   style={{ width: '100%', marginTop: '15px', padding: '10px', background: 'linear-gradient(90deg, #00c2ff 0%, #007aff 100%)', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px', fontWeight: '900', cursor: 'pointer', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}
                 >
@@ -1798,11 +1808,11 @@ export default function Home() {
           {/* VIEW 4: SWAP STATION (JUPITER PLUGIN) */}
           {view === 'SWAP_STATION' && (
             <div style={{
-              position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 9999, background: theme.bg,
+              position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 9999, background: '#000000',
               display: 'flex', flexDirection: 'column', overscrollBehavior: 'none'
             }}>
               <div style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: `1px solid ${theme.border}` }}>
-                <button onClick={() => { setView('INVENTORY'); if (window.Jupiter) window.Jupiter.close(); setJupiterInitialized(false); }} style={{ background: theme.panel, border: `1px solid ${theme.border}`, color: theme.text, padding: '8px', borderRadius: '4px' }}>
+                <button onClick={() => { console.log('🔙 Closing Swap Station'); setView('INVENTORY'); if (window.Jupiter) window.Jupiter.close(); setJupiterInitialized(false); }} style={{ background: theme.panel, border: `1px solid ${theme.border}`, color: theme.text, padding: '8px', borderRadius: '4px' }}>
                   <ArrowLeft size={20} />
                 </button>
                 <h2 style={{ fontSize: '16px', fontWeight: '900', color: '#00c2ff' }}>YIELD GENERATOR (JupSOL)</h2>
