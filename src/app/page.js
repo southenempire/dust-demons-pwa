@@ -2347,26 +2347,63 @@ export default function Home() {
 }
 
 // 🛡️ VERIFICATION OVERLAY COMPONENT
+// 🛡️ VERIFICATION OVERLAY COMPONENT
 function VerificationOverlay({ isOpen }) {
   if (!isOpen) return null;
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 10000,
-      background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(10px)',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
-    }}>
-      <div style={{ position: 'relative', width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ position: 'absolute', inset: 0, border: '2px solid #00ff41', borderRadius: '50%', opacity: 0.3, animation: 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite' }} />
-        <div style={{ position: 'absolute', inset: '10px', border: '2px solid #00ff41', borderRadius: '50%', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} />
-        <Terminal size={32} color="#00ff41" />
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 10000,
+        background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(10px)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+      }}
+    >
+      <div style={{ position: 'relative', width: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {/* Outer Ring Pulse */}
+        <motion.div
+          animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          style={{ position: 'absolute', inset: 0, border: '2px solid #00ff41', borderRadius: '50%' }}
+        />
+        {/* Inner Ring Spin */}
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          style={{ position: 'absolute', inset: '10px', border: '2px solid #00ff41', borderRadius: '50%', borderTopColor: 'transparent', borderLeftColor: 'transparent' }}
+        />
+        {/* Core Pulsing Icon */}
+        <motion.div
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        >
+          <Terminal size={48} color="#00ff41" />
+        </motion.div>
       </div>
-      <h2 style={{ color: '#00ff41', marginTop: '24px', fontSize: '18px', fontWeight: '900', letterSpacing: '1px', textTransform: 'uppercase' }}>
+
+      <motion.h2
+        animate={{ opacity: [0.5, 1, 0.5] }}
+        transition={{ duration: 1.5, repeat: Infinity }}
+        style={{ color: '#00ff41', marginTop: '32px', fontSize: '18px', fontWeight: '900', letterSpacing: '2px', textTransform: 'uppercase' }}
+      >
         VERIFYING ON-CHAIN
-      </h2>
+      </motion.h2>
+
       <p style={{ color: '#fff', opacity: 0.7, fontSize: '12px', marginTop: '8px', fontFamily: 'monospace' }}>
         Scanning for Jupiter Swaps & Burns...
       </p>
-    </div>
+
+      {/* Connection lines effect */}
+      <div style={{ width: '200px', height: '2px', background: 'rgba(0,255,65,0.2)', marginTop: '20px', position: 'relative', overflow: 'hidden' }}>
+        <motion.div
+          animate={{ x: [-200, 200] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+          style={{ width: '50%', height: '100%', background: 'linear-gradient(90deg, transparent, #00ff41, transparent)' }}
+        />
+      </div>
+    </motion.div>
   );
 }
 
