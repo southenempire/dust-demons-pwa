@@ -250,6 +250,5 @@ export default function OnboardingTour({ show, currentStep, onNext, onBack, onSk
                 </>
             )}
         </AnimatePresence>
-                </AnimatePresence >
-            );
+
 }
