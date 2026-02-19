@@ -1226,6 +1226,31 @@ export default function Home() {
           )}
         </AnimatePresence>
 
+        {/* VIEW 4: SWAP STATION (JUPITER PLUGIN) */}
+        {/* MOVED TO ROOT LEVEL FOR Z-INDEX FIX */}
+        {view === 'SWAP_STATION' && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 99999, background: '#000000',
+            display: 'flex', flexDirection: 'column', overscrollBehavior: 'none'
+          }}>
+            <div style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: `1px solid ${theme.border}` }}>
+              <button onClick={() => { setView('INVENTORY'); if (window.Jupiter) window.Jupiter.close(); setJupiterInitialized(false); }} style={{ background: theme.panel, border: `1px solid ${theme.border}`, color: theme.text, padding: '8px', borderRadius: '4px' }}>
+                <ArrowLeft size={20} />
+              </button>
+              <h2 style={{ fontSize: '16px', fontWeight: '900', color: '#00c2ff' }}>YIELD GENERATOR (JupSOL)</h2>
+            </div>
+            {/* JUPITER PLUGIN CONTAINER */}
+            <div id="integrated-terminal" style={{ flex: 1, width: '100%', height: '100%', position: 'relative' }}>
+              {!jupiterInitialized && (
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: theme.textDim }}>
+                  <Loader2 className="animate-spin" size={24} /> INITIALIZING...
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* LOOT DROPS (FLOATING TEXT) */}
         {/* HEADER */}
         <header style={{ zIndex: 100, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${theme.border}`, background: 'rgba(5,5,5,0.8)', backdropFilter: 'blur(10px)' }}>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', overflow: 'hidden' }}>
@@ -1836,417 +1861,408 @@ export default function Home() {
             </div>
           )}
 
-          {/* VIEW 4: SWAP STATION (JUPITER PLUGIN) */}
-          {/* VIEW 4: SWAP STATION (JUPITER PLUGIN) */}
-          {/* Use strict equality check and high z-index overlay */}
-          {view === 'SWAP_STATION' && (
-            <div style={{
-              position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 99999, background: '#000000',
-              display: 'flex', flexDirection: 'column', overscrollBehavior: 'none'
-            }}>
-              <div style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: `1px solid ${theme.border}` }}>
-                <button onClick={() => { setView('INVENTORY'); if (window.Jupiter) window.Jupiter.close(); setJupiterInitialized(false); }} style={{ background: theme.panel, border: `1px solid ${theme.border}`, color: theme.text, padding: '8px', borderRadius: '4px' }}>
-                  <ArrowLeft size={20} />
-                </button>
-                <h2 style={{ fontSize: '16px', fontWeight: '900', color: '#00c2ff' }}>YIELD GENERATOR (JupSOL)</h2>
-              </div>
-              {/* JUPITER PLUGIN CONTAINER */}
-              <div id="integrated-terminal" style={{ flex: 1, width: '100%', height: '100%', position: 'relative' }}>
-                {!jupiterInitialized && (
-                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: theme.textDim }}>
-                    <Loader2 className="animate-spin" size={24} /> INITIALIZING...
-                  </div>
+          <Loader2 className="animate-spin" size={24} /> INITIALIZING...
+        </div>
                 )}
+      </div>
+    </div>
+  )
+}
+
+{/* VIEW 5: YIELD DASHBOARD - MOBILE OPTIMIZED */ }
+{
+  view === 'YIELD' && (
+    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '15px 15px 100px 15px' }}>
+      {/* Compact Header */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '10px',
+        marginBottom: '15px',
+        padding: '15px',
+        background: 'linear-gradient(135deg, #001a33 0%, #003d52 100%)',
+        border: '2px solid #00c2ff',
+        borderRadius: '10px',
+        boxShadow: '0 0 20px rgba(0, 194, 255, 0.3)'
+      }}>
+        <div style={{ fontSize: '32px' }}>💰</div>
+        <div>
+          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: '#00c2ff', letterSpacing: '1px' }}>
+            YIELD CALCULATOR
+          </h2>
+          <div style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#7dd3fc', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            {jupsolAPY > 0 ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#00c2ff', fontWeight: '700' }}>
+                <img src="/logo-bright.svg" alt="Demon" style={{ width: '12px', height: '12px', borderRadius: '50%' }} /> {(jupsolAPY || 0).toFixed(2)}% APY (Live)
+              </div>
+            ) : (
+              <>Powered by JupSOL</>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Calculator Input */}
+      <div style={{ marginBottom: '15px' }}>
+        <input
+          type="number"
+          value={calculatorAmount}
+          onChange={(e) => setCalculatorAmount(e.target.value)}
+          placeholder="Enter JupSOL amount..."
+          style={{
+            width: '100%',
+            padding: '15px',
+            background: 'rgba(0, 194, 255, 0.05)',
+            border: '2px solid rgba(0, 194, 255, 0.3)',
+            borderRadius: '8px',
+            color: theme.text,
+            fontSize: '18px',
+            fontWeight: '900',
+            textAlign: 'center',
+            fontFamily: 'monospace',
+            boxSizing: 'border-box',
+            outline: 'none'
+          }}
+        />
+        {calculatorAmount && currentSOLPrice > 0 && (
+          <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: '#7dd3fc', textAlign: 'center' }}>
+            ≈ ${(parseFloat(calculatorAmount || 0) * (currentSOLPrice || 0)).toFixed(2)} USD
+          </p>
+        )}
+      </div>
+
+      {/* Calculator Results */}
+      {calculatorAmount && parseFloat(calculatorAmount) > 0 ? (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '15px' }}
+        >
+          <div style={{ background: 'rgba(0, 194, 255, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(0, 194, 255, 0.3)' }}>
+            <p style={{ margin: 0, fontSize: '9px', color: theme.textDim }}>Daily</p>
+            <p style={{ margin: '3px 0 0 0', fontSize: '13px', fontWeight: '900', color: '#00c2ff' }}>
+              {((parseFloat(calculatorAmount || 0) * (jupsolAPY || 0) / 100) / 365).toFixed(4)}
+            </p>
+            <p style={{ margin: '2px 0 0 0', fontSize: '8px', color: '#7dd3fc' }}>
+              ${((parseFloat(calculatorAmount || 0) * (jupsolAPY || 0) / 100 / 365) * (currentSOLPrice || 0)).toFixed(2)}
+            </p>
+          </div>
+          <div style={{ background: 'rgba(0, 194, 255, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(0, 194, 255, 0.3)' }}>
+            <p style={{ margin: 0, fontSize: '9px', color: theme.textDim }}>Monthly</p>
+            <p style={{ margin: '3px 0 0 0', fontSize: '13px', fontWeight: '900', color: '#00c2ff' }}>
+              {((parseFloat(calculatorAmount || 0) * (jupsolAPY || 0) / 100) / 12).toFixed(4)}
+            </p>
+            <p style={{ margin: '2px 0 0 0', fontSize: '8px', color: '#7dd3fc' }}>
+              ${((parseFloat(calculatorAmount || 0) * (jupsolAPY || 0) / 100 / 12) * (currentSOLPrice || 0)).toFixed(2)}
+            </p>
+          </div>
+          <div style={{ background: 'rgba(0, 255, 136, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(0, 255, 136, 0.3)', gridColumn: '1 / -1' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '10px', color: theme.textDim }}>Yearly Earnings</span>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#00ff88' }}>
+                  {(parseFloat(calculatorAmount || 0) * (jupsolAPY || 0) / 100).toFixed(4)} SOL
+                </p>
+                <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#7dd3fc' }}>
+                  ${((parseFloat(calculatorAmount || 0) * (jupsolAPY || 0) / 100) * (currentSOLPrice || 0)).toFixed(2)} USD
+                </p>
               </div>
             </div>
-          )}
+          </div>
+        </motion.div>
+      ) : (
+        <div style={{
+          padding: '30px 20px',
+          textAlign: 'center',
+          background: 'rgba(0, 194, 255, 0.05)',
+          borderRadius: '8px',
+          border: '1px dashed rgba(0, 194, 255, 0.3)',
+          marginBottom: '15px'
+        }}>
+          <p style={{ margin: 0, fontSize: '12px', color: theme.textDim }}>
+            👆 Enter an amount to calculate earnings
+          </p>
+        </div>
+      )}
 
-          {/* VIEW 5: YIELD DASHBOARD - MOBILE OPTIMIZED */}
-          {view === 'YIELD' && (
-            <div style={{ maxWidth: '600px', margin: '0 auto', padding: '15px 15px 100px 15px' }}>
-              {/* Compact Header */}
+      {/* Current Holdings (if any) - Compact */}
+      {jupsolBalance > 0 && (
+        <div style={{ background: 'rgba(0, 255, 136, 0.1)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(0, 255, 136, 0.3)', marginBottom: '15px' }}>
+          <p style={{ margin: '0 0 8px 0', fontSize: '10px', color: '#00ff88', fontWeight: '900', letterSpacing: '1px' }}>
+            💎 YOUR HOLDINGS
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <span style={{ fontSize: '11px', color: theme.text }}>Balance</span>
+            <span style={{ fontSize: '14px', fontWeight: '900', color: '#00c2ff' }}>{(jupsolBalance || 0).toFixed(4)} JupSOL</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: theme.text }}>Yearly</span>
+            <span style={{ fontSize: '12px', fontWeight: '900', color: '#00ff88' }}>{(estimatedEarnings?.yearly || 0).toFixed(4)} SOL</span>
+          </div>
+        </div>
+      )}
+
+      {/* Call to Action */}
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => setView('SCANNER')}
+        style={{
+          width: '100%',
+          padding: '15px',
+          background: jupsolBalance === 0
+            ? 'linear-gradient(135deg, #00c2ff 0%, #00ff88 100%)'
+            : 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)',
+          border: `3px solid ${jupsolBalance === 0 ? '#00c2ff' : '#a855f7'}`,
+          borderRadius: '10px',
+          color: jupsolBalance === 0 ? '#000' : '#fff',
+          fontWeight: '900',
+          fontSize: '13px',
+          cursor: 'pointer',
+          boxShadow: `0 0 20px ${jupsolBalance === 0 ? 'rgba(0, 194, 255, 0.4)' : 'rgba(168, 85, 247, 0.4)'}`,
+          letterSpacing: '1px'
+        }}
+      >
+        {jupsolBalance === 0 ? 'FIND TOKENS TO CONVERT' : 'SCAN FOR MORE TOKENS'}
+      </motion.button>
+    </div>
+  )
+}
+
+{/* VIEW 6: LEADERBOARD - MOBILE OPTIMIZED */ }
+{
+  view === 'LEADERBOARD' && (
+    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '15px 15px 100px 15px' }}>
+      {/* Compact Header */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '10px',
+        marginBottom: '15px',
+        padding: '15px',
+        background: 'linear-gradient(135deg, #1a0033 0%, #2d0052 100%)',
+        border: '2px solid #fbbf24',
+        borderRadius: '10px',
+        boxShadow: '0 0 20px rgba(251, 191, 36, 0.3)'
+      }}>
+        <div style={{ fontSize: '32px' }}>🏆</div>
+        <div>
+          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: '#fbbf24', letterSpacing: '1px' }}>
+            LEADERBOARD
+          </h2>
+          <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#fcd34d' }}>
+            Live Rankings
+          </p>
+        </div>
+      </div>
+
+      {/* User Rank Card */}
+      {userRank && (
+        <div style={{
+          background: 'linear-gradient(135deg, #000000 0%, #1a0033 100%)',
+          padding: '15px',
+          borderRadius: '8px',
+          marginBottom: '15px',
+          border: '2px solid #fbbf24',
+          boxShadow: '0 0 15px rgba(251, 191, 36, 0.3)'
+        }}>
+          <p style={{ margin: '0 0 8px 0', fontSize: '10px', color: '#fcd34d', fontWeight: '900', letterSpacing: '1px' }}>
+            YOUR RANK
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h1 style={{ margin: 0, fontSize: '32px', fontWeight: '900', color: '#fbbf24', fontFamily: 'monospace' }}>
+                #{String(userRank?.rank || '')}
+              </h1>
+              <p style={{ margin: '5px 0 0 0', fontSize: '11px', color: theme.text }}>
+                {stats.xp.toLocaleString()} XP • {currentRank}
+              </p>
+            </div>
+            {isJupiterMobile && (
               <div style={{
+                background: 'rgba(0, 194, 255, 0.2)',
+                padding: '6px 10px',
+                borderRadius: '6px',
+                border: '1px solid #00c2ff',
+                marginRight: '8px'
+              }}>
+                <p style={{ margin: 0, fontSize: '10px', color: '#00c2ff', fontWeight: '900' }}>📱 MOBILE</p>
+              </div>
+            )}
+            <button
+              onClick={() => handleShare('rank')}
+              style={{
+                background: 'rgba(251, 191, 36, 0.1)',
+                border: '1px solid #fbbf24',
+                color: '#fbbf24',
+                borderRadius: '6px',
+                padding: '6px 12px',
+                fontSize: '10px',
+                fontWeight: '900',
+                cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                gap: '10px',
-                marginBottom: '15px',
-                padding: '15px',
-                background: 'linear-gradient(135deg, #001a33 0%, #003d52 100%)',
-                border: '2px solid #00c2ff',
-                borderRadius: '10px',
-                boxShadow: '0 0 20px rgba(0, 194, 255, 0.3)'
-              }}>
-                <div style={{ fontSize: '32px' }}>💰</div>
-                <div>
-                  <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: '#00c2ff', letterSpacing: '1px' }}>
-                    YIELD CALCULATOR
-                  </h2>
-                  <div style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#7dd3fc', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {jupsolAPY > 0 ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#00c2ff', fontWeight: '700' }}>
-                        <img src="/logo-bright.svg" alt="Demon" style={{ width: '12px', height: '12px', borderRadius: '50%' }} /> {(jupsolAPY || 0).toFixed(2)}% APY (Live)
-                      </div>
-                    ) : (
-                      <>Powered by JupSOL</>
-                    )}
-                  </div>
-                </div>
-              </div>
+                gap: '4px'
+              }}
+            >
+              SHARE
+            </button>
+          </div>
+        </div>
+      )}
 
-              {/* Calculator Input */}
-              <div style={{ marginBottom: '15px' }}>
-                <input
-                  type="number"
-                  value={calculatorAmount}
-                  onChange={(e) => setCalculatorAmount(e.target.value)}
-                  placeholder="Enter JupSOL amount..."
-                  style={{
-                    width: '100%',
-                    padding: '15px',
-                    background: 'rgba(0, 194, 255, 0.05)',
-                    border: '2px solid rgba(0, 194, 255, 0.3)',
-                    borderRadius: '8px',
-                    color: theme.text,
-                    fontSize: '18px',
-                    fontWeight: '900',
-                    textAlign: 'center',
-                    fontFamily: 'monospace',
-                    boxSizing: 'border-box',
-                    outline: 'none'
-                  }}
-                />
-                {calculatorAmount && currentSOLPrice > 0 && (
-                  <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: '#7dd3fc', textAlign: 'center' }}>
-                    ≈ ${(parseFloat(calculatorAmount || 0) * (currentSOLPrice || 0)).toFixed(2)} USD
-                  </p>
-                )}
-              </div>
+      {/* Top 10 Leaderboard */}
+      <div style={{ background: theme.panel, padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}` }}>
+        <h3 style={{ margin: '0 0 12px 0', fontSize: '12px', fontWeight: '900', color: theme.accent }}>
+          TOP 10 HUNTERS
+        </h3>
 
-              {/* Calculator Results */}
-              {calculatorAmount && parseFloat(calculatorAmount) > 0 ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '15px' }}
-                >
-                  <div style={{ background: 'rgba(0, 194, 255, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(0, 194, 255, 0.3)' }}>
-                    <p style={{ margin: 0, fontSize: '9px', color: theme.textDim }}>Daily</p>
-                    <p style={{ margin: '3px 0 0 0', fontSize: '13px', fontWeight: '900', color: '#00c2ff' }}>
-                      {((parseFloat(calculatorAmount || 0) * (jupsolAPY || 0) / 100) / 365).toFixed(4)}
-                    </p>
-                    <p style={{ margin: '2px 0 0 0', fontSize: '8px', color: '#7dd3fc' }}>
-                      ${((parseFloat(calculatorAmount || 0) * (jupsolAPY || 0) / 100 / 365) * (currentSOLPrice || 0)).toFixed(2)}
-                    </p>
-                  </div>
-                  <div style={{ background: 'rgba(0, 194, 255, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(0, 194, 255, 0.3)' }}>
-                    <p style={{ margin: 0, fontSize: '9px', color: theme.textDim }}>Monthly</p>
-                    <p style={{ margin: '3px 0 0 0', fontSize: '13px', fontWeight: '900', color: '#00c2ff' }}>
-                      {((parseFloat(calculatorAmount || 0) * (jupsolAPY || 0) / 100) / 12).toFixed(4)}
-                    </p>
-                    <p style={{ margin: '2px 0 0 0', fontSize: '8px', color: '#7dd3fc' }}>
-                      ${((parseFloat(calculatorAmount || 0) * (jupsolAPY || 0) / 100 / 12) * (currentSOLPrice || 0)).toFixed(2)}
-                    </p>
-                  </div>
-                  <div style={{ background: 'rgba(0, 255, 136, 0.1)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(0, 255, 136, 0.3)', gridColumn: '1 / -1' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '10px', color: theme.textDim }}>Yearly Earnings</span>
-                      <div style={{ textAlign: 'right' }}>
-                        <p style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#00ff88' }}>
-                          {(parseFloat(calculatorAmount || 0) * (jupsolAPY || 0) / 100).toFixed(4)} SOL
-                        </p>
-                        <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#7dd3fc' }}>
-                          ${((parseFloat(calculatorAmount || 0) * (jupsolAPY || 0) / 100) * (currentSOLPrice || 0)).toFixed(2)} USD
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ) : (
-                <div style={{
-                  padding: '30px 20px',
-                  textAlign: 'center',
-                  background: 'rgba(0, 194, 255, 0.05)',
-                  borderRadius: '8px',
-                  border: '1px dashed rgba(0, 194, 255, 0.3)',
-                  marginBottom: '15px'
-                }}>
-                  <p style={{ margin: 0, fontSize: '12px', color: theme.textDim }}>
-                    👆 Enter an amount to calculate earnings
-                  </p>
-                </div>
-              )}
+        {leaderboardData.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '20px', color: theme.textDim }}>
+            <p style={{ margin: '0 0 8px 0', fontSize: '24px' }}>👻</p>
+            <p style={{ margin: 0, fontSize: '11px' }}>No hunters yet. Be the first to burn!</p>
+          </div>
+        ) : (
+          leaderboardData.map((player, index) => {
+            const isTop3 = index < 3;
+            const trophies = ['🥇', '🥈', '🥉'];
+            const truncatedWallet = player.isUser
+              ? 'YOU'
+              : `${player.wallet.slice(0, 4)}...${player.wallet.slice(-4)}`;
 
-              {/* Current Holdings (if any) - Compact */}
-              {jupsolBalance > 0 && (
-                <div style={{ background: 'rgba(0, 255, 136, 0.1)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(0, 255, 136, 0.3)', marginBottom: '15px' }}>
-                  <p style={{ margin: '0 0 8px 0', fontSize: '10px', color: '#00ff88', fontWeight: '900', letterSpacing: '1px' }}>
-                    💎 YOUR HOLDINGS
-                  </p>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '11px', color: theme.text }}>Balance</span>
-                    <span style={{ fontSize: '14px', fontWeight: '900', color: '#00c2ff' }}>{(jupsolBalance || 0).toFixed(4)} JupSOL</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '11px', color: theme.text }}>Yearly</span>
-                    <span style={{ fontSize: '12px', fontWeight: '900', color: '#00ff88' }}>{(estimatedEarnings?.yearly || 0).toFixed(4)} SOL</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Call to Action */}
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setView('SCANNER')}
+            return (
+              <div
+                key={player.wallet}
                 style={{
-                  width: '100%',
-                  padding: '15px',
-                  background: jupsolBalance === 0
-                    ? 'linear-gradient(135deg, #00c2ff 0%, #00ff88 100%)'
-                    : 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)',
-                  border: `3px solid ${jupsolBalance === 0 ? '#00c2ff' : '#a855f7'}`,
-                  borderRadius: '10px',
-                  color: jupsolBalance === 0 ? '#000' : '#fff',
-                  fontWeight: '900',
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  boxShadow: `0 0 20px ${jupsolBalance === 0 ? 'rgba(0, 194, 255, 0.4)' : 'rgba(168, 85, 247, 0.4)'}`,
-                  letterSpacing: '1px'
+                  padding: '10px',
+                  background: player.isUser ? 'rgba(251, 191, 36, 0.1)' : theme.bg,
+                  borderRadius: '6px',
+                  marginBottom: '8px',
+                  border: player.isUser ? '1px solid #fbbf24' : `1px solid ${theme.border}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px'
                 }}
               >
-                {jupsolBalance === 0 ? 'FIND TOKENS TO CONVERT' : 'SCAN FOR MORE TOKENS'}
-              </motion.button>
-            </div>
-          )}
-
-          {/* VIEW 6: LEADERBOARD - MOBILE OPTIMIZED */}
-          {view === 'LEADERBOARD' && (
-            <div style={{ maxWidth: '600px', margin: '0 auto', padding: '15px 15px 100px 15px' }}>
-              {/* Compact Header */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '10px',
-                marginBottom: '15px',
-                padding: '15px',
-                background: 'linear-gradient(135deg, #1a0033 0%, #2d0052 100%)',
-                border: '2px solid #fbbf24',
-                borderRadius: '10px',
-                boxShadow: '0 0 20px rgba(251, 191, 36, 0.3)'
-              }}>
-                <div style={{ fontSize: '32px' }}>🏆</div>
-                <div>
-                  <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: '#fbbf24', letterSpacing: '1px' }}>
-                    LEADERBOARD
-                  </h2>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#fcd34d' }}>
-                    Live Rankings
-                  </p>
-                </div>
-              </div>
-
-              {/* User Rank Card */}
-              {userRank && (
+                {/* Rank */}
                 <div style={{
-                  background: 'linear-gradient(135deg, #000000 0%, #1a0033 100%)',
-                  padding: '15px',
-                  borderRadius: '8px',
-                  marginBottom: '15px',
-                  border: '2px solid #fbbf24',
-                  boxShadow: '0 0 15px rgba(251, 191, 36, 0.3)'
+                  minWidth: '30px',
+                  textAlign: 'center',
+                  fontSize: isTop3 ? '18px' : '12px',
+                  fontWeight: '900',
+                  color: isTop3 ? '#fbbf24' : theme.textDim
                 }}>
-                  <p style={{ margin: '0 0 8px 0', fontSize: '10px', color: '#fcd34d', fontWeight: '900', letterSpacing: '1px' }}>
-                    YOUR RANK
-                  </p>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <h1 style={{ margin: 0, fontSize: '32px', fontWeight: '900', color: '#fbbf24', fontFamily: 'monospace' }}>
-                        #{String(userRank?.rank || '')}
-                      </h1>
-                      <p style={{ margin: '5px 0 0 0', fontSize: '11px', color: theme.text }}>
-                        {stats.xp.toLocaleString()} XP • {currentRank}
-                      </p>
-                    </div>
-                    {isJupiterMobile && (
-                      <div style={{
-                        background: 'rgba(0, 194, 255, 0.2)',
-                        padding: '6px 10px',
-                        borderRadius: '6px',
-                        border: '1px solid #00c2ff',
-                        marginRight: '8px'
-                      }}>
-                        <p style={{ margin: 0, fontSize: '10px', color: '#00c2ff', fontWeight: '900' }}>📱 MOBILE</p>
-                      </div>
+                  {isTop3 ? trophies[index] : `#${index + 1}`}
+                </div>
+
+                {/* Player Info */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+                    <p style={{
+                      margin: 0,
+                      fontSize: '11px',
+                      fontWeight: '900',
+                      color: player.isUser ? '#fbbf24' : theme.text,
+                      fontFamily: 'monospace',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {truncatedWallet}
+                    </p>
+                    {player.isMobile && (
+                      <span style={{ fontSize: '10px' }}>📱</span>
                     )}
-                    <button
-                      onClick={() => handleShare('rank')}
-                      style={{
-                        background: 'rgba(251, 191, 36, 0.1)',
-                        border: '1px solid #fbbf24',
-                        color: '#fbbf24',
-                        borderRadius: '6px',
-                        padding: '6px 12px',
-                        fontSize: '10px',
-                        fontWeight: '900',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
-                      }}
-                    >
-                      SHARE
-                    </button>
                   </div>
+                  <p style={{ margin: 0, fontSize: '9px', color: theme.textDim }}>
+                    {player.xp.toLocaleString()} XP • {player.solReclaimed} SOL
+                  </p>
                 </div>
-              )}
-
-              {/* Top 10 Leaderboard */}
-              <div style={{ background: theme.panel, padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}` }}>
-                <h3 style={{ margin: '0 0 12px 0', fontSize: '12px', fontWeight: '900', color: theme.accent }}>
-                  TOP 10 HUNTERS
-                </h3>
-
-                {leaderboardData.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '20px', color: theme.textDim }}>
-                    <p style={{ margin: '0 0 8px 0', fontSize: '24px' }}>👻</p>
-                    <p style={{ margin: 0, fontSize: '11px' }}>No hunters yet. Be the first to burn!</p>
-                  </div>
-                ) : (
-                  leaderboardData.map((player, index) => {
-                    const isTop3 = index < 3;
-                    const trophies = ['🥇', '🥈', '🥉'];
-                    const truncatedWallet = player.isUser
-                      ? 'YOU'
-                      : `${player.wallet.slice(0, 4)}...${player.wallet.slice(-4)}`;
-
-                    return (
-                      <div
-                        key={player.wallet}
-                        style={{
-                          padding: '10px',
-                          background: player.isUser ? 'rgba(251, 191, 36, 0.1)' : theme.bg,
-                          borderRadius: '6px',
-                          marginBottom: '8px',
-                          border: player.isUser ? '1px solid #fbbf24' : `1px solid ${theme.border}`,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '10px'
-                        }}
-                      >
-                        {/* Rank */}
-                        <div style={{
-                          minWidth: '30px',
-                          textAlign: 'center',
-                          fontSize: isTop3 ? '18px' : '12px',
-                          fontWeight: '900',
-                          color: isTop3 ? '#fbbf24' : theme.textDim
-                        }}>
-                          {isTop3 ? trophies[index] : `#${index + 1}`}
-                        </div>
-
-                        {/* Player Info */}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
-                            <p style={{
-                              margin: 0,
-                              fontSize: '11px',
-                              fontWeight: '900',
-                              color: player.isUser ? '#fbbf24' : theme.text,
-                              fontFamily: 'monospace',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
-                            }}>
-                              {truncatedWallet}
-                            </p>
-                            {player.isMobile && (
-                              <span style={{ fontSize: '10px' }}>📱</span>
-                            )}
-                          </div>
-                          <p style={{ margin: 0, fontSize: '9px', color: theme.textDim }}>
-                            {player.xp.toLocaleString()} XP • {player.solReclaimed} SOL
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
               </div>
+            );
+          })
+        )}
+      </div>
 
-              {/* Mobile Exclusive Section */}
-              {isJupiterMobile && (
-                <div style={{
-                  marginTop: '15px',
-                  background: 'rgba(0, 194, 255, 0.1)',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: '1px solid #00c2ff'
-                }}>
-                  <p style={{ margin: '0 0 6px 0', fontSize: '10px', color: '#00c2ff', fontWeight: '900', letterSpacing: '1px' }}>
-                    📱 MOBILE EXCLUSIVE
-                  </p>
-                  <p style={{ margin: 0, fontSize: '11px', color: theme.text }}>
-                    Earning <strong style={{ color: '#00c2ff' }}>3x XP</strong> on Jupiter Mobile
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* VIEW 7: ACHIEVEMENTS */}
-          {view === 'ACHIEVEMENTS' && (
-            <div style={{ minHeight: '100vh', paddingBottom: '90px' }}>
-              <AchievementGallery
-                earnedAchievements={earnedAchievements}
-                stats={stats}
-                context={{
-                  jupsolBalance,
-                  predictions: predictionHistory,
-                  isJupiterMobile,
-                  userRank,
-                }}
-                onMint={handleMintNFT}
-                theme={theme}
-              />
-            </div>
-          )}
-
-          {/* VIEW 8: REFERRALS */}
-          {view === 'REFERRALS' && (
-            <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px 15px 100px 15px' }}>
-              <ReferralPanel
-                wallet={publicKey?.toString()}
-                theme={theme}
-                onCopy={() => {
-                  triggerHaptic('light');
-                  triggerConfetti('success');
-                }}
-                onShare={(platform) => {
-                  triggerHaptic('medium');
-
-                }}
-              />
-            </div>
-          )}
-
-        </div>
-
-        {/* FOOTER NAV - Streamlined to 6 core actions */}
-        <nav style={{
-          position: 'fixed',
-          bottom: 0,
-          width: '100%',
-          height: 'calc(70px + env(safe-area-inset-bottom))',
-          paddingBottom: 'env(safe-area-inset-bottom)',
-          background: theme.bg,
-          borderTop: `1px solid ${theme.border}`,
-          display: 'flex',
-          justifyContent: 'space-around',
-          alignItems: 'center',
-          zIndex: 1000
+      {/* Mobile Exclusive Section */}
+      {isJupiterMobile && (
+        <div style={{
+          marginTop: '15px',
+          background: 'rgba(0, 194, 255, 0.1)',
+          padding: '12px',
+          borderRadius: '8px',
+          border: '1px solid #00c2ff'
         }}>
+          <p style={{ margin: '0 0 6px 0', fontSize: '10px', color: '#00c2ff', fontWeight: '900', letterSpacing: '1px' }}>
+            📱 MOBILE EXCLUSIVE
+          </p>
+          <p style={{ margin: 0, fontSize: '11px', color: theme.text }}>
+            Earning <strong style={{ color: '#00c2ff' }}>3x XP</strong> on Jupiter Mobile
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+{/* VIEW 7: ACHIEVEMENTS */ }
+{
+  view === 'ACHIEVEMENTS' && (
+    <div style={{ minHeight: '100vh', paddingBottom: '90px' }}>
+      <AchievementGallery
+        earnedAchievements={earnedAchievements}
+        stats={stats}
+        context={{
+          jupsolBalance,
+          predictions: predictionHistory,
+          isJupiterMobile,
+          userRank,
+        }}
+        onMint={handleMintNFT}
+        theme={theme}
+      />
+    </div>
+  )
+}
+
+{/* VIEW 8: REFERRALS */ }
+{
+  view === 'REFERRALS' && (
+    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px 15px 100px 15px' }}>
+      <ReferralPanel
+        wallet={publicKey?.toString()}
+        theme={theme}
+        onCopy={() => {
+          triggerHaptic('light');
+          triggerConfetti('success');
+        }}
+        onShare={(platform) => {
+          triggerHaptic('medium');
+
+        }}
+      />
+    </div>
+  )
+}
+
+        </div >
+
+  {/* FOOTER NAV - Streamlined to 6 core actions */ }
+  < nav style = {{
+  position: 'fixed',
+    bottom: 0,
+      width: '100%',
+        height: 'calc(70px + env(safe-area-inset-bottom))',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+            background: theme.bg,
+              borderTop: `1px solid ${theme.border}`,
+                display: 'flex',
+                  justifyContent: 'space-around',
+                    alignItems: 'center',
+                      zIndex: 1000
+}}>
           <button onClick={() => setView('SCANNER')} style={{ background: 'none', border: 'none', color: view === 'SCANNER' ? theme.accent : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
             <Crosshair size={24} />
             <span style={{ fontSize: '9px' }}>SCAN</span>
@@ -2290,50 +2306,50 @@ export default function Home() {
               </span>
             )}
           </button>
-        </nav>
+        </nav >
 
-        {shake && <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(255,0,0,0.2)', zIndex: 2000, pointerEvents: 'none' }} />}
-        <AnimatePresence>
-          {lootDrops.map(l => (
-            <motion.div key={l.id} initial={{ opacity: 0, y: 0, scale: 0.5 }} animate={{ opacity: [0, 1, 0], y: -100, scale: 1.5 }} className="fixed top-1/2 left-1/2 transform -translate-x-1/2 z-[3000] pointer-events-none">
-              <div style={{ color: '#fbbf24', fontWeight: '900', fontSize: '24px', textShadow: '0 0 10px #fbbf24', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <img src="/logo-bright.svg" alt="Demon" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
-                {l.text}
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+  { shake && <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(255,0,0,0.2)', zIndex: 2000, pointerEvents: 'none' }} />}
+<AnimatePresence>
+  {lootDrops.map(l => (
+    <motion.div key={l.id} initial={{ opacity: 0, y: 0, scale: 0.5 }} animate={{ opacity: [0, 1, 0], y: -100, scale: 1.5 }} className="fixed top-1/2 left-1/2 transform -translate-x-1/2 z-[3000] pointer-events-none">
+      <div style={{ color: '#fbbf24', fontWeight: '900', fontSize: '24px', textShadow: '0 0 10px #fbbf24', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <img src="/logo-bright.svg" alt="Demon" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
+        {l.text}
+      </div>
+    </motion.div>
+  ))}
+</AnimatePresence>
 
-        {/* ONBOARDING TOUR */}
-        <OnboardingTour
-          show={showTour}
-          currentStep={tourStep}
-          onNext={handleTourNext}
-          onBack={() => { if (tourStep > 0) setTourStep(s => s - 1); }}
-          onSkip={handleTourSkip}
-          theme={theme}
-        />
+{/* ONBOARDING TOUR */ }
+<OnboardingTour
+  show={showTour}
+  currentStep={tourStep}
+  onNext={handleTourNext}
+  onBack={() => { if (tourStep > 0) setTourStep(s => s - 1); }}
+  onSkip={handleTourSkip}
+  theme={theme}
+/>
 
-        {/* Achievement Unlock Modal */}
-        <AchievementModal
-          achievement={achievementToShow}
-          isOpen={!!achievementToShow}
-          onClose={() => setAchievementToShow(null)}
-        />
+{/* Achievement Unlock Modal */ }
+<AchievementModal
+  achievement={achievementToShow}
+  isOpen={!!achievementToShow}
+  onClose={() => setAchievementToShow(null)}
+/>
 
-        {/* 🔥 OG BURNER CELEBRATION MODAL */}
-        <OGBurnerCelebration
-          isOpen={showOGCelebration}
-          onClose={() => setShowOGCelebration(false)}
-          ogNumber={ogNumber}
-          totalOGs={100}
-          isMinted={ogStatus?.nftMinted}
-        />
+{/* 🔥 OG BURNER CELEBRATION MODAL */ }
+<OGBurnerCelebration
+  isOpen={showOGCelebration}
+  onClose={() => setShowOGCelebration(false)}
+  ogNumber={ogNumber}
+  totalOGs={100}
+  isMinted={ogStatus?.nftMinted}
+/>
 
-        {/* 🛡️ VERIFICATION OVERLAY */}
-        <VerificationOverlay isOpen={pendingTx?.type === 'verification'} />
-      </main>
-    </WalletModalProvider>
+{/* 🛡️ VERIFICATION OVERLAY */ }
+<VerificationOverlay isOpen={pendingTx?.type === 'verification'} />
+      </main >
+    </WalletModalProvider >
   );
 }
 
