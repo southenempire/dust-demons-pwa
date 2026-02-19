@@ -246,8 +246,10 @@ export default function OnboardingTour({ show, currentStep, onNext, onBack, onSk
                                 </button>
                             </div>
                         </motion.div>
-                    </>
+                    </div>
+                </>
             )}
-                </AnimatePresence>
+        </AnimatePresence>
+                </AnimatePresence >
             );
 }
