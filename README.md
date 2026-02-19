@@ -359,6 +359,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <div align="center">
-  <img src="/demon-logo.jpg" alt="Dust Demons Logo" width="100" />
+  <img src="public/demon-logo.jpg" alt="Dust Demons Logo" width="100" />
   <p><strong>Powered by Jupiter • Built for Solana</strong></p>
 </div>
