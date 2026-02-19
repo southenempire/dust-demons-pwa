@@ -45,7 +45,7 @@ export default function SplashScreen() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '25px' }}>
                             <span style={{ color: '#666', fontSize: '12px', letterSpacing: '1px' }}>POWERED BY</span>
                             <span style={{ color: '#00c2ff', fontWeight: '900', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                JUPITER MOBILE <img src="/demon-logo.jpg" alt="Demon" style={{ width: '16px', height: '16px', borderRadius: '50%', border: '1px solid #00c2ff' }} />
+                                JUPITER MOBILE <img src="/logo-bright.svg" alt="Demon" style={{ width: '16px', height: '16px', borderRadius: '50%', border: '1px solid #00c2ff' }} />
                             </span>
                         </div>
                     </motion.div>

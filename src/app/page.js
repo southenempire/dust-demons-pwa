@@ -1210,7 +1210,7 @@ export default function Home() {
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', overflow: 'hidden' }}>
             {/* LOGO & RANK */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-              <img src="/demon-logo.jpg" style={{ width: '32px', height: '32px', borderRadius: '4px', border: `1px solid ${theme.border}`, objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
+              <img src="/logo-bright.svg" style={{ width: '32px', height: '32px', borderRadius: '4px', border: `1px solid ${theme.border}`, objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
               <div className="mobile-hide-label" style={{ background: theme.panel, border: `1px solid ${rankColor}`, padding: '4px 8px', borderRadius: '4px' }}>
                 <p style={{ margin: 0, fontSize: '8px', color: rankColor, fontWeight: 'bold', letterSpacing: '1px', display: 'none', '@media (min-width: 400px)': { display: 'block' } }}>RANK</p>
                 <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text, whiteSpace: 'nowrap' }}>{currentRank.split(' ')[0]}</h2>
@@ -1390,7 +1390,7 @@ export default function Home() {
               <div style={{ marginBottom: '20px', padding: '15px', background: theme.panel, border: `1px solid #00c2ff`, borderRadius: '4px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
                   {/* REPLACED LOGO */}
-                  <img src="/demon-logo.jpg" alt="Demon" style={{ width: '18px', height: '18px', borderRadius: '50%' }} />
+                  <img src="/logo-bright.svg" alt="Demon" style={{ width: '18px', height: '18px', borderRadius: '50%' }} />
                   <h4 style={{ margin: 0, fontSize: '14px', color: '#00c2ff', fontWeight: '900', letterSpacing: '1px' }}>JUPITER QUESTS</h4>
                 </div>
                 {missions.map(m => {
@@ -1862,7 +1862,7 @@ export default function Home() {
                   <div style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#7dd3fc', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     {jupsolAPY > 0 ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#00c2ff', fontWeight: '700' }}>
-                        <img src="/demon-logo.jpg" alt="Demon" style={{ width: '12px', height: '12px', borderRadius: '50%' }} /> {(jupsolAPY || 0).toFixed(2)}% APY (Live)
+                        <img src="/logo-bright.svg" alt="Demon" style={{ width: '12px', height: '12px', borderRadius: '50%' }} /> {(jupsolAPY || 0).toFixed(2)}% APY (Live)
                       </div>
                     ) : (
                       <>Powered by JupSOL</>
@@ -2274,7 +2274,7 @@ export default function Home() {
           {lootDrops.map(l => (
             <motion.div key={l.id} initial={{ opacity: 0, y: 0, scale: 0.5 }} animate={{ opacity: [0, 1, 0], y: -100, scale: 1.5 }} className="fixed top-1/2 left-1/2 transform -translate-x-1/2 z-[3000] pointer-events-none">
               <div style={{ color: '#fbbf24', fontWeight: '900', fontSize: '24px', textShadow: '0 0 10px #fbbf24', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <img src="/demon-logo.jpg" alt="Demon" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
+                <img src="/logo-bright.svg" alt="Demon" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
                 {l.text}
               </div>
             </motion.div>

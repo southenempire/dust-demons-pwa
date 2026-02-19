@@ -64,7 +64,7 @@ export default function PriceTicker() {
                             <TickerItem label="JupSOL" price={prices.jupsol} isJup />
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <div style={{ fontSize: '10px', color: '#00c2ff', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <img src="/demon-logo.jpg" alt="Demon" style={{ width: '12px', height: '12px', borderRadius: '50%' }} /> POWERED BY JUPITER
+                                    <img src="/logo-bright.svg" alt="Demon" style={{ width: '12px', height: '12px', borderRadius: '50%' }} /> POWERED BY JUPITER
                                 </div>
                             </div>
                         </div>
