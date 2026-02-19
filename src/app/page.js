@@ -717,8 +717,10 @@ export default function Home() {
   }
 
   const handleSwap = (target) => {
+    console.log('🌊 handleSwap called with:', target);
     setSwapTarget(target);
     setView('SWAP_STATION');
+    console.log('🌊 View set to SWAP_STATION from handleSwap');
     playSound('success');
   };
 
@@ -1820,9 +1822,11 @@ export default function Home() {
           )}
 
           {/* VIEW 4: SWAP STATION (JUPITER PLUGIN) */}
+          {/* VIEW 4: SWAP STATION (JUPITER PLUGIN) */}
+          {/* Use strict equality check and high z-index overlay */}
           {view === 'SWAP_STATION' && (
             <div style={{
-              position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 9999, background: '#000000',
+              position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 99999, background: '#000000',
               display: 'flex', flexDirection: 'column', overscrollBehavior: 'none'
             }}>
               <div style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: `1px solid ${theme.border}` }}>
@@ -2308,12 +2312,37 @@ export default function Home() {
           onClose={() => setShowOGCelebration(false)}
           ogNumber={ogNumber}
           totalOGs={100}
-          onMint={handleMintOG}
-          isMinting={loading}
           isMinted={ogStatus?.nftMinted}
         />
+
+        {/* 🛡️ VERIFICATION OVERLAY */}
+        <VerificationOverlay isOpen={pendingTx?.type === 'verification'} />
       </main>
     </WalletModalProvider>
+  );
+}
+
+// 🛡️ VERIFICATION OVERLAY COMPONENT
+function VerificationOverlay({ isOpen }) {
+  if (!isOpen) return null;
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 10000,
+      background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(10px)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+    }}>
+      <div style={{ position: 'relative', width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ position: 'absolute', inset: 0, border: '2px solid #00ff41', borderRadius: '50%', opacity: 0.3, animation: 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite' }} />
+        <div style={{ position: 'absolute', inset: '10px', border: '2px solid #00ff41', borderRadius: '50%', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} />
+        <Terminal size={32} color="#00ff41" />
+      </div>
+      <h2 style={{ color: '#00ff41', marginTop: '24px', fontSize: '18px', fontWeight: '900', letterSpacing: '1px', textTransform: 'uppercase' }}>
+        VERIFYING ON-CHAIN
+      </h2>
+      <p style={{ color: '#fff', opacity: 0.7, fontSize: '12px', marginTop: '8px', fontFamily: 'monospace' }}>
+        Scanning for Jupiter Swaps & Burns...
+      </p>
+    </div>
   );
 }
 

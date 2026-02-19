@@ -299,6 +299,12 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 ## 🎥 Demo Video
 
+## 🎥 Visual Tour
+
+<div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+  <img src="media/mobile_showcase_1.png" alt="Mobile Dashboard" width="200" />
+</div>
+
 > **Coming Soon** - Full walkthrough showcasing all features
 
 ---
