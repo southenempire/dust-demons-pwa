@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } fro
 import { Skull, Ghost, Crosshair, Zap, Activity, Wallet, Terminal, Settings, Volume2, VolumeX, X, Target, ArrowRightLeft, ArrowLeft, Loader2, Moon, Sun, Share2, Users, Trophy, Crown, Smartphone, TrendingUp, TrendingDown, HelpCircle, Monitor } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
-import { WalletMultiButton, WalletModalProvider } from '@solana/wallet-adapter-react-ui';
+import { UnifiedWalletButton } from '@jup-ag/wallet-adapter';
 import { PublicKey, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { createBurnInstruction, createCloseAccountInstruction, getAssociatedTokenAddress } from '@solana/spl-token';
 import confetti from 'canvas-confetti';
@@ -1083,13 +1083,8 @@ export default function Home() {
 
 
   return (
-    <WalletModalProvider>
+    <>
       <SplashScreen />
-
-      {/* Hidden Wallet Trigger for Jupiter */}
-      <div id="hidden-wallet-trigger" style={{ display: 'none' }}>
-        <WalletMultiButton />
-      </div>
 
       <main style={{ height: '100dvh', width: '100vw', backgroundColor: theme.bg, color: theme.text, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', fontFamily: 'monospace' }}>
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: `linear-gradient(${theme.grid} 1px, transparent 1px), linear-gradient(90deg, ${theme.grid} 1px, transparent 1px)`, backgroundSize: '30px 30px' }} />
@@ -1258,90 +1253,7 @@ export default function Home() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-            {!connected ? (
-              <button
-                onClick={() => {
-                  // 1. If inside Jupiter App browser, use native wallet adapter
-                  if (typeof window !== 'undefined' && window.jupiter) {
-                    const hiddenTrigger = document.getElementById('hidden-wallet-trigger')?.querySelector('button');
-                    if (hiddenTrigger) hiddenTrigger.click();
-                    return;
-                  }
-
-                  // 2. Mobile Brower Flow: Hide AppKit Flash & Handle App Store Fallback
-                  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                  if (isMobile) {
-                    // Create an overlay to hide the ugly WalletConnect QR flash
-                    let overlay = document.getElementById('jup-redirect-overlay');
-                    if (!overlay) {
-                      overlay = document.createElement('div');
-                      overlay.id = 'jup-redirect-overlay';
-                      overlay.style.position = 'fixed';
-                      overlay.style.inset = '0';
-                      overlay.style.backgroundColor = '#050505';
-                      overlay.style.zIndex = '9999999';
-                      overlay.style.display = 'flex';
-                      overlay.style.flexDirection = 'column';
-                      overlay.style.alignItems = 'center';
-                      overlay.style.justifyContent = 'center';
-                      overlay.innerHTML = `
-                        <style>
-                          @keyframes pulseImg { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.1); opacity: 0.8; } }
-                        </style>
-                        <img src="/logo-bright.svg" style="width: 72px; height: 72px; border-radius: 16px; margin-bottom: 24px; animation: pulseImg 1s infinite alternate;" />
-                        <h2 style="color: #00c2ff; font-family: monospace; letter-spacing: 2px; margin: 0; font-size: 16px;">UPLINKING TO JUPITER</h2>
-                        <p style="color: #666; font-family: monospace; font-size: 11px; margin-top: 12px; max-width: 250px; text-align: center;">Opening app... if you don't have Jupiter Mobile installed, redirecting to store...</p>
-                      `;
-                      document.body.appendChild(overlay);
-                    }
-
-                    // Trigger WalletConnect to generate the deep link
-                    const hiddenTrigger = document.getElementById('hidden-wallet-trigger')?.querySelector('button');
-                    if (hiddenTrigger) hiddenTrigger.click();
-
-                    // Smart timeout to check if the deep link succeeded (app opened -> browser backgrounds)
-                    const startTime = Date.now();
-                    setTimeout(() => {
-                      const timeElapsed = Date.now() - startTime;
-                      // If < 3000ms elapsed, the browser was NOT backgrounded, so the deep link failed.
-                      if (timeElapsed < 3000) {
-                        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-                        if (isIOS) {
-                          window.location.href = "https://apps.apple.com/us/app/jupiter-mobile/id6738361715";
-                        } else {
-                          window.location.href = "https://play.google.com/store/apps/details?id=ag.jup.mobile";
-                        }
-                      }
-                      // Remove overlay after redirect attempt
-                      setTimeout(() => { if (document.body.contains(overlay)) document.body.removeChild(overlay); }, 1500);
-                    }, 2500);
-
-                    return;
-                  }
-
-                  // 3. Fallback to WalletConnect (AppKit) for desktop
-                  const hiddenTrigger = document.getElementById('hidden-wallet-trigger')?.querySelector('button');
-                  if (hiddenTrigger) hiddenTrigger.click();
-                }}
-                className="glass-button pulse-animation"
-                style={{
-                  height: '32px',
-                  padding: '0 16px',
-                  fontSize: '11px',
-                  fontWeight: '900',
-                  borderRadius: '6px',
-                  background: 'linear-gradient(135deg, #00c2ff, #007aff)',
-                  border: '1px solid #00c2ff',
-                  color: '#fff',
-                  boxShadow: '0 0 10px rgba(0, 194, 255, 0.4)',
-                  letterSpacing: '0.5px'
-                }}
-              >
-                UPLINK MOBILE
-              </button>
-            ) : (
-              <WalletMultiButton style={{ height: '32px', padding: '0 12px', fontSize: '12px' }} />
-            )}
+            <UnifiedWalletButton />
           </div>
         </header>
 
@@ -2427,7 +2339,7 @@ export default function Home() {
           )
         }
       </main >
-    </WalletModalProvider >
+    </>
   );
 }
 

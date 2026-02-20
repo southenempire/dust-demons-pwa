@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@jup-ag/jup-mobile-adapter": "^0.0.2",
+    "@jup-ag/wallet-adapter": "^0.2.6",
     "@metaplex-foundation/mpl-bubblegum": "^5.0.2",
     "@metaplex-foundation/umi": "^1.5.1",
     "@metaplex-foundation/umi-options": "^1.5.1",
@@ -30,6 +31,7 @@
     "@solana/web3.js": "^1.98.4",
     "@supabase/supabase-js": "^2.95.3",
     "canvas-confetti": "^1.9.4",
+    "decimal.js": "^10.6.0",
     "dotenv": "^17.3.1",
     "framer-motion": "^11.2.10",
     "lucide-react": "^0.460.0",
