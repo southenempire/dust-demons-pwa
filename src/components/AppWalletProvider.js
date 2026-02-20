@@ -23,6 +23,18 @@ export default function AppWalletProvider({ children }) {
       },
       // Disable built-in wallet list to use only Jupiter Mobile Adapter
       enableWallets: false,
+      customWallets: [
+        {
+          id: 'jupiter',
+          name: 'Jupiter Mobile',
+          homepage: 'https://jup.ag',
+          image_url: 'https://jup.ag/favicon.ico',
+          mobile_link: 'jupiter://', // Custom deep link schema
+          desktop_link: 'https://jup.ag',
+          app_store: 'https://apps.apple.com/us/app/jupiter-mobile/id6738361715',
+          play_store: 'https://play.google.com/store/apps/details?id=ag.jup.mobile'
+        }
+      ],
     }
   });
 

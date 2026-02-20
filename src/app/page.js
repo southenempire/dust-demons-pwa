@@ -112,7 +112,7 @@ const mobileShare = async (text, url) => {
 };
 
 export default function Home() {
-  const { signAllTransactions, wallet, signTransaction } = useWallet();
+  const { signAllTransactions, wallet, signTransaction, wallets, select, connect: connectWallet } = useWallet();
   const { connection } = useConnection();
 
   // Custom Hooks
@@ -1253,7 +1253,42 @@ export default function Home() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-            <UnifiedWalletButton />
+            {!connected ? (
+              <button
+                onClick={async () => {
+                  try {
+                    // Force the Jupiter Mobile Adapter (bypasses UnifiedWallet generic wallet modal!)
+                    const jupWallet = wallets.find(w => w.adapter.name === 'Jupiter Mobile');
+                    if (jupWallet) {
+                      select(jupWallet.adapter.name);
+                      // Small timeout to let the UnifiedWalletKit adapter select settle before connecting
+                      setTimeout(() => connectWallet().catch(console.error), 100);
+                    } else {
+                      console.warn('Jupiter Mobile adapter not found.');
+                    }
+                  } catch (e) {
+                    console.error("Connection error:", e);
+                  }
+                }}
+                className="glass-button pulse-animation"
+                style={{
+                  height: '32px',
+                  padding: '0 16px',
+                  fontSize: '11px',
+                  fontWeight: '900',
+                  borderRadius: '6px',
+                  background: 'linear-gradient(135deg, #00c2ff, #007aff)',
+                  border: '1px solid #00c2ff',
+                  color: '#fff',
+                  boxShadow: '0 0 10px rgba(0, 194, 255, 0.4)',
+                  letterSpacing: '0.5px'
+                }}
+              >
+                UPLINK MOBILE
+              </button>
+            ) : (
+              <UnifiedWalletButton />
+            )}
           </div>
         </header>
 
