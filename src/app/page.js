@@ -1261,18 +1261,61 @@ export default function Home() {
             {!connected ? (
               <button
                 onClick={() => {
-                  // 1. If inside Jupiter App browser, use native wallet adapter via WalletConnect wrapper
+                  // 1. If inside Jupiter App browser, use native wallet adapter
                   if (typeof window !== 'undefined' && window.jupiter) {
                     const hiddenTrigger = document.getElementById('hidden-wallet-trigger')?.querySelector('button');
                     if (hiddenTrigger) hiddenTrigger.click();
                     return;
                   }
 
-                  // 2. Direct deep link for mobile browsers (bypasses Reown AppKit QR flashing)
+                  // 2. Mobile Brower Flow: Hide AppKit Flash & Handle App Store Fallback
                   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
                   if (isMobile) {
-                    const returnUrl = encodeURIComponent(window.location.href);
-                    window.location.href = `https://jup.ag/browse?url=${returnUrl}`;
+                    // Create an overlay to hide the ugly WalletConnect QR flash
+                    let overlay = document.getElementById('jup-redirect-overlay');
+                    if (!overlay) {
+                      overlay = document.createElement('div');
+                      overlay.id = 'jup-redirect-overlay';
+                      overlay.style.position = 'fixed';
+                      overlay.style.inset = '0';
+                      overlay.style.backgroundColor = '#050505';
+                      overlay.style.zIndex = '9999999';
+                      overlay.style.display = 'flex';
+                      overlay.style.flexDirection = 'column';
+                      overlay.style.alignItems = 'center';
+                      overlay.style.justifyContent = 'center';
+                      overlay.innerHTML = `
+                        <style>
+                          @keyframes pulseImg { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.1); opacity: 0.8; } }
+                        </style>
+                        <img src="/logo-bright.svg" style="width: 72px; height: 72px; border-radius: 16px; margin-bottom: 24px; animation: pulseImg 1s infinite alternate;" />
+                        <h2 style="color: #00c2ff; font-family: monospace; letter-spacing: 2px; margin: 0; font-size: 16px;">UPLINKING TO JUPITER</h2>
+                        <p style="color: #666; font-family: monospace; font-size: 11px; margin-top: 12px; max-width: 250px; text-align: center;">Opening app... if you don't have Jupiter Mobile installed, redirecting to store...</p>
+                      `;
+                      document.body.appendChild(overlay);
+                    }
+
+                    // Trigger WalletConnect to generate the deep link
+                    const hiddenTrigger = document.getElementById('hidden-wallet-trigger')?.querySelector('button');
+                    if (hiddenTrigger) hiddenTrigger.click();
+
+                    // Smart timeout to check if the deep link succeeded (app opened -> browser backgrounds)
+                    const startTime = Date.now();
+                    setTimeout(() => {
+                      const timeElapsed = Date.now() - startTime;
+                      // If < 3000ms elapsed, the browser was NOT backgrounded, so the deep link failed.
+                      if (timeElapsed < 3000) {
+                        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+                        if (isIOS) {
+                          window.location.href = "https://apps.apple.com/us/app/jupiter-mobile/id6738361715";
+                        } else {
+                          window.location.href = "https://play.google.com/store/apps/details?id=ag.jup.mobile";
+                        }
+                      }
+                      // Remove overlay after redirect attempt
+                      setTimeout(() => { if (document.body.contains(overlay)) document.body.removeChild(overlay); }, 1500);
+                    }, 2500);
+
                     return;
                   }
 
