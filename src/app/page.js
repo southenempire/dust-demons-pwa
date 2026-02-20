@@ -928,7 +928,6 @@ export default function Home() {
         }
       } catch (ogError) {
         console.error("🔥 OG CLAIM ERROR TRACE:", ogError);
-        alert("OG CLAIM DEBUG ERROR: " + ogError.message);
         // Non-critical, don't show error to user in prod
       }
 
