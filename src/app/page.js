@@ -927,8 +927,9 @@ export default function Home() {
           });
         }
       } catch (ogError) {
-
-        // Non-critical, don't show error to user
+        console.error("🔥 OG CLAIM ERROR TRACE:", ogError);
+        alert("OG CLAIM DEBUG ERROR: " + ogError.message);
+        // Non-critical, don't show error to user in prod
       }
 
       // 🎁 Track referral completion (first burn)
