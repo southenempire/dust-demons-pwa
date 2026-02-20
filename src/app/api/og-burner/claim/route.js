@@ -46,7 +46,10 @@ export async function POST(request) {
 
             // Verify wallet is involved in transaction
             const walletPubkey = new PublicKey(walletAddress);
-            const isInvolved = tx.transaction.message.staticAccountKeys.some(
+            const msg = tx.transaction.message;
+            const accountKeys = msg.staticAccountKeys || msg.accountKeys || [];
+
+            const isInvolved = accountKeys.some(
                 key => key.equals(walletPubkey)
             );
 
