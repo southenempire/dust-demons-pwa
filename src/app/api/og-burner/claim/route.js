@@ -29,43 +29,52 @@ export async function POST(request) {
             );
         }
 
-        // Verify transaction exists on-chain
+        // Verify transaction exists on-chain with retry logic for RPC delay
         console.log('🔥 API: Verifying tx:', burnTxSignature);
-        try {
-            const tx = await connection.getTransaction(burnTxSignature, {
-                maxSupportedTransactionVersion: 0,
-                commitment: 'confirmed'
-            });
+        let tx = null;
+        let retries = 5;
 
-            if (!tx) {
-                return NextResponse.json(
-                    { error: 'Transaction not found' },
-                    { status: 404 }
-                );
+        while (retries > 0 && !tx) {
+            try {
+                tx = await connection.getTransaction(burnTxSignature, {
+                    maxSupportedTransactionVersion: 0,
+                    commitment: 'confirmed'
+                });
+                if (!tx) {
+                    console.log(`⏳ TX not found yet. Retrying in 1s... (${retries} left)`);
+                    await new Promise(r => setTimeout(r, 1000));
+                    retries--;
+                }
+            } catch (err) {
+                console.error('RPC Error fetching tx:', err);
+                await new Promise(r => setTimeout(r, 1000));
+                retries--;
             }
+        }
 
-            // Verify wallet is involved in transaction
-            const walletPubkey = new PublicKey(walletAddress);
-            const msg = tx.transaction.message;
-            const accountKeys = msg.staticAccountKeys || msg.accountKeys || [];
-
-            const isInvolved = accountKeys.some(
-                key => key.equals(walletPubkey)
-            );
-
-            if (!isInvolved) {
-                return NextResponse.json(
-                    { error: 'Wallet not involved in transaction' },
-                    { status: 400 }
-                );
-            }
-        } catch (error) {
-            console.error('Transaction verification failed:', error);
+        if (!tx) {
             return NextResponse.json(
-                { error: 'Failed to verify transaction', details: error.message },
-                { status: 500 }
+                { error: 'Transaction not found after retries' },
+                { status: 404 }
             );
         }
+
+        // Verify wallet is involved in transaction
+        const walletPubkey = new PublicKey(walletAddress);
+        const msg = tx.transaction.message;
+        const accountKeys = msg.staticAccountKeys || msg.accountKeys || [];
+
+        const isInvolved = accountKeys.some(
+            key => key.equals(walletPubkey)
+        );
+
+        if (!isInvolved) {
+            return NextResponse.json(
+                { error: 'Wallet not involved in transaction' },
+                { status: 400 }
+            );
+        }
+        // (Removed orphaned catch block)
 
         // Check if wallet already claimed
         const { data: existing } = await supabase
