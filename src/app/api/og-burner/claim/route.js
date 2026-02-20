@@ -17,7 +17,7 @@ export async function POST(request) {
         );
         console.log('🔥 API: Supabase initialized');
 
-        const connection = new Connection(process.env.NEXT_PUBLIC_RPC_URL);
+        const connection = new Connection(process.env.NEXT_PUBLIC_RPC_URL || process.env.RPC_URL || 'https://mainnet.helius-rpc.com/?api-key=19b096d1-dce5-49a3-ad44-5e7876db7661');
 
         const { walletAddress, burnTxSignature } = await request.json();
 
