@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } fro
 import { Skull, Ghost, Crosshair, Zap, Activity, Wallet, Terminal, Settings, Volume2, VolumeX, X, Target, ArrowRightLeft, ArrowLeft, Loader2, Moon, Sun, Share2, Users, Trophy, Crown, Smartphone, TrendingUp, TrendingDown, HelpCircle, Monitor } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
-import { UnifiedWalletButton } from '@jup-ag/wallet-adapter';
+// import { UnifiedWalletButton } from '@jup-ag/wallet-adapter'; // Removed due to client-side exception in Jupiter mobile browser
 import { PublicKey, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { createBurnInstruction, createCloseAccountInstruction, getAssociatedTokenAddress } from '@solana/spl-token';
 import confetti from 'canvas-confetti';
@@ -1287,7 +1287,52 @@ export default function Home() {
                 UPLINK MOBILE
               </button>
             ) : (
-              <UnifiedWalletButton />
+              <div
+                className="glass-panel"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '4px 8px 4px 4px',
+                  borderRadius: '20px',
+                  background: 'rgba(0,0,0,0.5)',
+                  border: `1px solid ${theme.border}`
+                }}
+              >
+                {/* Balance Badge */}
+                <div style={{
+                  background: 'rgba(0,255,65,0.1)',
+                  color: '#00ff41',
+                  padding: '4px 8px',
+                  borderRadius: '16px',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
+                  <span style={{ fontSize: '10px' }}>◎</span>
+                  {walletBalance.toFixed(2)}
+                </div>
+
+                {/* Address Badge */}
+                <div
+                  onClick={() => {
+                    if (window.confirm("Disconnect wallet?")) {
+                      wallet.adapter.disconnect();
+                    }
+                  }}
+                  style={{
+                    color: theme.text,
+                    fontSize: '11px',
+                    fontFamily: 'monospace',
+                    cursor: 'pointer',
+                    padding: '0 4px'
+                  }}
+                >
+                  {publicKey ? `${publicKey.toBase58().slice(0, 4)}...${publicKey.toBase58().slice(-4)}` : 'Connected'}
+                </div>
+              </div>
             )}
           </div>
         </header>
