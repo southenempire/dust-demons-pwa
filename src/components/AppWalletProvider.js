@@ -3,20 +3,14 @@
 import React, { useMemo } from 'react';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 export default function AppWalletProvider({ children }) {
   // NEW KEY INTEGRATED
   const endpoint = 'https://mainnet.helius-rpc.com/?api-key=691928df-d5b6-40c4-aa85-f00f6723d838';
 
-  const wallets = useMemo(
-    () => [
-      new PhantomWalletAdapter(),
-      new SolflareWalletAdapter(),
-    ],
-    []
-  );
+  // Empty array forces reliance on window.solana injection (like Jupiter Mobile)
+  const wallets = useMemo(() => [], []);
 
   return (
     <ConnectionProvider endpoint={endpoint}>

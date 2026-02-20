@@ -665,11 +665,11 @@ export default function Home() {
     if (!publicKey) {
       showModal('INFO', '🔗 WALLET REQUIRED',
         [
-          'Click wallet button (top right)',
-          'Select your Solana wallet',
-          'Approve the connection',
+          'Click UPLINK MOBILE (top right)',
+          'Launch inside Jupiter Mobile app',
+          'Approve the connection automatically',
           'Start scanning for dust!',
-          '💡 Jupiter Mobile gets 3x XP!'
+          '💡 Exclusive 3x XP on Jupiter Mobile!'
         ],
         () => { closeModal(); setShowMenu(true); },
         'VIEW GUIDE'
@@ -1258,7 +1258,42 @@ export default function Home() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-            <WalletMultiButton style={{ height: '32px', padding: '0 12px', fontSize: '12px' }} />
+            {!connected ? (
+              <button
+                onClick={() => {
+                  if (isJupiterMobile || (typeof window !== 'undefined' && (window.jupiter || window.solana?.isJupiter))) {
+                    const hiddenTrigger = document.getElementById('hidden-wallet-trigger')?.querySelector('button');
+                    if (hiddenTrigger) hiddenTrigger.click();
+                  } else {
+                    showModal('INFO', 'JUPITER MOBILE EXCLUSIVE',
+                      ['Dust Demons is authenticated exclusively via Jupiter Mobile.', 'Launch the game inside the Jupiter Mobile App to play and earn bonuses.'],
+                      () => {
+                        window.location.href = `https://jup.ag/browse?url=${encodeURIComponent(window.location.href)}`;
+                        closeModal();
+                      },
+                      'LAUNCH IN JUPITER'
+                    );
+                  }
+                }}
+                className="glass-button pulse-animation"
+                style={{
+                  height: '32px',
+                  padding: '0 16px',
+                  fontSize: '11px',
+                  fontWeight: '900',
+                  borderRadius: '6px',
+                  background: 'linear-gradient(135deg, #00c2ff, #007aff)',
+                  border: '1px solid #00c2ff',
+                  color: '#fff',
+                  boxShadow: '0 0 10px rgba(0, 194, 255, 0.4)',
+                  letterSpacing: '0.5px'
+                }}
+              >
+                UPLINK MOBILE
+              </button>
+            ) : (
+              <WalletMultiButton style={{ height: '32px', padding: '0 12px', fontSize: '12px' }} />
+            )}
           </div>
         </header>
 

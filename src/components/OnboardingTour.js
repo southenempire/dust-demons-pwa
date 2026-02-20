@@ -5,13 +5,13 @@ import { X, ChevronRight } from 'lucide-react';
 
 const tourSteps = [
     {
-        title: 'Connect Wallet',
-        emoji: '🔗',
+        title: 'Uplink via Jupiter',
+        emoji: '🪐',
         items: [
-            'Tap wallet button',
-            'Choose Solana wallet',
-            'Approve connection',
-            '3x XP with Jupiter!'
+            'Tap UPLINK MOBILE',
+            'Launch Jupiter app',
+            'Approve connection automatically',
+            'Earn 3x XP bonus!'
         ]
     },
     {
