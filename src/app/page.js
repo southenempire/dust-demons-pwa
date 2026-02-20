@@ -1261,6 +1261,22 @@ export default function Home() {
             {!connected ? (
               <button
                 onClick={() => {
+                  // 1. If inside Jupiter App browser, use native wallet adapter via WalletConnect wrapper
+                  if (typeof window !== 'undefined' && window.jupiter) {
+                    const hiddenTrigger = document.getElementById('hidden-wallet-trigger')?.querySelector('button');
+                    if (hiddenTrigger) hiddenTrigger.click();
+                    return;
+                  }
+
+                  // 2. Direct deep link for mobile browsers (bypasses Reown AppKit QR flashing)
+                  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                  if (isMobile) {
+                    const returnUrl = encodeURIComponent(window.location.href);
+                    window.location.href = `https://jup.ag/browse?url=${returnUrl}`;
+                    return;
+                  }
+
+                  // 3. Fallback to WalletConnect (AppKit) for desktop
                   const hiddenTrigger = document.getElementById('hidden-wallet-trigger')?.querySelector('button');
                   if (hiddenTrigger) hiddenTrigger.click();
                 }}
