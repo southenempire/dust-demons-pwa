@@ -20,8 +20,14 @@ export function useTransactions() {
     }, []);
 
     // Set pending transaction
-    const setPending = useCallback((type, message) => {
-        setPendingTx({ type, message });
+    const setPending = useCallback((typeOrObj, message) => {
+        if (typeOrObj === null) {
+            setPendingTx(null);
+        } else if (typeof typeOrObj === 'object') {
+            setPendingTx(typeOrObj);
+        } else {
+            setPendingTx({ type: typeOrObj, message });
+        }
     }, []);
 
     // Clear pending transaction
