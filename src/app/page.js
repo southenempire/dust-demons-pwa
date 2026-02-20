@@ -918,8 +918,8 @@ export default function Home() {
       // 🔥 OG BURNER: Claim status after burn
       try {
         const ogResult = await claimOGStatus(lastSig);
-        if (ogResult.eligible && !ogResult.alreadyClaimed) {
-          // New OG Burner! Show celebration
+        if (ogResult.eligible && (!ogResult.alreadyClaimed || !ogResult.nftMinted)) {
+          // New OG Burner or hasn't minted! Show celebration
           setTimeout(() => setShowOGCelebration(true), 1000);
           trackEvent(AnalyticsEvents.OG_BURNER_CLAIMED, {
             ogNumber: ogResult.ogNumber,
@@ -2312,6 +2312,8 @@ export default function Home() {
           ogNumber={ogNumber}
           totalOGs={100}
           isMinted={ogStatus?.nftMinted}
+          onMint={handleMintOG}
+          isMinting={loading}
         />
 
         {/* 🛡️ VERIFICATION OVERLAY */}
