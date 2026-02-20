@@ -1261,19 +1261,8 @@ export default function Home() {
             {!connected ? (
               <button
                 onClick={() => {
-                  if (isJupiterMobile || (typeof window !== 'undefined' && (window.jupiter || window.solana?.isJupiter))) {
-                    const hiddenTrigger = document.getElementById('hidden-wallet-trigger')?.querySelector('button');
-                    if (hiddenTrigger) hiddenTrigger.click();
-                  } else {
-                    showModal('INFO', 'JUPITER MOBILE EXCLUSIVE',
-                      ['Dust Demons is authenticated exclusively via Jupiter Mobile.', 'Launch the game inside the Jupiter Mobile App to play and earn bonuses.'],
-                      () => {
-                        window.location.href = `https://jup.ag/browse?url=${encodeURIComponent(window.location.href)}`;
-                        closeModal();
-                      },
-                      'LAUNCH IN JUPITER'
-                    );
-                  }
+                  const hiddenTrigger = document.getElementById('hidden-wallet-trigger')?.querySelector('button');
+                  if (hiddenTrigger) hiddenTrigger.click();
                 }}
                 className="glass-button pulse-animation"
                 style={{
