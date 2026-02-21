@@ -388,15 +388,15 @@ export default function Home() {
   }, [stats.xp, audioEnabled, isMounted]);
 
   useEffect(() => {
-    if (publicKey) {
+    if (publicKey && connection) {
       connection.getBalance(publicKey)
         .then(bal => setWalletBalance(bal / LAMPORTS_PER_SOL))
         .catch(e => console.warn("Balance check failed:", e));
 
       // 📊 Auto-submit to leaderboard on wallet connection
-      setTimeout(() => submitToLeaderboard(), 1500);
+      setTimeout(() => submitToLeaderboard(publicKey, stats, isMobile), 1500);
     }
-  }, [publicKey]);
+  }, [publicKey, connection]);
 
   // 💰 FETCH JUPSOL BALANCE
   useEffect(() => {
