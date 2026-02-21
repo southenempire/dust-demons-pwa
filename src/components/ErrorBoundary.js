@@ -24,32 +24,41 @@ class ErrorBoundary extends React.Component {
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    justifyContent: 'center',
+                    justifyContent: 'flex-start',
                     minHeight: '100vh',
-                    background: '#050505',
+                    background: '#990000',
                     color: '#e0e0e0',
-                    padding: '20px',
-                    textAlign: 'center'
+                    padding: '40px 20px',
+                    textAlign: 'left',
+                    fontFamily: 'monospace',
+                    overflow: 'auto'
                 }}>
-                    <div style={{ fontSize: '64px', marginBottom: '20px' }}>💀</div>
-                    <h1 style={{ fontSize: '24px', fontWeight: '900', marginBottom: '12px', color: '#ff0055' }}>
-                        CRITICAL ERROR
-                    </h1>
-                    <p style={{ fontSize: '14px', color: '#666', marginBottom: '20px', maxWidth: '400px' }}>
-                        {this.state.error?.message || 'Something went wrong. The demons have escaped.'}
+                    <div style={{ fontSize: '32px', marginBottom: '10px' }}>💀 FATAL CRASH</div>
+                    <p style={{ fontSize: '14px', color: '#fff', marginBottom: '20px' }}>
+                        Please screenshot the text below and send it to the AI:
                     </p>
+                    <div style={{ background: '#000', padding: '15px', borderRadius: '4px', width: '100%', wordBreak: 'break-word', marginBottom: '10px' }}>
+                        <strong style={{ color: '#ff0055' }}>Error:</strong>
+                        <br />
+                        {this.state.error && this.state.error.toString()}
+                    </div>
+                    <div style={{ background: 'rgba(0,0,0,0.5)', padding: '15px', borderRadius: '4px', width: '100%', wordBreak: 'break-word', fontSize: '10px', whiteSpace: 'pre-wrap' }}>
+                        <strong style={{ color: '#00c2ff' }}>Component Stack:</strong>
+                        <br />
+                        {this.state.errorInfo && this.state.errorInfo.componentStack}
+                    </div>
                     <button
                         onClick={() => window.location.reload()}
                         style={{
+                            marginTop: '30px',
                             padding: '12px 24px',
-                            background: '#00ff41',
+                            background: '#fff',
                             color: '#000',
                             border: 'none',
                             borderRadius: '8px',
                             fontSize: '14px',
                             fontWeight: '900',
-                            cursor: 'pointer',
-                            boxShadow: '0 0 20px rgba(0, 255, 65, 0.3)'
+                            cursor: 'pointer'
                         }}
                     >
                         RELOAD APP

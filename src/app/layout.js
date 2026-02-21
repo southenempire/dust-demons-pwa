@@ -2,6 +2,7 @@ import './globals.css';
 import { Inter } from 'next/font/google';
 // 🚀 FIX: Pointing to src/components/AppWalletProvider.js
 import AppWalletProvider from '@/components/AppWalletProvider';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -65,7 +66,9 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={inter.className}>
         <AppWalletProvider>
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </AppWalletProvider>
       </body>
     </html>
