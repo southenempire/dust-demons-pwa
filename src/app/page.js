@@ -1253,7 +1253,9 @@ export default function Home() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-            {!connected ? (
+            {!isMounted ? (
+              <div style={{ width: '120px', height: '32px' }} /> // Placeholder during hydration
+            ) : !connected ? (
               <button
                 onClick={async () => {
                   try {
