@@ -25,7 +25,7 @@ export default function AppWalletProvider({ children }) {
       enableWallets: false,
       customWallets: [
         {
-          id: 'jupiter',
+          id: '19b096d1-dce5-49a3-ad44-5e7876db7661', // Must be a valid UUID format to avoid Reown Core fallback collisions
           name: 'Jupiter Mobile',
           homepage: 'https://jup.ag',
           image_url: 'https://jup.ag/favicon.ico',
