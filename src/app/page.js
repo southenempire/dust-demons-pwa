@@ -413,6 +413,37 @@ export default function Home() {
     }
   }, [publicKey, connection]);
 
+  // 📱 AUTO-CONNECT: When user returns from Jupiter Mobile app, auto-trigger wallet connect
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        const pending = localStorage.getItem('pendingJupiterConnect');
+        if (pending === 'true' && !connected) {
+          localStorage.removeItem('pendingJupiterConnect');
+          // Small delay to let Jupiter Mobile wallet inject itself
+          setTimeout(() => {
+            const jupWallet = wallets.find(w => w.adapter.name === 'Jupiter Mobile');
+            if (jupWallet) {
+              select(jupWallet.adapter.name);
+              setTimeout(() => connectWallet().catch(console.error), 150);
+            }
+          }, 500);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    // Also handle focus event as fallback for some mobile browsers
+    window.addEventListener('focus', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleVisibilityChange);
+    };
+  }, [connected, wallets, select, connectWallet]);
+
   // 💰 FETCH JUPSOL BALANCE
   useEffect(() => {
     if (publicKey && connection && currentSOLPrice > 0) {
@@ -1332,7 +1363,8 @@ export default function Home() {
                       setTimeout(() => connectWallet().catch(console.error), 100);
                     } else {
                       // Not inside Jupiter Mobile browser — deep link to Jupiter Mobile app
-                      // with this page as the return URL so user lands back automatically
+                      // Set flag so we auto-connect when user returns to this page
+                      localStorage.setItem('pendingJupiterConnect', 'true');
                       const returnUrl = encodeURIComponent(window.location.href);
                       const deepLink = `https://jup.ag/mobile?utm_source=dust-demons&return_url=${returnUrl}`;
                       window.location.href = deepLink;
