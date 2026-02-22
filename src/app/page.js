@@ -1081,7 +1081,52 @@ export default function Home() {
 
   if (!isMounted) return <div style={{ background: theme.bg, height: '100dvh', width: '100vw' }} />;
 
-
+  // 🚫 DESKTOP GATE — Mobile only
+  if (!isMobile) {
+    return (
+      <div style={{
+        height: '100dvh', width: '100vw',
+        background: '#000',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        fontFamily: 'monospace', textAlign: 'center',
+        padding: '24px',
+        backgroundImage: 'linear-gradient(rgba(0,255,65,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,65,0.05) 1px, transparent 1px)',
+        backgroundSize: '30px 30px'
+      }}>
+        <img src="/logo-bright.svg" alt="Dust Demons" style={{ width: '80px', height: '80px', marginBottom: '24px', borderRadius: '50%' }} />
+        <h1 style={{ color: '#00ff41', fontSize: '22px', fontWeight: '900', letterSpacing: '2px', margin: '0 0 12px 0' }}>
+          MOBILE ONLY
+        </h1>
+        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', lineHeight: '1.6', maxWidth: '320px', margin: '0 0 32px 0' }}>
+          Dust Demons is not compatible with desktop browsers.<br />
+          Open this app on your phone inside the <strong style={{ color: '#00c2ff' }}>Jupiter Mobile</strong> app for the full experience.
+        </p>
+        <a
+          href="https://jup.ag"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-block',
+            padding: '14px 28px',
+            background: 'linear-gradient(135deg, #00ff41, #00c2ff)',
+            color: '#000',
+            fontWeight: '900',
+            fontSize: '13px',
+            letterSpacing: '1px',
+            borderRadius: '6px',
+            textDecoration: 'none',
+            marginBottom: '12px'
+          }}
+        >
+          GET JUPITER MOBILE →
+        </a>
+        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', marginTop: '16px', letterSpacing: '1px' }}>
+          dust-demons.vercel.app · Mobile Only
+        </p>
+      </div>
+    );
+  }
 
   return (
     <>
