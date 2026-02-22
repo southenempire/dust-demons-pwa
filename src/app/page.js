@@ -1318,21 +1318,7 @@ export default function Home() {
             {!isMounted ? (
               <div style={{ width: '120px', height: '32px' }} /> // Placeholder during hydration
             ) : (
-              <UnifiedWalletButton
-                buttonClassName="glass-button pulse-animation"
-                overrideContent={
-                  !connected ? (
-                    <span style={{
-                      fontSize: '11px',
-                      fontWeight: '900',
-                      letterSpacing: '0.5px',
-                      color: '#fff'
-                    }}>
-                      UPLINK MOBILE
-                    </span>
-                  ) : undefined
-                }
-              />
+              <UnifiedWalletButton />
             )}
           </div>
         </header>
