@@ -11,12 +11,6 @@ Dust Demons transforms the mundane task of wallet cleanup into a thrilling game 
 
 ---
 
-> **Turn wallet dust into yield-bearing JupSOL through an addictive, competitive gaming experience.**
-
-Dust Demons transforms the mundane task of wallet cleanup into a thrilling game where players compete on a live leaderboard, complete daily missions, and earn real economic rewards—all powered by Jupiter's infrastructure.
-
----
-
 ## 🎯 The Mission
 
 Solana wallets accumulate "dust"—worthless tokens, closed accounts, and NFT spam—that clutter the interface and waste rent. Cleaning this manually is:
@@ -70,12 +64,12 @@ Dust Demons checks **ALL** the boxes:
 
 ### 🔗 Jupiter Integrations (8 Total)
 
-1. **Jupiter Mobile Detection** - 3-tier system (UA, deep link, wallet)
-2. **Jupiter Terminal** - Embedded swap widget for JupSOL conversion
-3. **Jupiter Price API** - Real-time SOL/USD pricing
-4. **Jupiter Swap Verification** - On-chain transaction verification
-5. **Sanctum JupSOL APY** - Live staking yield data (7.5% fallback)
-6. **Jupiter Mobile Notifications** - Native push notifications
+1. **Jupiter Mobile Adapter** - Official `@jup-ag/jup-mobile-adapter` + Reown WalletConnect
+2. **UnifiedWalletButton** - Official `@jup-ag/wallet-adapter` connect/disconnect UI
+3. **Jupiter Terminal** - Embedded swap widget for JupSOL conversion
+4. **Jupiter Price API v3** - Real-time SOL/USD + token pricing
+5. **Jupiter Swap Verification** - On-chain transaction verification
+6. **Sanctum JupSOL APY** - Live staking yield data (7.5% fallback)
 7. **Deep Linking** - Jupiter Mobile app integration
 8. **Mobile Haptics** - Vibration feedback for actions
 
@@ -106,6 +100,8 @@ Dust Demons checks **ALL** the boxes:
 - **@solana/web3.js** - Solana interactions
 - **@solana/wallet-adapter** - Multi-wallet support
 - **@solana/spl-token** - Token operations (burn, close)
+- **@jup-ag/wallet-adapter** - Jupiter UnifiedWalletProvider + UnifiedWalletButton
+- **@jup-ag/jup-mobile-adapter** - Jupiter Mobile WalletConnect via Reown
 - **Helius RPC** - Enhanced Solana RPC with DAS API
 
 ### Backend & Database
@@ -158,6 +154,12 @@ NEXT_PUBLIC_HELIUS_API_KEY=your_helius_key
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Jupiter Price API (required for token prices)
+NEXT_PUBLIC_JUPITER_API_KEY=your_jupiter_api_key
+
+# Reown / WalletConnect (required for Jupiter Mobile Adapter)
+NEXT_PUBLIC_REOWN_PROJECT_ID=your_reown_project_id
 ```
 
 ### Database Setup
@@ -175,8 +177,9 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ## 🎯 How It Works
 
 ### 1. Connect Wallet
-- Supports all Solana wallets via wallet-adapter
-- Auto-detects Jupiter Mobile for enhanced features
+- Official Jupiter `UnifiedWalletButton` for seamless connection
+- Supports Jupiter Mobile via `@jup-ag/jup-mobile-adapter` + Reown WalletConnect
+- Auto-detects Jupiter Mobile for enhanced features + 3x XP bonus
 
 ### 2. Scan for Dust
 - Fetches all tokens using Helius DAS API
