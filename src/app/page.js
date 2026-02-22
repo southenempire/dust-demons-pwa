@@ -134,7 +134,8 @@ export default function Home() {
   const [burningId, setBurningId] = useState(null);
   const [lootDrops, setLootDrops] = useState([]);
   const [shake, setShake] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
+  const [showWalletScanner, setShowWalletScanner] = useState(false);
+  const [showDesktopWarning, setShowDesktopWarning] = useState(false); // NEW STATE FOR DESKTOP REDIRECT
   const [showTour, setShowTour] = useState(false);
   const [tourStep, setTourStep] = useState(0);
   const [swapTarget, setSwapTarget] = useState(null);
@@ -1259,6 +1260,12 @@ export default function Home() {
               <button
                 onClick={async () => {
                   try {
+                    // Block desktop users to force the mobile flow natively
+                    if (!isMobile) {
+                      setShowDesktopWarning(true);
+                      return;
+                    }
+
                     // Force the Jupiter Mobile Adapter (bypasses UnifiedWallet generic wallet modal!)
                     const jupWallet = wallets.find(w => w.adapter.name === 'Jupiter Mobile');
                     if (jupWallet) {
@@ -1301,22 +1308,6 @@ export default function Home() {
                   border: `1px solid ${theme.border}`
                 }}
               >
-                {/* Balance Badge */}
-                <div style={{
-                  background: 'rgba(0,255,65,0.1)',
-                  color: '#00ff41',
-                  padding: '4px 8px',
-                  borderRadius: '16px',
-                  fontSize: '11px',
-                  fontWeight: 'bold',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}>
-                  <span style={{ fontSize: '10px' }}>◎</span>
-                  {walletBalance.toFixed(2)}
-                </div>
-
                 {/* Address Badge */}
                 <div
                   onClick={() => {
@@ -1427,16 +1418,164 @@ export default function Home() {
                     borderRadius: '10px',
                     padding: '3px 7px',
                     fontSize: '10px',
-                    fontWeight: '900'
+                    fontWeight: 'bold'
                   }}>
                     {earnedAchievements.length}
                   </span>
                 )}
               </button>
 
-              {/* 🎁 REFERRALS */}
+              {/* 💻 DESKTOP WARNING MODAL (Forces Jupiter Mobile Flow) */}
+              <AnimatePresence>
+                {showDesktopWarning && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{
+                      position: 'fixed',
+                      inset: 0,
+                      backgroundColor: 'rgba(0,0,0,0.8)',
+                      backdropFilter: 'blur(5px)',
+                      zIndex: 10000,
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      padding: '20px'
+                    }}
+                  >
+                    <motion.div
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.9, opacity: 0 }}
+                      className="glass-panel"
+                      style={{
+                        width: '100%',
+                        maxWidth: '400px',
+                        background: 'linear-gradient(180deg, #111 0%, #000 100%)',
+                        borderRadius: '16px',
+                        border: `1px solid ${theme.border}`,
+                        padding: '30px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        boxShadow: '0 10px 40px rgba(0, 255, 65, 0.15)',
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}
+                    >
+                      {/* Close Button */}
+                      <button
+                        onClick={() => setShowDesktopWarning(false)}
+                        style={{
+                          position: 'absolute',
+                          top: '15px',
+                          right: '15px',
+                          background: 'none',
+                          border: 'none',
+                          color: theme.textDim,
+                          cursor: 'pointer',
+                          padding: '5px'
+                        }}
+                      >
+                        <X size={20} />
+                      </button>
+
+                      {/* Banner / Header */}
+                      <div style={{
+                        background: 'rgba(0, 194, 255, 0.1)',
+                        color: '#00c2ff',
+                        padding: '6px 16px',
+                        borderRadius: '100px',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        letterSpacing: '1px',
+                        marginBottom: '20px',
+                        border: '1px solid rgba(0, 194, 255, 0.3)'
+                      }}>
+                        MOBILE EXCLUSIVE APP
+                      </div>
+
+                      <h2 style={{ margin: '0 0 10px 0', fontSize: '24px', fontWeight: '900', color: theme.text, textAlign: 'center' }}>
+                        Jupiter Super App Required
+                      </h2>
+
+                      <p style={{ margin: '0 0 25px 0', fontSize: '13px', color: theme.textDim, textAlign: 'center', lineHeight: '1.5' }}>
+                        Dust Demons is designed exclusively for the Jupiter Mobile app. Scan this QR code with your phone camera to launch the app directly.
+                      </p>
+
+                      {/* QR Code Container (Simulated with Logo for Style) */}
+                      <div style={{
+                        background: '#fff',
+                        padding: '15px',
+                        borderRadius: '16px',
+                        marginBottom: '25px',
+                        boxShadow: '0 0 20px rgba(255,255,255,0.1)'
+                      }}>
+                        {/* Using an img src directly linked to a QR generator pointing to the DApp URL */}
+                        <img
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://dust-demons.vercel.app`}
+                          alt="Scan to open in Jupiter Mobile"
+                          style={{ width: '200px', height: '200px', borderRadius: '8px' }}
+                        />
+                        <div style={{
+                          position: 'absolute',
+                          top: '50%',
+                          left: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          background: '#fff',
+                          padding: '8px',
+                          borderRadius: '50%',
+                          boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
+                        }}>
+                          <img src="/logo-bright.svg" style={{ width: '32px', height: '32px', borderRadius: '50%' }} />
+                        </div>
+                      </div>
+
+                      {/* Call to Action */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+                        <button
+                          onClick={() => {
+                            window.location.href = "https://jup.ag";
+                          }}
+                          style={{
+                            width: '100%',
+                            padding: '14px',
+                            borderRadius: '8px',
+                            background: 'linear-gradient(135deg, #00ff41, #008f11)',
+                            color: '#000',
+                            border: 'none',
+                            fontWeight: 'bold',
+                            fontSize: '14px',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 15px rgba(0, 255, 65, 0.3)'
+                          }}
+                        >
+                          Don&apos;t have Jupiter? Download Now
+                        </button>
+                        <button
+                          onClick={() => setShowDesktopWarning(false)}
+                          style={{
+                            width: '100%',
+                            padding: '12px',
+                            borderRadius: '8px',
+                            background: 'rgba(255,255,255,0.05)',
+                            color: theme.textDim,
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            fontWeight: 'bold',
+                            fontSize: '12px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                        </button>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              {/* 🎁 TACTICAL GUIDE */}
               <button
-                onClick={() => { setView('REFERRALS'); setShowMenu(false); }}
+                onClick={() => { }}
                 style={{
                   background: theme.panel,
                   border: `2px solid #10B981`,
@@ -1451,53 +1590,37 @@ export default function Home() {
                   marginBottom: '20px'
                 }}
               >
-                <div style={{ fontSize: '28px' }}>🎁</div>
-                <div style={{ flex: 1, textAlign: 'left' }}>
-                  <div style={{ fontSize: '13px', fontWeight: '900', color: theme.text }}>Invite Friends</div>
-                  <div style={{ fontSize: '10px', color: theme.textDim }}>Earn +50 XP per referral</div>
-                </div>
+                <h4 style={{ margin: 0, fontSize: '14px', color: theme.accent, fontWeight: '900', letterSpacing: '1px' }}>TACTICAL GUIDE</h4>
               </button>
+              <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12px', color: theme.textDim, lineHeight: '1.8' }}>
+                <li><strong>SCAN:</strong> Find dust & spam.</li>
+                <li><strong><span style={{ color: '#00ff41' }}>GREEN</span> (RENT):</strong> Burn to reclaim free SOL.</li>
+                <li><strong><span style={{ color: '#00c2ff' }}>BLUE</span> (YIELD):</strong> Swap to <strong>JupSOL</strong> (7% APY).</li>
+                <li><strong><span style={{ color: '#fbbf24' }}>YELLOW</span> (DUST):</strong> Burn it all.</li>
+              </ul>
 
-              {/* 🛡️ TACTICAL GUIDE (HOW TO PLAY) */}
-
-              {/* 🛡️ TACTICAL GUIDE (GLASS STYLE) */}
-              <div style={{ marginBottom: '20px', padding: '15px', background: 'rgba(10, 10, 18, 0.6)', backdropFilter: 'blur(12px)', border: `1px solid rgba(255, 255, 255, 0.1)`, borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                  <HelpCircle size={18} color={theme.accent} />
-                  <h4 style={{ margin: 0, fontSize: '14px', color: theme.accent, fontWeight: '900', letterSpacing: '1px' }}>TACTICAL GUIDE</h4>
-                </div>
-                <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12px', color: theme.textDim, lineHeight: '1.8' }}>
-                  <li><strong>SCAN:</strong> Find dust & spam.</li>
-                  <li><strong><span style={{ color: '#00ff41' }}>GREEN</span> (RENT):</strong> Burn to reclaim free SOL.</li>
-                  <li><strong><span style={{ color: '#00c2ff' }}>BLUE</span> (YIELD):</strong> Swap to <strong>JupSOL</strong> (7% APY).</li>
-                  <li><strong><span style={{ color: '#fbbf24' }}>YELLOW</span> (DUST):</strong> Burn it all.</li>
-                </ul>
-
-                {/* SWAP TO JUPSOL ACTION */}
-                {/* SWAP TO JUPSOL ACTION */}
-                <button
-                  onClick={() => {
-                    console.log('🌊 TACTICAL SWAP CLICKED');
-                    // Use a mock token object for SOL to trigger the swap flow correctly
-                    const solToken = {
-                      id: 'So11111111111111111111111111111111111111112',
-                      name: 'SOL',
-                      symbol: 'SOL',
-                      decimals: 9,
-                      logoURI: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png'
-                    };
-                    handleSwap(solToken);
-                  }}
-                  style={{ width: '100%', marginTop: '15px', padding: '10px', background: 'linear-gradient(90deg, #00c2ff 0%, #007aff 100%)', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px', fontWeight: '900', cursor: 'pointer', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}
-                >
-                  🌊 SWAP SOL → JUPSOL
-                </button>
-              </div>
+              {/* SWAP TO JUPSOL ACTION */}
+              <button
+                onClick={() => {
+                  console.log('🌊 TACTICAL SWAP CLICKED');
+                  // Use a mock token object for SOL to trigger the swap flow correctly
+                  const solToken = {
+                    id: 'So11111111111111111111111111111111111111112',
+                    name: 'SOL',
+                    symbol: 'SOL',
+                    decimals: 9,
+                    logoURI: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png'
+                  };
+                  handleSwap(solToken);
+                }}
+                style={{ width: '100%', marginTop: '15px', marginBottom: '20px', padding: '10px', background: 'linear-gradient(90deg, #00c2ff 0%, #007aff 100%)', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px', fontWeight: '900', cursor: 'pointer', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}
+              >
+                🌊 SWAP SOL → JUPSOL
+              </button>
 
               {/* 🛡️ JUPITER QUESTS (NEW) */}
               <div style={{ marginBottom: '20px', padding: '15px', background: theme.panel, border: `1px solid #00c2ff`, borderRadius: '4px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                  {/* REPLACED LOGO */}
                   <img src="/logo-bright.svg" alt="Demon" style={{ width: '18px', height: '18px', borderRadius: '50%' }} />
                   <h4 style={{ margin: 0, fontSize: '14px', color: '#00c2ff', fontWeight: '900', letterSpacing: '1px' }}>JUPITER QUESTS</h4>
                 </div>
@@ -1599,10 +1722,10 @@ export default function Home() {
               </div>
             </motion.div>
           )}
-        </AnimatePresence>
+        </AnimatePresence >
 
         {/* MAIN CONTENT AREA */}
-        <PriceTicker />
+        < PriceTicker />
         <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px', paddingBottom: 'calc(120px + env(safe-area-inset-bottom))', zIndex: 10 }}>
 
           {/* VIEW 1: SCANNER */}
@@ -2295,7 +2418,7 @@ export default function Home() {
         </div >
 
         {/* FOOTER NAV - Streamlined to 6 core actions */}
-        < nav style={{
+        <nav style={{
           position: 'fixed',
           bottom: 0,
           width: '100%',
@@ -2426,7 +2549,6 @@ export default function Home() {
 }
 
 // 🛡️ VERIFICATION OVERLAY COMPONENT
-// 🛡️ VERIFICATION OVERLAY COMPONENT
 function VerificationOverlay({ isOpen }) {
   return (
     <AnimatePresence>
@@ -2436,53 +2558,72 @@ function VerificationOverlay({ isOpen }) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           style={{
-            position: 'fixed', inset: 0, zIndex: 10000,
-            background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(10px)',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.8)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
           }}
         >
-          <div style={{ position: 'relative', width: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {/* Outer Ring Pulse */}
+          {isOpen && (
             <motion.div
-              animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              style={{ position: 'absolute', inset: 0, border: '2px solid #00ff41', borderRadius: '50%' }}
-            />
-            {/* Inner Ring Spin */}
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              style={{ position: 'absolute', inset: '10px', border: '2px solid #00ff41', borderRadius: '50%', borderTopColor: 'transparent', borderLeftColor: 'transparent' }}
-            />
-            {/* Core Pulsing Icon */}
-            <motion.div
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                position: 'fixed', inset: 0, zIndex: 10000,
+                background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(10px)',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+              }}
             >
-              <Terminal size={48} color="#00ff41" />
+              <div style={{ position: 'relative', width: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {/* Outer Ring Pulse */}
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  style={{ position: 'absolute', inset: 0, border: '2px solid #00ff41', borderRadius: '50%' }}
+                />
+                {/* Inner Ring Spin */}
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  style={{ position: 'absolute', inset: '10px', border: '2px solid #00ff41', borderRadius: '50%', borderTopColor: 'transparent', borderLeftColor: 'transparent' }}
+                />
+                {/* Core Pulsing Icon */}
+                <motion.div
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  <Terminal size={48} color="#00ff41" />
+                </motion.div>
+              </div>
+
+              <motion.h2
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+                style={{ color: '#00ff41', marginTop: '32px', fontSize: '18px', fontWeight: '900', letterSpacing: '2px', textTransform: 'uppercase' }}
+              >
+                VERIFYING ON-CHAIN
+              </motion.h2>
+
+              <p style={{ color: '#fff', opacity: 0.7, fontSize: '12px', marginTop: '8px', fontFamily: 'monospace' }}>
+                Scanning for Jupiter Swaps & Burns...
+              </p>
+
+              {/* Connection lines effect */}
+              <div style={{ width: '200px', height: '2px', background: 'rgba(0,255,65,0.2)', marginTop: '20px', position: 'relative', overflow: 'hidden' }}>
+                <motion.div
+                  animate={{ x: [-200, 200] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                  style={{ width: '50%', height: '100%', background: 'linear-gradient(90deg, transparent, #00ff41, transparent)' }}
+                />
+              </div>
             </motion.div>
-          </div>
-
-          <motion.h2
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-            style={{ color: '#00ff41', marginTop: '32px', fontSize: '18px', fontWeight: '900', letterSpacing: '2px', textTransform: 'uppercase' }}
-          >
-            VERIFYING ON-CHAIN
-          </motion.h2>
-
-          <p style={{ color: '#fff', opacity: 0.7, fontSize: '12px', marginTop: '8px', fontFamily: 'monospace' }}>
-            Scanning for Jupiter Swaps & Burns...
-          </p>
-
-          {/* Connection lines effect */}
-          <div style={{ width: '200px', height: '2px', background: 'rgba(0,255,65,0.2)', marginTop: '20px', position: 'relative', overflow: 'hidden' }}>
-            <motion.div
-              animate={{ x: [-200, 200] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-              style={{ width: '50%', height: '100%', background: 'linear-gradient(90deg, transparent, #00ff41, transparent)' }}
-            />
-          </div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>
@@ -2569,3 +2710,5 @@ function BountyPoster({ data, selected, onSelect, onSwap, theme }) {
     </motion.div>
   );
 }
+
+// 🛑 END OF PAGE COMPONENT
