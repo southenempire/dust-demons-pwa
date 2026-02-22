@@ -1396,31 +1396,24 @@ export default function Home() {
                       return;
                     }
 
-                    // Inside Jupiter Mobile in-app browser: window.solana IS Jupiter's wallet
-                    if (window.solana?.isJupiter) {
-                      // Jupiter's provider is already injected — just select + connect through the adapter
-                      const jupWallet = wallets.find(w => w.adapter.name === 'Jupiter Mobile');
-                      if (jupWallet) {
-                        select(jupWallet.adapter.name);
-                        await new Promise(r => setTimeout(r, 100));
+                    // Inside Jupiter Mobile: its injected wallet is Phantom-compatible
+                    // Use Phantom adapter to pick it up natively — no WalletConnect/Reown QR
+                    if (window.solana?.isJupiter || window.solana?.isPhantom) {
+                      const injectedWallet = wallets.find(w =>
+                        w.adapter.name === 'Phantom' || w.adapter.name === 'Solflare'
+                      );
+                      if (injectedWallet) {
+                        select(injectedWallet.adapter.name);
+                        await new Promise(r => setTimeout(r, 150));
                         await connectWallet();
-                      } else {
-                        // Fallback: connect directly via injected provider
-                        await window.solana.connect();
                       }
                       return;
                     }
 
-                    // Regular mobile browser — try adapter first, then deep link
-                    const jupWallet = wallets.find(w => w.adapter.name === 'Jupiter Mobile');
-                    if (jupWallet) {
-                      select(jupWallet.adapter.name);
-                      setTimeout(() => connectWallet().catch(console.error), 100);
-                    } else {
-                      localStorage.setItem('pendingJupiterConnect', 'true');
-                      const returnUrl = encodeURIComponent(window.location.href);
-                      window.location.href = `https://jup.ag/mobile?utm_source=dust-demons&return_url=${returnUrl}`;
-                    }
+                    // Not inside any injected wallet browser — show Jupiter Mobile deep link
+                    localStorage.setItem('pendingJupiterConnect', 'true');
+                    const returnUrl = encodeURIComponent(window.location.href);
+                    window.location.href = `https://jup.ag/mobile?utm_source=dust-demons&return_url=${returnUrl}`;
                   } catch (e) {
                     console.error("Connection error:", e);
                   }

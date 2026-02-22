@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react';
 import { UnifiedWalletProvider } from "@jup-ag/wallet-adapter";
 import { useWrappedReownAdapter } from '@jup-ag/jup-mobile-adapter';
+import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 
 export default function AppWalletProvider({ children }) {
   // Initialize Jupiter Mobile adapter
@@ -24,8 +25,13 @@ export default function AppWalletProvider({ children }) {
     }
   });
 
-  // Specifically include the Jupiter adapter for WalletConnect / local mobile injection
-  const wallets = useMemo(() => [jupiterAdapter].filter(Boolean), [jupiterAdapter]);
+  // Specifically include the Jupiter adapter for WalletConnect / local mobile injection,
+  // plus standard adapters so injected wallets (like Jupiter in-app browser) are recognized natively.
+  const wallets = useMemo(() => [
+    new PhantomWalletAdapter(),
+    new SolflareWalletAdapter(),
+    jupiterAdapter
+  ].filter(Boolean), [jupiterAdapter]);
 
   return (
     <UnifiedWalletProvider
