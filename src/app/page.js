@@ -227,6 +227,25 @@ export default function Home() {
     }
   }, []);
 
+  // 🚀 AUTO-CONNECT: If inside Jupiter Mobile's in-app browser, connect wallet automatically
+  useEffect(() => {
+    if (typeof window === 'undefined' || connected) return;
+
+    // Wait a beat for Jupiter's wallet provider to inject
+    const timer = setTimeout(() => {
+      if (window.solana?.isJupiter && !connected) {
+        console.log('🚀 Jupiter Mobile detected — auto-connecting...');
+        const jupWallet = wallets.find(w => w.adapter.name === 'Jupiter Mobile');
+        if (jupWallet) {
+          select(jupWallet.adapter.name);
+          setTimeout(() => connectWallet().catch(e => console.warn('Auto-connect failed:', e)), 200);
+        }
+      }
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [connected, wallets, select, connectWallet]);
+
   // 🛡️ DAILY QUEST & LOGIN LOGIC
   useEffect(() => {
     if (isMounted && publicKey) { // Require wallet connection
@@ -1168,6 +1187,76 @@ export default function Home() {
         </a>
         <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', marginTop: '16px', letterSpacing: '1px' }}>
           dust-demons.vercel.app · Mobile Only
+        </p>
+      </div>
+    );
+  }
+
+  // 🚫 NON-JUPITER MOBILE GATE — Only allow Jupiter Mobile's in-app browser
+  if (isMobile && !isJupiterMobile && typeof window !== 'undefined' && !window.solana?.isJupiter) {
+    return (
+      <div style={{
+        height: '100dvh', width: '100vw',
+        background: '#000',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        fontFamily: 'monospace', textAlign: 'center',
+        padding: '24px',
+        backgroundImage: 'linear-gradient(rgba(0,255,65,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,65,0.05) 1px, transparent 1px)',
+        backgroundSize: '30px 30px'
+      }}>
+        <img src="/logo-bright.svg" alt="Dust Demons" style={{ width: '80px', height: '80px', marginBottom: '24px', borderRadius: '50%' }} />
+        <h1 style={{ color: '#00ff41', fontSize: '20px', fontWeight: '900', letterSpacing: '2px', margin: '0 0 12px 0' }}>
+          OPEN IN JUPITER
+        </h1>
+        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', lineHeight: '1.6', maxWidth: '300px', margin: '0 0 24px 0' }}>
+          Dust Demons runs inside <strong style={{ color: '#00c2ff' }}>Jupiter Mobile</strong>.<br />
+          Open Jupiter Mobile → tap the browser icon → paste this URL:
+        </p>
+        <div
+          onClick={() => {
+            navigator.clipboard?.writeText(window.location.href);
+            const el = document.getElementById('copy-feedback');
+            if (el) { el.textContent = 'Copied!'; setTimeout(() => { el.textContent = 'TAP TO COPY LINK'; }, 1500); }
+          }}
+          style={{
+            padding: '12px 20px',
+            background: 'rgba(0,255,65,0.1)',
+            border: '1px dashed #00ff41',
+            borderRadius: '8px',
+            color: '#00ff41',
+            fontSize: '11px',
+            fontFamily: 'monospace',
+            cursor: 'pointer',
+            marginBottom: '24px',
+            maxWidth: '300px',
+            wordBreak: 'break-all'
+          }}
+        >
+          <div style={{ marginBottom: '6px', opacity: 0.5, fontSize: '10px' }}>{window.location.href}</div>
+          <div id="copy-feedback" style={{ fontWeight: '900', letterSpacing: '1px' }}>TAP TO COPY LINK</div>
+        </div>
+        <a
+          href="https://jup.ag/mobile"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-block',
+            padding: '14px 28px',
+            background: 'linear-gradient(135deg, #00ff41, #00c2ff)',
+            color: '#000',
+            fontWeight: '900',
+            fontSize: '13px',
+            letterSpacing: '1px',
+            borderRadius: '6px',
+            textDecoration: 'none',
+            marginBottom: '12px'
+          }}
+        >
+          GET JUPITER MOBILE →
+        </a>
+        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', marginTop: '16px', letterSpacing: '1px' }}>
+          dust-demons.vercel.app · Jupiter Mobile Only
         </p>
       </div>
     );
