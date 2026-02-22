@@ -111,7 +111,7 @@ const mobileShare = async (text, url) => {
 };
 
 export default function Home() {
-  const { signAllTransactions, wallet, signTransaction, wallets, select, connect: connectWallet } = useWallet();
+  const { signAllTransactions, wallet, signTransaction, wallets, select, connect: connectWallet, disconnect: disconnectWallet } = useWallet();
   const { connection } = useConnection();
 
   // Custom Hooks
@@ -1356,18 +1356,30 @@ export default function Home() {
                       return;
                     }
 
-                    // Try to connect via Jupiter Mobile adapter (works inside Jupiter in-app browser)
+                    // Inside Jupiter Mobile in-app browser: window.solana IS Jupiter's wallet
+                    if (window.solana?.isJupiter) {
+                      // Jupiter's provider is already injected — just select + connect through the adapter
+                      const jupWallet = wallets.find(w => w.adapter.name === 'Jupiter Mobile');
+                      if (jupWallet) {
+                        select(jupWallet.adapter.name);
+                        await new Promise(r => setTimeout(r, 100));
+                        await connectWallet();
+                      } else {
+                        // Fallback: connect directly via injected provider
+                        await window.solana.connect();
+                      }
+                      return;
+                    }
+
+                    // Regular mobile browser — try adapter first, then deep link
                     const jupWallet = wallets.find(w => w.adapter.name === 'Jupiter Mobile');
                     if (jupWallet) {
                       select(jupWallet.adapter.name);
                       setTimeout(() => connectWallet().catch(console.error), 100);
                     } else {
-                      // Not inside Jupiter Mobile browser — deep link to Jupiter Mobile app
-                      // Set flag so we auto-connect when user returns to this page
                       localStorage.setItem('pendingJupiterConnect', 'true');
                       const returnUrl = encodeURIComponent(window.location.href);
-                      const deepLink = `https://jup.ag/mobile?utm_source=dust-demons&return_url=${returnUrl}`;
-                      window.location.href = deepLink;
+                      window.location.href = `https://jup.ag/mobile?utm_source=dust-demons&return_url=${returnUrl}`;
                     }
                   } catch (e) {
                     console.error("Connection error:", e);
@@ -1402,10 +1414,10 @@ export default function Home() {
                   border: `1px solid ${theme.border}`
                 }}
               >
-                {/* Address Badge */}
+                {/* Address Badge — tap to disconnect */}
                 <div
                   onClick={() => {
-                    wallet.adapter.disconnect();
+                    disconnectWallet();
                   }}
                   style={{
                     color: theme.text,
