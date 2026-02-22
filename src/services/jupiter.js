@@ -1,6 +1,5 @@
 const JUPITER_PRICE_API = 'https://api.jup.ag/price/v3';
-// API key from user (fallback if env var missing)
-const API_KEY = process.env.NEXT_PUBLIC_JUPITER_API_KEY || '168af430-77b6-4fe0-b528-b12b28dfc728';
+const API_KEY = process.env.NEXT_PUBLIC_JUPITER_API_KEY;
 
 const JUPITER_PRICE_API_V2 = 'https://api.jup.ag/price/v3';
 

@@ -1909,7 +1909,12 @@ export default function Home() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => makePredictionHook('up', currentSOLPrice)}
+                    onClick={() => {
+                      if (stats.xp < 50) { showModal('ERROR', 'NOT ENOUGH XP', 'You need at least 50 XP to place a wager.'); return; }
+                      setStats(s => ({ ...s, xp: Math.max(0, s.xp - 50) }));
+                      setLootDrops(l => [...l, { id: Date.now(), text: '⚠️ WAGERED -50 XP' }]);
+                      makePredictionHook('up', currentSOLPrice);
+                    }}
                     style={{
                       flex: 1,
                       background: 'linear-gradient(180deg, rgba(0,255,65,0.1) 0%, rgba(0,255,65,0.05) 100%)',
@@ -1928,8 +1933,9 @@ export default function Home() {
                     <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at center, rgba(0,255,65,0.2), transparent 70%)', opacity: 0.5 }} />
                     <TrendingUp size={40} color="#00ff41" strokeWidth={3} />
                     <span style={{ fontSize: '18px', fontWeight: '900', color: '#fff', textShadow: '0 0 10px #00ff41' }}>PUMP</span>
-                    <div style={{ padding: '4px 8px', background: '#00ff41', borderRadius: '4px', color: '#000', fontSize: '10px', fontWeight: '900' }}>
-                      +300 XP
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                      <div style={{ padding: '3px 8px', background: '#00ff41', borderRadius: '4px', color: '#000', fontSize: '10px', fontWeight: '900' }}>WIN: +300 XP</div>
+                      <div style={{ padding: '2px 6px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', color: '#aaa', fontSize: '9px', fontWeight: '700' }}>WAGER: 50 XP</div>
                     </div>
                   </motion.button>
 
@@ -1937,7 +1943,12 @@ export default function Home() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => makePredictionHook('down', currentSOLPrice)}
+                    onClick={() => {
+                      if (stats.xp < 50) { showModal('ERROR', 'NOT ENOUGH XP', 'You need at least 50 XP to place a wager.'); return; }
+                      setStats(s => ({ ...s, xp: Math.max(0, s.xp - 50) }));
+                      setLootDrops(l => [...l, { id: Date.now(), text: '⚠️ WAGERED -50 XP' }]);
+                      makePredictionHook('down', currentSOLPrice);
+                    }}
                     style={{
                       flex: 1,
                       background: 'linear-gradient(180deg, rgba(255,0,85,0.1) 0%, rgba(255,0,85,0.05) 100%)',
@@ -1956,8 +1967,9 @@ export default function Home() {
                     <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at center, rgba(255,0,85,0.2), transparent 70%)', opacity: 0.5 }} />
                     <TrendingDown size={40} color="#ff0055" strokeWidth={3} />
                     <span style={{ fontSize: '18px', fontWeight: '900', color: '#fff', textShadow: '0 0 10px #ff0055' }}>DUMP</span>
-                    <div style={{ padding: '4px 8px', background: '#ff0055', borderRadius: '4px', color: '#fff', fontSize: '10px', fontWeight: '900' }}>
-                      +300 XP
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                      <div style={{ padding: '3px 8px', background: '#ff0055', borderRadius: '4px', color: '#fff', fontSize: '10px', fontWeight: '900' }}>WIN: +300 XP</div>
+                      <div style={{ padding: '2px 6px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', color: '#aaa', fontSize: '9px', fontWeight: '700' }}>WAGER: 50 XP</div>
                     </div>
                   </motion.button>
                 </div>
@@ -2463,7 +2475,7 @@ export default function Home() {
         </div >
 
         {/* FOOTER NAV - Streamlined to 6 core actions */}
-        <nav style={{
+        < nav style={{
           position: 'fixed',
           bottom: 0,
           width: '100%',
@@ -2475,7 +2487,8 @@ export default function Home() {
           justifyContent: 'space-around',
           alignItems: 'center',
           zIndex: 1000
-        }}>
+        }
+        }>
           <button onClick={() => setView('SCANNER')} style={{ background: 'none', border: 'none', color: view === 'SCANNER' ? theme.accent : theme.textDim, transition: '0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
             <Crosshair size={24} />
             <span style={{ fontSize: '9px' }}>SCAN</span>

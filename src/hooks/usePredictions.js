@@ -72,7 +72,7 @@ export function usePredictions() {
         // 🔔 Send Jupiter Mobile Notification
         if (wasCorrect) {
             sendJupiterNotification(
-                'Prophecy Fulfiiled! 🔮',
+                'Prophecy Fulfilled! 🔮',
                 `You won! SOL moved ${priceChange > 0 ? 'UP' : 'DOWN'} to $${(newPrice || 0).toFixed(2)}`
             );
         } else {
