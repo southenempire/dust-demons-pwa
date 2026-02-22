@@ -41,3 +41,5 @@ dev_debug*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+parse_check.js
+swc_parse.js

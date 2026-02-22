@@ -1,7 +1,8 @@
 // src/services/helius.js
 // Helius DAS API service for fetching Solana assets
 
-const HELIUS_DAS_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.helius-rpc.com/?api-key=19b096d1-dce5-49a3-ad44-5e7876db7661';
+const HELIUS_DAS_URL = process.env.NEXT_PUBLIC_RPC_URL;
+if (!HELIUS_DAS_URL) console.error('⚠️ NEXT_PUBLIC_RPC_URL is not set — Helius API calls will fail');
 
 /**
  * Fetch all assets owned by a wallet address
