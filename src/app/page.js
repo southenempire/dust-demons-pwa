@@ -227,25 +227,6 @@ export default function Home() {
     }
   }, []);
 
-  // 🚀 AUTO-CONNECT: If inside Jupiter Mobile's in-app browser, connect wallet automatically
-  useEffect(() => {
-    if (typeof window === 'undefined' || connected) return;
-
-    // Wait a beat for Jupiter's wallet provider to inject
-    const timer = setTimeout(() => {
-      if (window.solana?.isJupiter && !connected) {
-        console.log('🚀 Jupiter Mobile detected — auto-connecting...');
-        const jupWallet = wallets.find(w => w.adapter.name === 'Jupiter Mobile');
-        if (jupWallet) {
-          select(jupWallet.adapter.name);
-          setTimeout(() => connectWallet().catch(e => console.warn('Auto-connect failed:', e)), 200);
-        }
-      }
-    }, 600);
-
-    return () => clearTimeout(timer);
-  }, [connected, wallets, select, connectWallet]);
-
   // 🛡️ DAILY QUEST & LOGIN LOGIC
   useEffect(() => {
     if (isMounted && publicKey) { // Require wallet connection
@@ -432,36 +413,6 @@ export default function Home() {
     }
   }, [publicKey, connection]);
 
-  // 📱 AUTO-CONNECT: When user returns from Jupiter Mobile app, auto-trigger wallet connect
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        const pending = localStorage.getItem('pendingJupiterConnect');
-        if (pending === 'true' && !connected) {
-          localStorage.removeItem('pendingJupiterConnect');
-          // Small delay to let Jupiter Mobile wallet inject itself
-          setTimeout(() => {
-            const jupWallet = wallets.find(w => w.adapter.name === 'Jupiter Mobile');
-            if (jupWallet) {
-              select(jupWallet.adapter.name);
-              setTimeout(() => connectWallet().catch(console.error), 150);
-            }
-          }, 500);
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    // Also handle focus event as fallback for some mobile browsers
-    window.addEventListener('focus', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleVisibilityChange);
-    };
-  }, [connected, wallets, select, connectWallet]);
 
   // 💰 FETCH JUPSOL BALANCE
   useEffect(() => {
