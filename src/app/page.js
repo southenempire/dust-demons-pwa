@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Skull, Ghost, Crosshair, Zap, Activity, Wallet, Terminal, Settings, Volume2, VolumeX, X, Target, ArrowRightLeft, ArrowLeft, Loader2, Moon, Sun, Share2, Users, Trophy, Crown, Smartphone, TrendingUp, TrendingDown, HelpCircle, Monitor } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { UnifiedWalletButton } from '@jup-ag/wallet-adapter';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { createBurnInstruction, createCloseAccountInstruction, getAssociatedTokenAddress } from '@solana/spl-token';
@@ -1316,86 +1317,22 @@ export default function Home() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
             {!isMounted ? (
               <div style={{ width: '120px', height: '32px' }} /> // Placeholder during hydration
-            ) : !connected ? (
-              <button
-                onClick={async () => {
-                  try {
-                    // Block desktop users
-                    if (!isMobile) {
-                      setShowDesktopWarning(true);
-                      return;
-                    }
-
-                    // Inside Jupiter Mobile: its injected wallet is Phantom-compatible
-                    // Use Phantom adapter to pick it up natively — no WalletConnect/Reown QR
-                    if (window.solana?.isJupiter || window.solana?.isPhantom) {
-                      const injectedWallet = wallets.find(w =>
-                        w.adapter.name === 'Phantom' || w.adapter.name === 'Solflare'
-                      );
-                      if (injectedWallet) {
-                        select(injectedWallet.adapter.name);
-                        await new Promise(r => setTimeout(r, 150));
-                        await connectWallet();
-                      }
-                      return;
-                    }
-
-                    // Not inside any injected wallet browser — show Jupiter Mobile deep link
-                    localStorage.setItem('pendingJupiterConnect', 'true');
-                    const returnUrl = encodeURIComponent(window.location.href);
-                    window.location.href = `https://jup.ag/mobile?utm_source=dust-demons&return_url=${returnUrl}`;
-                  } catch (e) {
-                    console.error("Connection error:", e);
-                  }
-                }}
-                className="glass-button pulse-animation"
-                style={{
-                  height: '32px',
-                  padding: '0 16px',
-                  fontSize: '11px',
-                  fontWeight: '900',
-                  borderRadius: '6px',
-                  background: 'linear-gradient(135deg, #00c2ff, #007aff)',
-                  border: '1px solid #00c2ff',
-                  color: '#fff',
-                  boxShadow: '0 0 10px rgba(0, 194, 255, 0.4)',
-                  letterSpacing: '0.5px'
-                }}
-              >
-                UPLINK MOBILE
-              </button>
             ) : (
-              <div
-                className="glass-panel"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '4px 8px 4px 4px',
-                  borderRadius: '20px',
-                  background: 'rgba(0,0,0,0.5)',
-                  border: `1px solid ${theme.border}`
-                }}
-              >
-                {/* Address Badge — tap to disconnect */}
-                <div
-                  onClick={() => {
-                    disconnectWallet();
-                  }}
-                  style={{
-                    color: theme.text,
-                    fontSize: '11px',
-                    fontFamily: 'monospace',
-                    cursor: 'pointer',
-                    padding: '6px 8px',
-                    minHeight: '32px',
-                    display: 'flex',
-                    alignItems: 'center'
-                  }}
-                >
-                  {publicKey ? `${publicKey.toBase58().slice(0, 4)}...${publicKey.toBase58().slice(-4)}` : 'Connected'}
-                </div>
-              </div>
+              <UnifiedWalletButton
+                buttonClassName="glass-button pulse-animation"
+                overrideContent={
+                  !connected ? (
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: '900',
+                      letterSpacing: '0.5px',
+                      color: '#fff'
+                    }}>
+                      UPLINK MOBILE
+                    </span>
+                  ) : undefined
+                }
+              />
             )}
           </div>
         </header>
