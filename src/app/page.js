@@ -1103,7 +1103,7 @@ export default function Home() {
           Open this app on your phone inside the <strong style={{ color: '#00c2ff' }}>Jupiter Mobile</strong> app for the full experience.
         </p>
         <a
-          href="https://jup.ag"
+          href="https://jup.ag/mobile"
           target="_blank"
           rel="noopener noreferrer"
           style={{
