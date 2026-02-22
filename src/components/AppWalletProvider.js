@@ -1,8 +1,11 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { ConnectionProvider } from '@solana/wallet-adapter-react';
 import { UnifiedWalletProvider } from "@jup-ag/wallet-adapter";
 import { useWrappedReownAdapter } from '@jup-ag/jup-mobile-adapter';
+
+const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://api.mainnet-beta.solana.com';
 
 export default function AppWalletProvider({ children }) {
   const { jupiterAdapter } = useWrappedReownAdapter({
@@ -28,22 +31,24 @@ export default function AppWalletProvider({ children }) {
   }, [jupiterAdapter]);
 
   return (
-    <UnifiedWalletProvider
-      wallets={wallets}
-      config={{
-        autoConnect: false,
-        env: "mainnet-beta",
-        metadata: {
-          name: "Dust Demons",
-          description: "Gamified Solana wallet cleanup. Earn 3x XP with Jupiter Mobile!",
-          url: "https://dust-demons.vercel.app",
-          iconUrls: ["https://dust-demons.vercel.app/icon.jpg"],
-        },
-        theme: "dark",
-        lang: "en",
-      }}
-    >
-      {children}
-    </UnifiedWalletProvider>
+    <ConnectionProvider endpoint={RPC_URL}>
+      <UnifiedWalletProvider
+        wallets={wallets}
+        config={{
+          autoConnect: false,
+          env: "mainnet-beta",
+          metadata: {
+            name: "Dust Demons",
+            description: "Gamified Solana wallet cleanup. Earn 3x XP with Jupiter Mobile!",
+            url: "https://dust-demons.vercel.app",
+            iconUrls: ["https://dust-demons.vercel.app/icon.jpg"],
+          },
+          theme: "dark",
+          lang: "en",
+        }}
+      >
+        {children}
+      </UnifiedWalletProvider>
+    </ConnectionProvider>
   );
 }
