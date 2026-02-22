@@ -1405,16 +1405,17 @@ export default function Home() {
                 {/* Address Badge */}
                 <div
                   onClick={() => {
-                    if (window.confirm("Disconnect wallet?")) {
-                      wallet.adapter.disconnect();
-                    }
+                    wallet.adapter.disconnect();
                   }}
                   style={{
                     color: theme.text,
                     fontSize: '11px',
                     fontFamily: 'monospace',
                     cursor: 'pointer',
-                    padding: '0 4px'
+                    padding: '6px 8px',
+                    minHeight: '32px',
+                    display: 'flex',
+                    alignItems: 'center'
                   }}
                 >
                   {publicKey ? `${publicKey.toBase58().slice(0, 4)}...${publicKey.toBase58().slice(-4)}` : 'Connected'}
