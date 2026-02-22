@@ -42,12 +42,6 @@ export const metadata = {
     images: ['/og-image.png'],
   },
 
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-  },
-
   robots: {
     index: true,
     follow: true,
@@ -59,6 +53,12 @@ export const metadata = {
       'max-snippet': -1,
     },
   },
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({ children }) {

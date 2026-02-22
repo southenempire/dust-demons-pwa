@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Skull, Ghost, Crosshair, Zap, Activity, Wallet, Terminal, Settings, Volume2, VolumeX, X, Target, ArrowRightLeft, ArrowLeft, Loader2, Moon, Sun, Share2, Users, Trophy, Crown, Smartphone, TrendingUp, TrendingDown, HelpCircle, Monitor } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
-// import { UnifiedWalletButton } from '@jup-ag/wallet-adapter'; // Removed due to client-side exception in Jupiter mobile browser
 import { PublicKey, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { createBurnInstruction, createCloseAccountInstruction, getAssociatedTokenAddress } from '@solana/spl-token';
 import confetti from 'canvas-confetti';
@@ -42,10 +41,10 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { useOGBurner } from '@/hooks/useOGBurner';
 import OGBurnerCelebration from '@/components/OGBurnerCelebration';
 import OGBurnerBadge from '@/components/OGBurnerBadge';
-import '@solana/wallet-adapter-react-ui/styles.css';
+
 
 // ⚡ RPC CONFIGURATION (DAS API endpoint for asset fetching)
-const HELIUS_DAS_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://mainnet.helius-rpc.com/?api-key=19b096d1-dce5-49a3-ad44-5e7876db7661';
+const HELIUS_DAS_URL = process.env.NEXT_PUBLIC_RPC_URL;
 
 // 🎯 JUPITER CONFIG
 const JUP_SOL_MINT = 'jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjx93v';
@@ -1275,7 +1274,7 @@ export default function Home() {
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', overflow: 'hidden' }}>
             {/* LOGO & RANK */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-              <img src="/logo-bright.svg" style={{ width: '32px', height: '32px', borderRadius: '4px', border: `1px solid ${theme.border}`, objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
+              <img src="/logo-bright.svg" alt="Dust Demons" style={{ width: '32px', height: '32px', borderRadius: '4px', border: `1px solid ${theme.border}`, objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
               <div className="mobile-hide-label" style={{ background: theme.panel, border: `1px solid ${rankColor}`, padding: '4px 8px', borderRadius: '4px' }}>
                 <p style={{ margin: 0, fontSize: '8px', color: rankColor, fontWeight: 'bold', letterSpacing: '1px', display: 'none', '@media (min-width: 400px)': { display: 'block' } }}>RANK</p>
                 <h2 style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: theme.text, whiteSpace: 'nowrap' }}>{currentRank.split(' ')[0]}</h2>
@@ -1573,7 +1572,7 @@ export default function Home() {
                           borderRadius: '50%',
                           boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
                         }}>
-                          <img src="/logo-bright.svg" style={{ width: '32px', height: '32px', borderRadius: '50%' }} />
+                          <img src="/logo-bright.svg" alt="Dust Demons" style={{ width: '32px', height: '32px', borderRadius: '50%' }} />
                         </div>
                       </div>
 
@@ -2755,5 +2754,3 @@ function BountyPoster({ data, selected, onSelect, onSwap, theme }) {
     </motion.div>
   );
 }
-
-// 🛑 END OF PAGE COMPONENT
