@@ -27,6 +27,24 @@ export function useLeaderboard() {
         }
     }, []);
 
+    // 🔄 Load previously saved player stats from server (on wallet connect)
+    const loadPlayerStats = useCallback(async (wallet) => {
+        if (!wallet) return null;
+        try {
+            const walletAddress = typeof wallet.toBase58 === 'function' ? wallet.toBase58() : wallet;
+            const res = await fetch(`/api/player/stats?wallet=${walletAddress}`);
+            if (!res.ok) return null;
+            const data = await res.json();
+            if (data.found && data.stats) {
+                console.log('✅ Loaded saved player stats from server:', data.stats);
+                return data.stats;
+            }
+        } catch (err) {
+            console.warn('Could not load player stats from server:', err);
+        }
+        return null;
+    }, []);
+
     // Submit stats to leaderboard
     const submitToLeaderboard = useCallback(async (wallet, stats, isMobile = false) => {
         if (!wallet) return;
@@ -49,6 +67,7 @@ export function useLeaderboard() {
         userRank,
         loading,
         fetchLeaderboard,
+        loadPlayerStats,
         submitToLeaderboard
     };
 }

@@ -117,7 +117,7 @@ export default function Home() {
   // Custom Hooks
   const { publicKey, connected, walletBalance, setWalletBalance, isJupiterMobile, isMobile } = useWalletState();
   const { assets, loading: assetsLoading, selectedIds, setSelectedIds, fetchAssets, getDustAssets, getBurnableAssets, toggleSelection, clearSelection, selectAllDust } = useAssets();
-  const { leaderboardData, userRank, loading: leaderboardLoading, fetchLeaderboard, submitToLeaderboard } = useLeaderboard();
+  const { leaderboardData, userRank, loading: leaderboardLoading, fetchLeaderboard, loadPlayerStats, submitToLeaderboard } = useLeaderboard();
   const { modal, showModal, closeModal } = useModal();
   const { audioEnabled, loadAudio, playSound, toggleAudio, setAudioEnabled } = useAudio();
   const { currentSOLPrice, previousSOLPrice, priceDirection, dailyPrediction, predictionHistory, timeLeft, fetchSOLPrice, makePrediction: makePredictionHook, checkPredictionResult } = usePredictions();
@@ -393,6 +393,20 @@ export default function Home() {
       connection.getBalance(publicKey)
         .then(bal => setWalletBalance(bal / LAMPORTS_PER_SOL))
         .catch(e => console.warn("Balance check failed:", e));
+
+      // 🔄 Load saved player stats from server on connect
+      loadPlayerStats(publicKey).then(savedStats => {
+        if (savedStats) {
+          setStats(prev => ({
+            ...prev,
+            // Take the higher XP value (server vs local) so we never downgrade
+            xp: Math.max(prev.xp, savedStats.xp || 0),
+            totalBurned: Math.max(prev.totalBurned, savedStats.totalBurned || 0),
+            solReclaimed: Math.max(prev.solReclaimed, savedStats.solReclaimed || 0),
+            level: Math.max(prev.level, savedStats.level || 1),
+          }));
+        }
+      });
 
       // 📊 Auto-submit to leaderboard on wallet connection
       setTimeout(() => submitToLeaderboard(publicKey, stats, isMobile), 1500);
@@ -1305,20 +1319,23 @@ export default function Home() {
               <button
                 onClick={async () => {
                   try {
-                    // Block desktop users to force the mobile flow natively
+                    // Block desktop users
                     if (!isMobile) {
                       setShowDesktopWarning(true);
                       return;
                     }
 
-                    // Force the Jupiter Mobile Adapter (bypasses UnifiedWallet generic wallet modal!)
+                    // Try to connect via Jupiter Mobile adapter (works inside Jupiter in-app browser)
                     const jupWallet = wallets.find(w => w.adapter.name === 'Jupiter Mobile');
                     if (jupWallet) {
                       select(jupWallet.adapter.name);
-                      // Small timeout to let the UnifiedWalletKit adapter select settle before connecting
                       setTimeout(() => connectWallet().catch(console.error), 100);
                     } else {
-                      console.warn('Jupiter Mobile adapter not found.');
+                      // Not inside Jupiter Mobile browser — deep link to Jupiter Mobile app
+                      // with this page as the return URL so user lands back automatically
+                      const returnUrl = encodeURIComponent(window.location.href);
+                      const deepLink = `https://jup.ag/mobile?utm_source=dust-demons&return_url=${returnUrl}`;
+                      window.location.href = deepLink;
                     }
                   } catch (e) {
                     console.error("Connection error:", e);
