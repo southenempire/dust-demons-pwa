@@ -135,6 +135,7 @@ export default function Home() {
   const [shake, setShake] = useState(false);
   const [showWalletScanner, setShowWalletScanner] = useState(false);
   const [showDesktopWarning, setShowDesktopWarning] = useState(false); // NEW STATE FOR DESKTOP REDIRECT
+  const [showMenu, setShowMenu] = useState(false);
   const [showTour, setShowTour] = useState(false);
   const [tourStep, setTourStep] = useState(0);
   const [swapTarget, setSwapTarget] = useState(null);
