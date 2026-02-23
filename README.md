@@ -302,7 +302,7 @@ NEXT_PUBLIC_REOWN_PROJECT_ID=your_reown_project_id
 
 ## 🎥 Demo Video
 
-## 🎥 Visual Tour
+[![Watch Demo](https://img.shields.io/badge/Watch%20Demo-YouTube-red?style=for-the-badge&logo=youtube)](https://youtube.com/shorts/KayaQFPRI6k)
 
 <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
   <img src="media/mobile_showcase_1.png" alt="Mobile Dashboard" width="200" />
